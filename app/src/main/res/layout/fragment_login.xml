@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:transitionGroup="true"
+    tools:context=".ui.auth.login.LoginFragment">
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/loginProgressIndicatorLoading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="@drawable/divider_gap_8"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:showDividers="middle">
+
+        <TextView
+            style="@style/Widget.App.H1.Bold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/sign_in" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/sign_in_to_access_all_features" />
+
+        <LinearLayout
+            android:id="@+id/loginLayoutForm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:divider="@drawable/divider_gap_8"
+            android:showDividers="middle">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/loginTextInputLayoutEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/email"
+                app:endIconMode="clear_text"
+                app:startIconContentDescription="@string/email"
+                app:startIconDrawable="@drawable/baseline_person_outline_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/loginInputEmailAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/loginTextInputLayoutPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/password"
+                app:endIconMode="password_toggle"
+                app:startIconContentDescription="@string/password"
+                app:startIconDrawable="@drawable/baseline_password_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/loginInputPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/loginTextForgotPassword"
+                style="@style/Widget.App.P.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="@string/forgot_password" />
+
+            <Button
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/sign_in"
+                app:icon="@drawable/outline_arrow_forward_ios_24" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/loginEmailButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/sign_in_with_email"
+            app:icon="@drawable/outline_alternate_email_24" />
+
+        <Button
+            android:id="@+id/loginGoogleButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="true"
+            android:text="@string/sign_in_with_google"
+            android:visibility="visible"
+            app:icon="@drawable/icon_google" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/do_not_have_an_account" />
+
+            <TextView
+                android:id="@+id/loginSignUpText"
+                style="@style/Widget.App.P.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/sign_up" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

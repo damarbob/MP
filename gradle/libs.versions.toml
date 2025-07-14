@@ -1,5 +1,7 @@
 [versions]
 agp = "8.11.0"
+credentialsPlayServicesAuth = "1.5.0"
+googleid = "1.1.1"
 mapbox = "11.13.1"
 firebaseBom = "33.16.0"
 kotlin = "2.0.21"
@@ -17,8 +19,12 @@ lifecycleViewmodelKtx = "2.6.1"
 fragmentKtx = "1.5.6"
 navigationFragmentKtx = "2.9.1"
 navigationUiKtx = "2.9.1"
+annotation = "1.9.1"
 
 [libraries]
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 mapbox = { module = "com.mapbox.maps:android", version.ref = "mapbox" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -38,6 +44,7 @@ androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifec
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
+androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

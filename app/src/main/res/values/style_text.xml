@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="Text.H1">36sp</dimen>
+    <dimen name="Text.H2">32sp</dimen>
+    <dimen name="Text.H3">28sp</dimen>
+    <dimen name="Text.H4">24sp</dimen>
+    <dimen name="Text.H5">20sp</dimen>
+    <dimen name="Text.P">16sp</dimen>
+    <dimen name="Text.Small">12sp</dimen>
+
+    <!-- Toolbar collapsed/expanded text appearance -->
+    <style name="TextAppearance.Widget.MaghribMengaji.Toolbar.Expanded" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="fontFamily">@font/plus_jakarta_sans_variable</item>
+        <item name="android:textSize">@dimen/Text.H1</item> <!-- Adjust as needed -->
+        <item name="android:textColor">@color/design_default_color_secondary</item>
+    </style>
+
+    <style name="TextAppearance.Widget.MaghribMengaji.Toolbar.Collapsed" parent="@style/TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
+        <item name="fontFamily">@font/plus_jakarta_sans_variable</item>
+        <item name="android:textSize">16sp</item> <!-- Adjust as needed -->
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+    </style>
+
+    <style name="Widget.App.None" parent="Widget.AppCompat.TextView">
+        <item name="android:visibility">invisible</item>
+        <item name="android:visible">false</item>
+    </style>
+
+    <!-- Heading style -->
+    <style name="Widget.App.Heading" parent="Widget.AppCompat.TextView">
+        <item name="fontFamily">@font/abel_regular</item>
+    </style>
+
+    <style name="Widget.App.H1" parent="Widget.App.Heading">
+        <item name="android:textSize">@dimen/Text.H1</item>
+    </style>
+    <style  name="Widget.App.H1.Bold" parent="Widget.App.H1">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style  name="Widget.App.H1.Bold.Primary" parent="Widget.App.H1.Bold">
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.App.H2" parent="Widget.App.Heading">
+        <item name="android:textSize">@dimen/Text.H2</item>
+    </style>
+    <style name="Widget.App.H3" parent="Widget.App.Heading">
+        <item name="android:textSize">@dimen/Text.H3</item>
+    </style>
+
+    <style name="Widget.App.H4" parent="Widget.App.Heading">
+        <item name="android:textSize">@dimen/Text.H4</item>
+    </style>
+    <style  name="Widget.App.H4.Bold" parent="Widget.App.H4">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.App.H5" parent="Widget.App.Heading">
+        <item name="android:textSize">@dimen/Text.H5</item>
+    </style>
+    <style  name="Widget.App.H5.Bold" parent="Widget.App.H5">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style  name="Widget.App.H5.Bold.Primary" parent="Widget.App.H5.Bold">
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- Normal text style -->
+    <style name="Widget.App.P" parent="Widget.AppCompat.TextView">
+        <item name="android:textSize">@dimen/Text.P</item>
+    </style>
+    <style name="Widget.App.P.Bold" parent="Widget.App.P">
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="Widget.App.P.Primary" parent="Widget.App.P">
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.App.Small" parent="Widget.AppCompat.TextView">
+        <item name="android:textSize">@dimen/Text.Small</item>
+    </style>
+
+</resources>

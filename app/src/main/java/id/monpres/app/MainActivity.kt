@@ -7,6 +7,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import id.monpres.app.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        navController = findNavController(binding.navHostFragmentActivityMain.id)
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(binding.navHostFragmentActivityMain.id) as NavHostFragment
+        navController = navHostFragment.navController
     }
 }
