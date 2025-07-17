@@ -1,4 +1,4 @@
-package id.monpres.app.ui.profile
+package id.monpres.app.ui.scheduledservice
 
 import androidx.fragment.app.viewModels
 import android.os.Bundle
@@ -9,13 +9,13 @@ import android.view.ViewGroup
 import com.google.android.material.transition.MaterialSharedAxis
 import id.monpres.app.R
 
-class ProfileFragment : Fragment() {
+class ScheduledServiceFragment : Fragment() {
 
     companion object {
-        fun newInstance() = ProfileFragment()
+        fun newInstance() = ScheduledServiceFragment()
     }
 
-    private val viewModel: ProfileViewModel by viewModels()
+    private val viewModel: ScheduledServiceViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +31,6 @@ class ProfileFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+        return inflater.inflate(R.layout.fragment_scheduled_service, container, false)
     }
 }

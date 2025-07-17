@@ -1,36 +1,33 @@
-package id.monpres.app.ui.home
+package id.monpres.app.ui.vehiclelist
 
+import androidx.fragment.app.viewModels
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialSharedAxis
 import id.monpres.app.MainActivity
 import id.monpres.app.R
-import id.monpres.app.databinding.FragmentHomeBinding
+import id.monpres.app.databinding.FragmentVehicleListBinding
 import id.monpres.app.model.Vehicle
 import id.monpres.app.ui.adapter.VehicleAdapter
 
-class HomeFragment : Fragment() {
+class VehicleListFragment : Fragment() {
 
     companion object {
-        fun newInstance() = HomeFragment()
+        fun newInstance() = VehicleListFragment()
     }
 
-    private val viewModel: HomeViewModel by viewModels()
+    private val viewModel: VehicleListViewModel by viewModels()
 
-    private lateinit var binding: FragmentHomeBinding
+    private lateinit var binding: FragmentVehicleListBinding
 
     private lateinit var vehicleAdapter: VehicleAdapter
     private lateinit var vehicles: List<Vehicle>
@@ -45,7 +42,6 @@ class HomeFragment : Fragment() {
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-
     }
 
     override fun onCreateView(
@@ -53,26 +49,9 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
-        binding = FragmentHomeBinding.inflate(inflater, container, false)
+        binding = FragmentVehicleListBinding.inflate(inflater, container, false)
 
         setupVehiclesObservers()
-//        setupVehicleRecyclerView()
-
-        binding.fragmentHomeCardViewQuickService.setOnClickListener {
-            val extras = FragmentNavigatorExtras(binding.fragmentHomeCardViewQuickService to "shared_element_container")
-            findNavController().navigate(R.id.action_homeFragment_to_quickServiceFragment, null, null, extras)
-        }
-        binding.fragmentHomeCardViewScheduledService.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_scheduledServiceFragment)
-        }
-        binding.fragmentHomeCardViewComponentReplacement.setOnClickListener {
-            Snackbar.make(requireContext(), binding.root, "Coming Soon...", Snackbar.LENGTH_SHORT)
-                .show()
-        }
-        binding.fragmentHomeButtonSeeAllVehicle.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_vehicleListFragment)
-        }
-
         return binding.root
     }
 
@@ -82,7 +61,10 @@ class HomeFragment : Fragment() {
         val appBarConfiguration =
             AppBarConfiguration(navController.graph, drawerLayout = drawerLayout)
 
-        binding.fragmentHomeToolbar.setupWithNavController(navController, appBarConfiguration)
+        binding.fragmentListVehicleToolbar.setupWithNavController(
+            navController,
+            appBarConfiguration
+        )
     }
 
     private fun setupVehicleRecyclerView() {
@@ -91,12 +73,12 @@ class HomeFragment : Fragment() {
         vehicleAdapter = VehicleAdapter(vehicles) { vehicle ->
             saveScrollPosition()
             findNavController().navigate(
-                R.id.action_homeFragment_to_editVehicleFragment,
+                R.id.action_vehicleListFragment_to_editVehicleFragment,
                 Bundle().apply { putParcelable("vehicle", vehicle) }
             )
         }
 
-        binding.fragmentHomeRecyclerViewVehicle.apply {
+        binding.fragmentListVehicleRecyclerViewListVehicle.apply {
             adapter = vehicleAdapter
             layoutManager = LinearLayoutManager(requireContext())
             setHasFixedSize(true)
@@ -125,7 +107,7 @@ class HomeFragment : Fragment() {
 
     private fun saveScrollPosition() {
         val layoutManager =
-            binding.fragmentHomeRecyclerViewVehicle.layoutManager as? LinearLayoutManager
+            binding.fragmentListVehicleRecyclerViewListVehicle.layoutManager as? LinearLayoutManager
         layoutManager?.let {
             val firstVisiblePosition = it.findFirstVisibleItemPosition()
             if (firstVisiblePosition != RecyclerView.NO_POSITION) {
@@ -137,9 +119,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun restoreScrollPosition() {
-        binding.fragmentHomeRecyclerViewVehicle.post {
+        binding.fragmentListVehicleRecyclerViewListVehicle.post {
             val layoutManager =
-                binding.fragmentHomeRecyclerViewVehicle.layoutManager as? LinearLayoutManager
+                binding.fragmentListVehicleRecyclerViewListVehicle.layoutManager as? LinearLayoutManager
             layoutManager?.scrollToPositionWithOffset(
                 scrollPosition,
                 scrollOffset
