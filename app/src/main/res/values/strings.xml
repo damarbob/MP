@@ -6,9 +6,11 @@
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
     <string name="loading">Loading</string>
+    <string name="refresh">Refresh</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_out">Sign Out</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="sign_in_with_email">Sign In with Email</string>
-    <string name="sign_in">Sign In</string>
     <string name="sign_in_to_access_all_features">Sign in to access all features and enjoy a seamless service experience.</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
@@ -34,6 +36,10 @@
     <string name="sign_up_successful">Sign up successful!</string>
     <string name="signed_in_as">Signed in as %1$s</string>
     <string name="authentication_failed">Authentication failed: %1$s</string>
+    <string name="verification">Verification</string>
+    <string name="please_verify_your_email">Please verify your email. Press the “Send” button, then click the verification link in the email we sent you.</string>
+    <string name="verification_email_has_been_sent">Verification email has been sent.</string>
+    <string name="failed_to_send_the_verification_email">Failed to send the verification email.</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
