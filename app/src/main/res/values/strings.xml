@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Montir Presisi</string>
-    <string name="terms_and_conditions_url">https://simsinfotekno.com/</string>
+    <string name="app_name" translatable="false">Montir Presisi</string>
+    <string name="terms_and_conditions_url" translatable="false">https://simsinfotekno.com/</string>
     <string name="continue_">Continue</string>
     <string name="send">Send</string>
     <string name="cancel">Cancel</string>
@@ -36,4 +36,18 @@
     <string name="authentication_failed">Authentication failed: %1$s</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="vehicles">Vehicles</string>
+    <string name="swift_and_precise_exchange_of_worn_or_damaged_vehicle_parts_with_high_quality_originals">Swift and precise exchange of worn or damaged vehicle parts with high-quality originals.</string>
+    <string name="component_replacement">Component Replacement</string>
+    <string name="plan_comprehensive_maintenance_ahead_of_time_ensuring_thorough_care_at_your_convenience">Plan comprehensive maintenance ahead of time, ensuring thorough care at your convenience.</string>
+    <string name="scheduled_service">Scheduled Service</string>
+    <string name="fast_on_the_spot_maintenance_and_diagnostics_to_get_your_vehicle_running_smoothly_in_no_time">Fast, on-the-spot maintenance and diagnostics to get your vehicle running smoothly in no time.</string>
+    <string name="quick_service">Quick Service</string>
+    <string name="title">Title</string>
+    <string name="subtitle">Subtitle</string>
+    <string name="edit_vehicle">Edit Vehicle</string>
+    <string name="name">Name</string>
+    <string name="registration_number">Registration Number</string>
+    <string name="show_more">Show more</string>
+    <string name="see_all">See all</string>
 </resources>

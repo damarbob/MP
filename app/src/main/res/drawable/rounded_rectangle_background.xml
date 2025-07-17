@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?colorPrimaryInverse">
+    <item>
+        <shape>
+            <solid android:color="?colorSurface" /> <!-- Background color -->
+            <corners android:radius="@dimen/large_rounding" />   <!-- Rounded corners -->
+        </shape>
+
+    </item>
+
+</ripple>
