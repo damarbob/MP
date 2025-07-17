@@ -1,11 +1,11 @@
-package id.monpres.app.ui.home
+package id.monpres.app.ui.vehiclelist
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import id.monpres.app.model.Vehicle
 
-class HomeViewModel : ViewModel() {
+class VehicleListViewModel : ViewModel() {
     private val _vehicles = MutableLiveData<List<Vehicle>>(emptyList())
     val vehicles: LiveData<List<Vehicle>> = _vehicles
 //    val vehicles: List<Vehicle> = Vehicle.getSampleList()
@@ -17,7 +17,7 @@ class HomeViewModel : ViewModel() {
     val scrollOffset: LiveData<Int> = _scrollOffset
 
     init {
-        _vehicles.value = Vehicle.getSampleList().take(5)
+        _vehicles.value = Vehicle.getSampleList()
     }
 
     fun saveScrollPosition(position: Int) {
@@ -26,9 +26,5 @@ class HomeViewModel : ViewModel() {
 
     fun saveScrollOffset(offset: Int) {
         _scrollOffset.value = offset
-    }
-
-    fun clearScrollPosition() {
-        _scrollPosition.value = 0
     }
 }

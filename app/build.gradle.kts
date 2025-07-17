@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -67,7 +68,11 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.coordinatorlayout)
+    implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.annotation)
+    implementation(libs.androidx.transition)
+    implementation(libs.androidx.transition.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

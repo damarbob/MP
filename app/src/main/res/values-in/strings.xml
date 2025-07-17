@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="continue_">Lanjutkan</string>
+    <string name="send">Kirim</string>
+    <string name="cancel">Batal</string>
+    <string name="close">Tutup</string>
+    <string name="loading">Memuat</string>
+    <string name="are_you_sure">Apakah Anda yakin?</string>
+    <string name="sign_in_with_email">Masuk dengan email</string>
+    <string name="sign_in">Masuk</string>
+    <string name="sign_in_to_access_all_features">Masuk untuk mengakses semua fitur dan nikmati pengalaman layanan tanpa batas.</string>
+    <string name="email">Email</string>
+    <string name="password">Kata Sandi</string>
+    <string name="forgot_password">Lupa kata sandi</string>
+    <string name="continue_please_make_sure">Lanjutkan? Pastikan informasi yang Anda masukkan sudah benar.</string>
+    <string name="an_email_with_a_password_reset_link">Email berisi tautan pengaturan ulang kata sandi telah dikirim ke alamat email Anda.</string>
+    <string name="sign_in_with_google">Masuk dengan Google</string>
+    <string name="do_not_have_an_account">Belum punya akun?</string>
+    <string name="sign_in_successful">Berhasil masuk!</string>
+    <string name="sign_up">Daftar</string>
+    <string name="just_one_more_step_to_go">Tinggal satu langkah lagi.</string>
+    <string name="full_name">Nama Lengkap</string>
+    <string name="full_name_is_required">Nama lengkap wajib diisi</string>
+    <string name="email_is_required">Email wajib diisi</string>
+    <string name="invalid_email_format">Format email tidak valid!</string>
+    <string name="password_is_required">Kata sandi wajib diisi</string>
+    <string name="password_must_be_at_least_6_characters_long">Kata sandi minimal 6 karakter!</string>
+    <string name="terms_and_conditions">Syarat dan ketentuan</string>
+    <string name="i_agree_to_the_terms_and_conditions">Saya setuju dengan <a href="https://simsinfotekno.com/">syarat dan ketentuan</a>.</string>
+    <string name="terms_must_be_accepted">Syarat harus disetujui!</string>
+    <string name="you_will_open_an_external_link">Anda akan membuka tautan eksternal di browser Anda.</string>
+    <string name="already_have_an_account">Sudah punya akun?</string>
+    <string name="sign_up_successful">Pendaftaran berhasil!</string>
+    <string name="signed_in_as">Masuk sebagai %1$s</string>
+    <string name="authentication_failed">Autentikasi gagal: %1$s</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Halo fragmen kosong</string>
+    <string name="vehicles">Kendaraan</string>
+    <string name="swift_and_precise_exchange_of_worn_or_damaged_vehicle_parts_with_high_quality_originals">Penukaran suku cadang kendaraan yang aus atau rusak secara cepat dan tepat dengan suku cadang asli berkualitas tinggi.</string>
+    <string name="component_replacement">Penggantian Komponen</string>
+    <string name="plan_comprehensive_maintenance_ahead_of_time_ensuring_thorough_care_at_your_convenience">Rencanakan perawatan komprehensif jauh-jauh hari, pastikan perawatan menyeluruh sesuai kenyamanan Anda.</string>
+    <string name="scheduled_service">Layanan Terjadwal</string>
+    <string name="fast_on_the_spot_maintenance_and_diagnostics_to_get_your_vehicle_running_smoothly_in_no_time">Perawatan dan diagnostik cepat di tempat agar kendaraan Anda berjalan mulus dalam waktu singkat.</string>
+    <string name="quick_service">Layanan Cepat</string>
+    <string name="title">Judul</string>
+    <string name="subtitle">Subjudul</string>
+    <string name="edit_vehicle">Edit Kendaraan</string>
+    <string name="name">Nama</string>
+    <string name="registration_number">Nomor Registrasi</string>
+    <string name="show_more">Tampilkan lebih banyak</string>
+    <string name="see_all">Lihat semua</string>
+</resources>

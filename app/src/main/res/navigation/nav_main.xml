@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_main.xml"
     app:startDestination="@id/homeFragment">
@@ -8,8 +8,8 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="id.monpres.app.ui.home.HomeFragment"
-        android:label="fragment_home"
-        tools:layout="@layout/fragment_home" >
+        android:label="Montir Presisi"
+        tools:layout="@layout/fragment_home">
         <action
             android:id="@+id/action_homeFragment_to_profileFragment"
             app:destination="@id/profileFragment"
@@ -20,10 +20,30 @@
         <action
             android:id="@+id/action_homeFragment_to_editVehicleFragment"
             app:destination="@id/editVehicleFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+            app:enterAnim="@animator/nav_default_enter_anim"
+            app:exitAnim="@animator/nav_default_exit_anim"
+            app:popEnterAnim="@animator/nav_default_pop_enter_anim"
+            app:popExitAnim="@animator/nav_default_pop_exit_anim"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
+        <action
+            android:id="@+id/action_homeFragment_to_quickServiceFragment"
+            app:destination="@id/quickServiceFragment"
+             />
+        <action
+            android:id="@+id/action_homeFragment_to_scheduledServiceFragment"
+            app:destination="@id/scheduledServiceFragment"
+            app:enterAnim="@animator/nav_default_enter_anim"
+            app:exitAnim="@animator/nav_default_exit_anim"
+            app:popEnterAnim="@animator/nav_default_pop_enter_anim"
+            app:popExitAnim="@animator/nav_default_pop_exit_anim" />
+        <action
+            android:id="@+id/action_homeFragment_to_vehicleListFragment"
+            app:destination="@id/vehicleListFragment"
+            app:enterAnim="@animator/nav_default_enter_anim"
+            app:exitAnim="@animator/nav_default_exit_anim"
+            app:popEnterAnim="@animator/nav_default_pop_enter_anim"
+            app:popExitAnim="@animator/nav_default_pop_exit_anim" />
     </fragment>
     <fragment
         android:id="@+id/profileFragment"
@@ -33,6 +53,38 @@
     <fragment
         android:id="@+id/editVehicleFragment"
         android:name="id.monpres.app.ui.editvehicle.EditVehicleFragment"
-        android:label="fragment_edit_vehicle"
+        android:label="Edit Vehicle"
         tools:layout="@layout/fragment_edit_vehicle" />
+    <fragment
+        android:id="@+id/quickServiceFragment"
+        android:name="id.monpres.app.ui.quickservice.QuickServiceFragment"
+        android:label="Quick Service"
+        tools:layout="@layout/fragment_quick_service" />
+    <fragment
+        android:id="@+id/scheduledServiceFragment"
+        android:name="id.monpres.app.ui.scheduledservice.ScheduledServiceFragment"
+        android:label="Scheduled Service"
+        tools:layout="@layout/fragment_scheduled_service" />
+    <action
+        android:id="@+id/action_global_profileFragment"
+        app:destination="@id/profileFragment"
+        app:enterAnim="@animator/nav_default_enter_anim"
+        app:exitAnim="@animator/nav_default_exit_anim"
+        app:popEnterAnim="@animator/nav_default_pop_enter_anim"
+        app:popExitAnim="@animator/nav_default_pop_exit_anim"
+        app:popUpTo="@id/profileFragment"
+        app:popUpToInclusive="true" />
+    <fragment
+        android:id="@+id/vehicleListFragment"
+        android:name="id.monpres.app.ui.vehiclelist.VehicleListFragment"
+        android:label="Vehicle List"
+        tools:layout="@layout/fragment_vehicle_list">
+        <action
+            android:id="@+id/action_vehicleListFragment_to_editVehicleFragment"
+            app:destination="@id/editVehicleFragment"
+            app:enterAnim="@animator/nav_default_enter_anim"
+            app:exitAnim="@animator/nav_default_exit_anim"
+            app:popEnterAnim="@animator/nav_default_pop_enter_anim"
+            app:popExitAnim="@animator/nav_default_pop_exit_anim" />
+    </fragment>
 </navigation>

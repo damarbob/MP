@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="text_margin">16dp</dimen>
+    <dimen name="large_rounding">16dp</dimen>
+    <dimen name="extra_small_rounding">4dp</dimen>
+</resources>

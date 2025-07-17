@@ -5,11 +5,14 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -29,6 +32,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         val TAG: String = MainActivity::class.java.simpleName
     }
 
+    /* View models */
+    private val viewModel: MainViewModel by viewModels()
+
     /* Use cases */
     private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
     private val resendVerificationEmailUseCase = ResendVerificationEmailUseCase()
@@ -36,6 +42,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     /* Views */
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
+    val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +60,29 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         navController = navHostFragment.navController
 
         runAuthentication()
+
+        /* Observers */
+        // Observe sign-out event
+        lifecycleScope.launch {
+            viewModel.signOutEvent.collect {
+                clearCredentialsAndNavigate()
+            }
+        }
+
+        /* Listeners */
+        binding.activityMainNavigationView.setNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.activityMainDrawerMenuLogOut -> {
+                    onLogoutClicked()
+                }
+
+                R.id.activityMainDrawerMenuProfile -> {
+                    navController.navigate(R.id.profileFragment)
+                }
+            }
+            drawerLayout.close()
+            return@setNavigationItemSelectedListener true
+        }
     }
 
     private fun runAuthentication() {
@@ -154,4 +184,24 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         finish() // Finish MainActivity to prevent the user from coming back to it
     }
 
+    private fun clearCredentialsAndNavigate() {
+        // 1. Clear credentials (context operation)
+        val cm = CredentialManager.create(this)
+        lifecycleScope.launch(Dispatchers.IO) {
+            cm.clearCredentialState(ClearCredentialStateRequest())
+        }
+
+        // 2. Navigate immediately (don't wait for credential clearing)
+        navigateToLogin()
+    }
+
+    private fun navigateToLogin() {
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
+    }
+
+    // Example usage
+    fun onLogoutClicked() {
+        viewModel.signOut()
+    }
 }

@@ -1,22 +1,209 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?colorSurfaceContainer"
+    android:fitsSystemWindows="true"
+    android:transitionGroup="true"
     tools:context=".ui.home.HomeFragment">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/fragmentHomeAppBarLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/button"
-        android:layout_centerInParent="true"
-        android:text="Home Fragment" />
+        android:minHeight="?attr/actionBarSize">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Profile" />
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/fragmentHomeToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:title="Montir Presisi"
+            app:titleCentered="true" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-</RelativeLayout>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Quick Service -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/fragmentHomeCardViewQuickService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless"
+                android:transitionName="shared_element_container">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="1dp"
+                    android:minHeight="72dp"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/fragmentHomeImageViewQuickServiceImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/menu_24px" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/fragmentHomeTextViewQuickServiceTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:text="@string/quick_service"
+                            android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+                        <TextView
+                            android:id="@+id/fragmentHomeTextViewQuickServiceSubtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/fast_on_the_spot_maintenance_and_diagnostics_to_get_your_vehicle_running_smoothly_in_no_time" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Scheduled Service -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/fragmentHomeCardViewScheduledService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="1dp"
+                    android:minHeight="72dp"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/fragmentHomeImageViewScheduledServiceImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/menu_24px" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/fragmentHomeTextViewScheduledServiceTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:text="@string/scheduled_service"
+                            android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+                        <TextView
+                            android:id="@+id/fragmentHomeTextViewScheduledServiceSubtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/plan_comprehensive_maintenance_ahead_of_time_ensuring_thorough_care_at_your_convenience" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/fragmentHomeCardViewComponentReplacement"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="1dp"
+                    android:minHeight="72dp"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/fragmentHomeImageViewComponentReplacementImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/menu_24px" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/fragmentHomeTextViewComponentReplacementTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:text="@string/component_replacement"
+                            android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+                        <TextView
+                            android:id="@+id/fragmentHomeTextViewComponentReplacementSubtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/swift_and_precise_exchange_of_worn_or_damaged_vehicle_parts_with_high_quality_originals" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/vehicles"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium.Emphasized" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentHomeRecyclerViewVehicle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:padding="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fragmentHomeButtonSeeAllVehicle"
+                style="@style/Widget.Material3Expressive.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginEnd="16dp"
+                android:text="@string/see_all"
+                app:icon="@drawable/outline_arrow_forward_ios_24" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
