@@ -3,4 +3,7 @@
     <dimen name="text_margin">16dp</dimen>
     <dimen name="large_rounding">16dp</dimen>
     <dimen name="extra_small_rounding">4dp</dimen>
+    <dimen name="space_between_input_field">16dp</dimen>
+    <dimen name="input_field_min_height">48dp</dimen>
+    <dimen name="input_field_max_width">488dp</dimen>
 </resources>

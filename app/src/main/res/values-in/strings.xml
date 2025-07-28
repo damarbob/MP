@@ -5,8 +5,10 @@
     <string name="cancel">Batal</string>
     <string name="close">Tutup</string>
     <string name="loading">Memuat</string>
+    <string name="sign_out">Keluar</string>
     <string name="are_you_sure">Apakah Anda yakin?</string>
     <string name="sign_in_with_email">Masuk dengan email</string>
+    <string name="refresh">Segarkan</string>
     <string name="sign_in">Masuk</string>
     <string name="sign_in_to_access_all_features">Masuk untuk mengakses semua fitur dan nikmati pengalaman layanan tanpa batas.</string>
     <string name="email">Email</string>
@@ -34,6 +36,7 @@
     <string name="signed_in_as">Masuk sebagai %1$s</string>
     <string name="authentication_failed">Autentikasi gagal: %1$s</string>
     <!-- TODO: Remove or change this placeholder text -->
+    <string name="failed_to_send_the_verification_email">Gagal mengirim email verifikasi</string>
     <string name="hello_blank_fragment">Halo fragmen kosong</string>
     <string name="vehicles">Kendaraan</string>
     <string name="swift_and_precise_exchange_of_worn_or_damaged_vehicle_parts_with_high_quality_originals">Penukaran suku cadang kendaraan yang aus atau rusak secara cepat dan tepat dengan suku cadang asli berkualitas tinggi.</string>
@@ -49,4 +52,31 @@
     <string name="registration_number">Nomor Registrasi</string>
     <string name="show_more">Tampilkan lebih banyak</string>
     <string name="see_all">Lihat semua</string>
+    <string name="license_plate_number">Plat nomor</string>
+    <string name="production_year">Tahun produksi</string>
+    <string name="engine_capacity">Kapasitas mesin</string>
+    <string name="seat">Kursi/jok/tempat duduk</string>
+    <string name="power_output">Output daya</string>
+    <string name="type">Tipe</string>
+    <string name="verification">Verifikasi</string>
+    <string name="please_verify_your_email">Mohon verifikasi email Anda. Tekan tombol \"Kirim\", lalu tekan tautan verifikasi di dalam email yang kami kirimkan ke Anda.</string>
+    <string name="verification_email_has_been_sent">Email verifikasi sudah terkirim.</string>
+    <string name="update">Update</string>
+    <string name="save">Simpan</string>
+    <string name="insert_vehicle">Tambah kendaraan</string>
+    <string name="power_source">Sumber daya</string>
+    <string name="wheel_drive">Roda penggerak</string>
+    <string name="transmission">Transmisi</string>
+    <string name="add_vehicle">Tambah kendaraan</string>
+    <string name="vehicle_list">Daftar kendaraan</string>
+    <string name="profile">Profil</string>
+    <string name="delete">Hapus</string>
+    <string name="x_not_found">%1$s tidak ditemukan</string>
+    <string name="unknown_error">Galat tidak diketahui</string>
+    <string name="x_items_selected">%1$d item dipilih</string>
+    <string name="deleted_x_items">Dihapus %1$d item</string>
+    <string name="select_items">Pilih item</string>
+    <string name="delete_vehicles">Hapus kendaraan</string>
+    <string name="delete_selected_vehicles_confirmation">Apakah Anda yakin menghapus data kendaraan?</string>
+    <string name="history">Riwayat</string>
 </resources>
