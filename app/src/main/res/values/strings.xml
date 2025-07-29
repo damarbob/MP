@@ -2,11 +2,13 @@
     <string name="app_name" translatable="false">Montir Presisi</string>
     <string name="terms_and_conditions_url" translatable="false">https://simsinfotekno.com/</string>
     <string name="continue_">Continue</string>
+    <string name="submit">Submit</string>
     <string name="send">Send</string>
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
     <string name="loading">Loading</string>
     <string name="refresh">Refresh</string>
+    <string name="issue">Issue</string>
     <string name="sign_in">Sign In</string>
     <string name="sign_out">Sign Out</string>
     <string name="are_you_sure">Are you sure?</string>
@@ -42,6 +44,7 @@
     <string name="failed_to_send_the_verification_email">Failed to send the verification email.</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="vehicle">Vehicle</string>
     <string name="vehicles">Vehicles</string>
     <string name="swift_and_precise_exchange_of_worn_or_damaged_vehicle_parts_with_high_quality_originals">Swift and precise exchange of worn or damaged vehicle parts with high-quality originals.</string>
     <string name="component_replacement">Component Replacement</string>
@@ -56,4 +59,26 @@
     <string name="registration_number">Registration Number</string>
     <string name="show_more">Show more</string>
     <string name="see_all">See all</string>
+    <string name="select_the_issue">Select the issue your vehicle is experiencing from the list.</string>
+    <string name="description">Description</string>
+    <string name="provide_any_additional_details">Provide any additional details or observations about the issue.</string>
+    <string name="location">Location</string>
+    <string name="open_maps">Open Maps</string>
+    <string name="enter_the_address_or_location">Enter the address or location where the service is needed.</string>
+    <string name="check_this_box_to_consent_to_sharing_your_location">Check this box to consent to sharing your location with the service provider.</string>
+    <string name="place_order">Place Order</string>
+    <string name="date">Date</string>
+    <string name="select_a_date_for_your_scheduled_service">Select a date for your scheduled service.</string>
+    <string name="you_must_agree_to_share_your_location_before_placing_an_order">You must agree to share your location before placing an order.</string>
+    <string name="select_a_vehicle_to_repair">Select a vehicle to repair.</string>
+    <string name="this_field_is_required">This field is required</string>
+    <string name="please_select_a_location_and_enable_gps">Please select a location and enable GPS</string>
+    <string name="select_a_location">Select a location</string>
+    <string name="re_select_a_location">Re-select a location</string>
+    <string name="address">Address</string>
+    <string name="select_date">Select date</string>
+    <string name="recurring">Recurring</string>
+    <string name="you_cannot_select_today_or_yesterday">You cannot select today or yesterday!</string>
+    <string name="order_placed_successfully">Order placed successfully</string>
+    <string name="failed_to_place_order">Failed to place order</string>
 </resources>

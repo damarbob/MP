@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="issues">
+        <item>Electrical &amp; Battery Issues</item>
+        <item>Engine &amp; Performance Issues</item>
+        <item>Fuel System Issues</item>
+        <item>Cooling System Issues</item>
+        <item>Lubrication &amp; Oil Issues</item>
+        <item>Transmission &amp; Drivetrain Issues</item>
+        <item>Brake System Issues</item>
+        <item>Tires &amp; Wheels Issues</item>
+        <item>Suspension &amp; Steering Issues</item>
+        <item>Lighting &amp; Signal Issues</item>
+        <item>HVAC (Heating, Ventilation &amp; AC) Issues</item>
+        <item>Exhaust &amp; Emission Issues</item>
+        <item>Body &amp; Accessory Issues</item>
+        <item>Safety &amp; Miscellaneous Issues</item>
+        <item>Others</item>
+    </string-array>
+</resources>
