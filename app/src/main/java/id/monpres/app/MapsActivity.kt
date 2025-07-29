@@ -1,0 +1,230 @@
+package id.monpres.app
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.mapbox.geojson.Point
+import com.mapbox.maps.MapLoaded
+import com.mapbox.maps.MapLoadedCallback
+import com.mapbox.maps.MapView
+import com.mapbox.maps.dsl.cameraOptions
+import com.mapbox.maps.plugin.PuckBearing
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
+import com.mapbox.maps.plugin.gestures.addOnMapClickListener
+import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
+import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.maps.plugin.viewport.viewport
+import id.monpres.app.databinding.ActivityMapsBinding
+import id.monpres.app.model.MapsActivityExtraData
+
+class MapsActivity : AppCompatActivity(), MapLoadedCallback {
+    companion object {
+        private val TAG = MapsActivity::class.java.simpleName
+        private val REQUIRED_PERMISSIONS = arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
+
+    /* Configs */
+    private var pickMode = false
+
+    /* Resources */
+    private val redMarkerBitmap: Bitmap by lazy {
+        return@lazy BitmapFactory
+            .decodeResource(resources, R.drawable.red_marker)
+    }
+
+    /* Variables */
+    private lateinit var pointAnnotationManager: PointAnnotationManager
+    private var selectedLocationPoint: Point? = null
+    private var userLocationPoint: Point? = null
+    private var annotation: PointAnnotation? = null
+
+    /* Views */
+    private lateinit var binding: ActivityMapsBinding
+
+    // Permission request launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.entries.all { it.value }
+        if (granted) {
+            Log.d(TAG, "Location permission granted")
+            enableLocationFeatures()
+        } else {
+            Log.w(TAG, "Location permission denied")
+            // Handle permission denial (optional: show message, disable features)
+        }
+    }
+
+    private lateinit var mapView: MapView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d(TAG, "MapsActivity initialized")
+
+        enableEdgeToEdge()
+        binding = ActivityMapsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        /* Maps */
+        mapView = binding.mapsView
+
+        val annotationApi = mapView.annotations
+        pointAnnotationManager = annotationApi.createPointAnnotationManager()
+
+        // Initial map setup
+        mapView.mapboxMap.apply {
+            setCamera(
+                cameraOptions {
+                    center(
+                        Point.fromLngLat(
+                            -98.0, 39.5
+                        )
+                    )
+                    zoom(12.0)
+                }
+            )
+            subscribeMapLoaded(this@MapsActivity)
+        }
+
+        mapView.mapboxMap.loadStyle("mapbox://styles/mapbox/streets-v12")
+
+        // Check permissions and setup location
+        if (hasLocationPermission()) {
+            Log.d(TAG, "Location permissions already granted")
+            enableLocationFeatures()
+        } else {
+            Log.d(TAG, "Requesting location permissions")
+            requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
+        }
+
+        /* End maps */
+
+        /* Configs */
+
+        // Check if we’re in “pick mode”
+        pickMode = intent.getBooleanExtra(MapsActivityExtraData.EXTRA_PICK_MODE, false)
+//        pickMode = false
+        if (pickMode) {
+            enableTapToSelect()
+        }
+
+        /* Setup UI */
+
+        // Hide submit location FAB if not pick mode
+        if (!pickMode) binding.fabMapsSubmitLocation.visibility = View.GONE
+
+        /* Listeners */
+        binding.fabMapsSubmitLocation.setOnClickListener { _ ->
+
+            // Return if not in pick mode
+            if (!pickMode) return@setOnClickListener
+
+            submitLocation()
+        }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return REQUIRED_PERMISSIONS.all { permission ->
+            ContextCompat.checkSelfPermission(
+                this,
+                permission
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun enableLocationFeatures() {
+        with(mapView) {
+            // Configure location display
+            location.apply {
+                locationPuck = createDefault2DPuck(withBearing = true)
+                enabled = true
+                puckBearing = PuckBearing.COURSE
+                puckBearingEnabled = true
+            }
+
+            // Set camera to follow user
+            viewport.transitionTo(
+                targetState = viewport.makeFollowPuckViewportState(),
+                transition = viewport.makeImmediateViewportTransition()
+            )
+
+            // Update user location point on position changed
+            location.addOnIndicatorPositionChangedListener { point ->
+                userLocationPoint = point
+            }
+        }
+    }
+
+    override fun run(mapLoaded: MapLoaded) {
+//        TODO("Not yet implemented")
+    }
+
+    private fun enableTapToSelect() {
+        mapView.mapboxMap.addOnMapClickListener { point ->
+
+            this.selectedLocationPoint = point // This replaces the old point if any
+
+            // Delete the previous annotation (if any)
+            annotation?.let { pointAnnotationManager.delete(it) }
+
+            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                .withPoint(Point.fromLngLat(point.longitude(), point.latitude()))
+                .withIconImage(redMarkerBitmap)
+                // Make the annotation draggable.
+                .withDraggable(false)
+
+            // Add the draggable pointAnnotation to the map.
+            annotation = pointAnnotationManager.create(pointAnnotationOptions)
+
+            true
+        }
+    }
+
+    private fun submitLocation() {
+        // Return if user or selected location is unavailable
+        if (userLocationPoint == null || selectedLocationPoint == null) {
+            Toast.makeText(
+                this,
+                getString(R.string.please_select_a_location_and_enable_gps), Toast.LENGTH_SHORT
+            ).show()
+            Log.w(TAG, "User's location or selected location is null")
+            return
+        }
+
+        // Package up the user’s selection
+        val data = Intent().apply {
+            putExtra(MapsActivityExtraData.SELECTED_LOCATION, selectedLocationPoint?.toJson())
+            putExtra(MapsActivityExtraData.USER_LOCATION, userLocationPoint?.toJson())
+        }
+        setResult(RESULT_OK, data)
+        Log.d(TAG, "User's location: ${userLocationPoint.toString()}")
+        Log.d(TAG, "Selected location: ${selectedLocationPoint.toString()}")
+        finish()  // return to previous activity
+    }
+
+}

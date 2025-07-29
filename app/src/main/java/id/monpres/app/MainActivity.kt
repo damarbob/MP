@@ -18,9 +18,11 @@ import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.gson.Gson
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
+import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +40,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     /* Use cases */
     private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
     private val resendVerificationEmailUseCase = ResendVerificationEmailUseCase()
+    private val getOrderServicesUseCase = GetOrderServicesUseCase()
 
     /* Views */
     private lateinit var binding: ActivityMainBinding
@@ -82,6 +85,19 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             }
             drawerLayout.close()
             return@setNavigationItemSelectedListener true
+        }
+
+        /* Testing. TODO: Remove on production */
+        getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
+            result.onSuccess { orders ->
+                for (order in orders) {
+                    val orderJson = Gson().toJson(order.vehicle)
+                    Log.d(TAG, "Order: $orderJson")
+                }
+            }
+                .onFailure { t ->
+                    Log.e(TAG, t.localizedMessage ?: t.message ?: "Unknown error")
+                }
         }
     }
 

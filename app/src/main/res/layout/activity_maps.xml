@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MapsActivity">
+
+    <com.mapbox.maps.MapView
+        android:id="@+id/mapsView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:mapbox_locationComponentEnabled="true"
+        app:mapbox_locationComponentPuckBearing="heading"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/fabMapsSubmitLocation"
+        style="?attr/materialButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:translationX="-8dp"
+        android:translationY="-40dp"
+        android:translationZ="8dp"
+        android:text="@string/submit"
+        app:icon="@drawable/check_24px"
+        app:layout_anchor="@id/mapsView"
+        app:layout_anchorGravity="bottom|center" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

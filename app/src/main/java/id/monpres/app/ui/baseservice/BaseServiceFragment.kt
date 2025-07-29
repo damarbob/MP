@@ -1,0 +1,237 @@
+package id.monpres.app.ui
+
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputLayout
+import com.google.android.material.transition.MaterialSharedAxis
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.mapbox.geojson.Point
+import id.monpres.app.MainApplication
+import id.monpres.app.MapsActivity
+import id.monpres.app.R
+import id.monpres.app.model.MapsActivityExtraData
+import id.monpres.app.model.OrderService
+import id.monpres.app.model.Service
+import id.monpres.app.model.Vehicle
+import id.monpres.app.ui.baseservice.BaseServiceViewModel
+import id.monpres.app.ui.quickservice.QuickServiceViewModel
+
+/**
+ * An abstract base class for fragments that handle service ordering.
+ * It provides common functionality for selecting a vehicle, issue, location,
+ * and placing an order. Subclasses must implement methods to provide
+ * specific UI elements and the ViewModel.
+ *
+ * This fragment handles:
+ * - Setting up MaterialSharedAxis transitions for enter, return, exit, and reenter.
+ * - Managing a list of user's vehicles and the chosen vehicle.
+ * - Handling the selection of a location via an external MapsActivity using `pickLocationLauncher`.
+ * - Observing changes to the selected location and updating the UI accordingly.
+ * - Observing the result of placing an order and displaying appropriate toasts.
+ * - Providing common validation methods for location, location consent, vehicle, and issue.
+ * - Providing a common method to open the map for location selection.
+ * - Providing a common method to construct and place an order.
+ *
+ * Subclasses are expected to:
+ * - Provide implementations for abstract methods to return specific UI components (e.g., AutoCompleteTextViews, Buttons, CheckBox, TextInputLayouts).
+ * - Provide an implementation for `getBaseOrderService()` to return an instance of `OrderService`.
+ * - Provide an implementation for `getViewModel()` to return an instance of `BaseServiceViewModel` (or a subclass).
+ * - Initialize the `binding` property with the appropriate ViewBinding instance.
+ */
+abstract class BaseServiceFragment : Fragment() {
+    protected val TAG = this::class.java.simpleName
+    protected lateinit var binding: Any
+    protected var service: Service? = null
+    protected var myVehicles = Vehicle.getSampleList()
+    protected var chosenMyVehicle: Vehicle? = null
+    protected var selectedLocationPoint: Point? = null
+
+    private val pickLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                val selectedLocation =
+                    data.getStringExtra(MapsActivityExtraData.SELECTED_LOCATION) ?: ""
+                val userLocation = data.getStringExtra(MapsActivityExtraData.USER_LOCATION) ?: ""
+                Log.d(TAG, "User's location $userLocation")
+                Log.d(TAG, "Selected location $selectedLocation")
+                getViewModel().setSelectedLocationPoint(Point.fromJson(selectedLocation))
+                getViewModel().setUserLocationPoint(Point.fromJson(userLocation))
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+    }
+
+    abstract fun getVehicleAutoCompleteTextView(): AutoCompleteTextView
+    abstract fun getIssueAutoCompleteTextView(): AutoCompleteTextView
+    abstract fun getAddressText(): String
+    abstract fun getIssueDescriptionText(): String
+    abstract fun getLocationSelectButton(): Button
+    abstract fun getLocationReSelectButton(): Button
+    abstract fun getLocationConsentCheckBox(): CheckBox
+    abstract fun getVehicleInputLayout(): TextInputLayout
+    abstract fun getIssueInputLayout(): TextInputLayout
+    abstract fun getPlaceOrderButton(): Button
+    abstract fun getBaseOrderService(): OrderService
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        service = MainApplication.services?.get(0)
+
+        // Setup vehicle dropdown
+        val vehicleInputView = getVehicleAutoCompleteTextView()
+        val vehicles = myVehicles.map { it.name }
+        val adapter = ArrayAdapter(requireContext(), R.layout.item_list, vehicles)
+        vehicleInputView.setAdapter(adapter)
+        vehicleInputView.setOnItemClickListener { _, _, position, _ ->
+            chosenMyVehicle = myVehicles[position]
+            Log.d(TAG, "Chosen vehicle: ${vehicleInputView.text}, object=$chosenMyVehicle")
+        }
+
+        // Setup buttons visibility
+        getLocationSelectButton().visibility = View.VISIBLE
+        getLocationReSelectButton().visibility = View.GONE
+
+        // Location observer
+        getViewModel().selectedLocationPoint.observe(viewLifecycleOwner) { point ->
+            selectedLocationPoint = point
+            if (point == null) return@observe
+            getLocationSelectButton().visibility = View.GONE
+            getLocationReSelectButton().visibility = View.VISIBLE
+        }
+
+        // Order result observer
+        getViewModel().placeOrderResult.observe(viewLifecycleOwner) { result ->
+            result?.onSuccess {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.order_placed_successfully),
+                    Toast.LENGTH_SHORT
+                ).show()
+                findNavController().popBackStack()
+            }?.onFailure {
+                val error = it.localizedMessage ?: it.message ?: "Unknown error"
+                Log.e(TAG, error)
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.failed_to_place_order),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        // Location button listeners
+        getLocationSelectButton().setOnClickListener { openMap() }
+        getLocationReSelectButton().setOnClickListener { openMap() }
+
+        // Place order listener
+        getPlaceOrderButton().setOnClickListener { placeOrder() }
+    }
+
+    protected fun validateLocation(): Boolean {
+        return if (selectedLocationPoint == null) {
+            getLocationSelectButton().error = ""
+            getLocationReSelectButton().error = ""
+            false
+        } else {
+            getLocationSelectButton().error = null
+            getLocationReSelectButton().error = null
+            true
+        }
+    }
+
+    protected fun validateLocationConsent(): Boolean {
+        val consented = getLocationConsentCheckBox().isChecked
+        return if (!consented) {
+            getLocationConsentCheckBox().error = getString(R.string.this_field_is_required)
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(getString(R.string.location))
+                .setMessage(getString(R.string.you_must_agree_to_share_your_location_before_placing_an_order))
+                .setNeutralButton(getString(R.string.close), null)
+                .show()
+            false
+        } else {
+            getLocationConsentCheckBox().error = null
+            true
+        }
+    }
+
+    protected fun validateVehicle(): Boolean {
+        val text = getVehicleAutoCompleteTextView().text.toString()
+        return if (text.isBlank()) {
+            getVehicleInputLayout().error = getString(R.string.this_field_is_required)
+            false
+        } else {
+            getVehicleInputLayout().isErrorEnabled = false
+            true
+        }
+    }
+
+    protected fun validateIssue(): Boolean {
+        val text = getIssueAutoCompleteTextView().text.toString()
+        return if (text.isBlank()) {
+            getIssueInputLayout().error = getString(R.string.this_field_is_required)
+            false
+        } else {
+            getIssueInputLayout().isErrorEnabled = false
+            true
+        }
+    }
+
+    protected fun openMap() {
+        val intent = Intent(requireContext(), MapsActivity::class.java).apply {
+            putExtra(MapsActivityExtraData.EXTRA_PICK_MODE, true)
+        }
+        pickLocationLauncher.launch(intent)
+    }
+
+    protected fun placeOrder() {
+        val orderService = getBaseOrderService().apply {
+            /* System */
+            userId = Firebase.auth.uid
+            serviceId = service?.id
+
+            /* Service snapshot */
+            type = MainApplication.serviceTypes?.find { it.id == service?.typeId }?.name
+            name = service?.name
+            description = service?.description
+
+            /* Delivery data */
+            userLocationLat = getViewModel().userLocationPoint.value?.latitude()
+            userLocationLng = getViewModel().userLocationPoint.value?.longitude()
+            selectedLocationLat = selectedLocationPoint?.latitude()
+            selectedLocationLng = selectedLocationPoint?.longitude()
+
+            /* User inputs */
+            address = getAddressText()
+            vehicle = chosenMyVehicle
+            issue = getIssueAutoCompleteTextView().text.toString()
+            issueDescription = getIssueDescriptionText()
+        }
+        getViewModel().placeOrder(orderService)
+    }
+
+    protected abstract fun getViewModel(): BaseServiceViewModel
+}
