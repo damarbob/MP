@@ -1,41 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:background="?colorSurfaceContainer"
+    android:transitionGroup="true"
     tools:context=".ui.vehiclelist.VehicleListFragment">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/fragmentListVehicleAppBarLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/fragmentListVehicleToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:title="Vehicles"
-            app:titleCentered="true" />
-    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/fragmentListVehicleAppBarLayout"
-        android:background="@drawable/rounded_rectangle_background_surface"
-        android:clipToOutline="true"
-        tools:targetApi="31">
+        android:layout_height="match_parent">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/fragmentListVehicleRecyclerViewListVehicle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/fragmentListVehicleAppBarLayout"
-            android:clipToPadding="true"
-            android:padding="16dp" />
+            android:orientation="vertical">
 
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/fragmentListVehicleProgressIndicator"
+                style="@style/Widget.Material3.LinearProgressIndicator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentListVehicleRecyclerViewListVehicle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="16dp"
+                android:background="@drawable/rounded_rectangle_background_clip"
+                android:clipToOutline="true"
+                android:nestedScrollingEnabled="false"
+                tools:targetApi="31" />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="64dp" />
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-</RelativeLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fragmentListVehicleFloatingActionButtonAddVehicle"
+        style="?floatingActionButtonMediumStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/add_vehicle"
+        android:src="@drawable/add_24px"
+        app:layout_behavior="com.google.android.material.floatingactionbutton.FloatingActionButton$Behavior" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="1dp"
-    android:background="@drawable/rounded_rectangle_background"
+    android:background="@drawable/list_background"
     android:clickable="true"
     android:focusable="true"
     android:minHeight="72dp"
@@ -15,8 +15,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:src="@drawable/menu_24px"
-        android:tint="?colorOnPrimaryContainer" />
+        android:background="?colorSecondaryContainer"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:src="@drawable/directions_car_24px"
+        app:contentPadding="8dp"
+        android:tint="?colorOnSecondaryContainer"
+        app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
 
     <LinearLayout
         android:layout_width="match_parent"

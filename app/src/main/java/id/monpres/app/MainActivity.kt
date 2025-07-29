@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -15,9 +16,14 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
@@ -26,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActivityRestartable {
 
     companion object {
@@ -40,8 +47,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private val resendVerificationEmailUseCase = ResendVerificationEmailUseCase()
 
     /* Views */
-    private lateinit var binding: ActivityMainBinding
+    lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
+    private lateinit var appBarConfiguration: AppBarConfiguration
     val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,13 +59,24 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
+            binding.navHostFragmentActivityMain.setPadding(
+                binding.navHostFragmentActivityMain.paddingLeft,
+                0,
+                binding.navHostFragmentActivityMain.paddingRight,
+                systemBars.bottom
+            )
             insets
         }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(binding.navHostFragmentActivityMain.id) as NavHostFragment
         navController = navHostFragment.navController
+        appBarConfiguration = AppBarConfiguration(navController.graph, drawerLayout)
+        setSupportActionBar(binding.activityMainToolbar)
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        binding.activityMainNavigationView.setupWithNavController(navController)
 
         runAuthentication()
 
@@ -83,6 +102,11 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             drawerLayout.close()
             return@setNavigationItemSelectedListener true
         }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp(appBarConfiguration)
+                || super.onSupportNavigateUp()
     }
 
     private fun runAuthentication() {

@@ -5,33 +5,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?colorSurfaceContainer"
-    android:fitsSystemWindows="true"
     android:transitionGroup="true"
     tools:context=".ui.home.HomeFragment">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/fragmentHomeAppBarLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/fragmentHomeToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:title="Montir Presisi"
-            app:titleCentered="true" />
-    </com.google.android.material.appbar.AppBarLayout>
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/fragmentHomeProgressIndicator"
+                style="@style/Widget.Material3.LinearProgressIndicator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                android:paddingHorizontal="4dp"
+                app:hideAnimationBehavior="escape"
+                app:showAnimationBehavior="inward"
+                app:wavelengthIndeterminate="20dp"
+                app:wavelength="40dp"
+                app:waveAmplitude="2dp"
+                app:trackThickness="6dp" />
 
             <!-- Quick Service -->
             <androidx.cardview.widget.CardView
@@ -177,30 +175,91 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:text="@string/vehicles"
-                android:textAppearance="@style/TextAppearance.Material3.LabelMedium.Emphasized" />
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vehicles"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentHomeButtonSeeAllVehicle"
+                    style="@style/Widget.Material3Expressive.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/see_all"
+                    android:text="@string/see_all"
+                    app:icon="@drawable/outline_arrow_forward_ios_24"
+                    app:iconGravity="textEnd" />
+            </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/fragmentHomeRecyclerViewVehicle"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:padding="16dp" />
+                android:layout_marginHorizontal="16dp"
+                android:background="@drawable/rounded_rectangle_background_clip"
+                android:clipToOutline="true"
+                android:nestedScrollingEnabled="false"
+                tools:targetApi="31" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/fragmentHomeButtonSeeAllVehicle"
-                style="@style/Widget.Material3Expressive.Button.TextButton"
+                android:id="@+id/fragmentHomeButtonAddVehicle"
+                style="@style/Widget.Material3Expressive.Button.ElevatedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="16dp"
-                android:text="@string/see_all"
-                app:icon="@drawable/outline_arrow_forward_ios_24" />
+                android:layout_gravity="center"
+                android:layout_margin="16dp"
+                android:contentDescription="@string/insert_vehicle"
+                android:text="@string/insert_vehicle"
+                app:icon="@drawable/add_24px" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/history"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentHomeButtonSeeAllHistory"
+                    style="@style/Widget.Material3Expressive.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/see_all"
+                    app:icon="@drawable/outline_arrow_forward_ios_24"
+                    app:iconGravity="textEnd" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentHomeRecyclerViewHistory"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="16dp"
+                android:background="@drawable/rounded_rectangle_background_clip"
+                android:clipToOutline="true"
+                android:nestedScrollingEnabled="false"
+                tools:targetApi="31" />
 
         </LinearLayout>
 

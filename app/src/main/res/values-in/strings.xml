@@ -73,10 +73,17 @@
     <string name="delete">Hapus</string>
     <string name="x_not_found">%1$s tidak ditemukan</string>
     <string name="unknown_error">Galat tidak diketahui</string>
-    <string name="x_items_selected">%1$d item dipilih</string>
-    <string name="deleted_x_items">Dihapus %1$d item</string>
+    <plurals name="x_items_selected">
+        <item quantity="other">%d item dipilih</item>
+    </plurals>
+    <plurals name="deleted_x_items">
+        <item quantity="other">%d item dihapus</item>
+    </plurals>
     <string name="select_items">Pilih item</string>
     <string name="delete_vehicles">Hapus kendaraan</string>
     <string name="delete_selected_vehicles_confirmation">Apakah Anda yakin menghapus data kendaraan?</string>
     <string name="history">Riwayat</string>
+    <string name="vehicle_updated">Vehicle updated</string>
+    <string name="x_is_invalid">%s is invalid</string>
+    <string name="x_is_required">%s is required</string>
 </resources>

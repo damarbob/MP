@@ -1,4 +1,4 @@
-package id.monpres.app.ui.editvehicle
+package id.monpres.app.ui.insertvehicle
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,12 +10,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
 import id.monpres.app.R
-import id.monpres.app.databinding.FragmentEditVehicleBinding
+import id.monpres.app.databinding.FragmentInsertVehicleBinding
 import id.monpres.app.enums.VehiclePowerSource
 import id.monpres.app.enums.VehicleTransmission
 import id.monpres.app.enums.VehicleWheelDrive
@@ -25,24 +24,19 @@ import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 @AndroidEntryPoint
-class EditVehicleFragment : BaseFragment() {
+class InsertVehicleFragment : BaseFragment() {
 
     companion object {
-        fun newInstance() = EditVehicleFragment()
-        val TAG = EditVehicleFragment::class.java.simpleName
+        fun newInstance() = InsertVehicleFragment()
     }
 
     /* View models */
-    private val viewModel: EditVehicleViewModel by viewModels()
-
-    /* Args */
-    private val args: EditVehicleFragmentArgs by navArgs()
+    private val viewModel: InsertVehicleViewModel by viewModels()
 
     /* Bindings */
-    private lateinit var binding: FragmentEditVehicleBinding
+    private lateinit var binding: FragmentInsertVehicleBinding
 
     /* Variables */
-    private var vehicle: Vehicle? = null
     private lateinit var vehicleTypes: List<VehicleType>
     private lateinit var vehicleTypeAdapter: ArrayAdapter<String>
     private lateinit var vehicleTransmissionAdapter: ArrayAdapter<String>
@@ -63,25 +57,18 @@ class EditVehicleFragment : BaseFragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentEditVehicleBinding.inflate(inflater, container, false)
-        // Get vehicle from arguments
-        vehicle = args.vehicle
 
-        // Set insets with keyboard
-        val insetsWithKeyboardCallback =
-            InsetsWithKeyboardCallback(requireActivity().window, 0, null)
+        binding = FragmentInsertVehicleBinding.inflate(inflater, container, false)
+
+        // Set the window insets listener (so the keyboard can be detected and views not hide by keyboard)
+        val insetsWithKeyboardCallback = InsetsWithKeyboardCallback(requireActivity().window, 0, null)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root, insetsWithKeyboardCallback)
-//        ViewCompat.setWindowInsetsAnimationCallback(binding.root, insetsWithKeyboardCallback)
-//
-//        val insetsWithKeyboardAnimationCallback = InsetsWithKeyboardAnimationCallback(binding.fragmentEditVehicleButtonSave)
-//        ViewCompat.setWindowInsetsAnimationCallback(binding.fragmentEditVehicleButtonSave, insetsWithKeyboardAnimationCallback)
 
         /* Observe */
         // Observe vehicle types
         viewModel.vehicleTypes.observe(viewLifecycleOwner) {
             vehicleTypes = it
             setDropdownsOptions()
-            setFormsValues()
         }
 
         setupListeners()
@@ -90,13 +77,14 @@ class EditVehicleFragment : BaseFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as MainActivity).binding.activityMainAppBarLayout.background = binding.root.background
 //        val navController = findNavController()
 //        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
 //        val appBarConfiguration =
 //            AppBarConfiguration(navController.graph, drawerLayout = drawerLayout)
 //
-//        binding.fragmentEditVehicleToolbar.setupWithNavController(
+//        binding.fragmentInsertVehicleToolbar.setupWithNavController(
 //            navController,
 //            appBarConfiguration
 //        )
@@ -106,74 +94,44 @@ class EditVehicleFragment : BaseFragment() {
         // Setup form validation on text change
         setupFormListener()
 
-        binding.fragmentEditVehicleButtonSave.setOnClickListener {
-            // Check if form is valid
+        binding.fragmentInsertVehicleButtonSave.setOnClickListener {
             if (isFormValid()) {
-                val editedVehicle = Vehicle(id = vehicle?.id ?: "")
+                val newVehicle = Vehicle()
                 with(binding) {
-                    editedVehicle.apply {
+                    newVehicle.apply {
                         name =
-                            fragmentEditVehicleTextInputLayoutVehicleName.editText?.text.toString()
+                            fragmentInsertVehicleTextInputLayoutVehicleName.editText?.text.toString()
                         registrationNumber =
-                            fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.toString()
+                            fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.toString()
                         licensePlateNumber =
-                            fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.text.toString()
+                            fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.text.toString()
                         year =
-                            fragmentEditVehicleTextInputLayoutVehicleYear.editText?.text.toString()
+                            fragmentInsertVehicleTextInputLayoutVehicleYear.editText?.text.toString()
                         engineCapacity =
-                            fragmentEditVehicleTextInputLayoutVehicleEngineCapacity.editText?.text.toString()
+                            fragmentInsertVehicleTextInputLayoutVehicleEngineCapacity.editText?.text.toString()
                         powerOutput =
-                            fragmentEditVehicleTextInputLayoutVehiclePowerOutput.editText?.text.toString()
+                            fragmentInsertVehicleTextInputLayoutVehiclePowerOutput.editText?.text.toString()
                         seat =
-                            fragmentEditVehicleTextInputLayoutVehicleSeat.editText?.text.toString()
+                            fragmentInsertVehicleTextInputLayoutVehicleSeat.editText?.text.toString()
                         typeId = vehicleTypes.find {
                             it.name.equals(
-                                fragmentEditVehicleDropdownVehicleType.text.toString(),
+                                fragmentInsertVehicleDropdownVehicleType.text.toString(),
                                 true
                             )
                         }?.id
                         transmission =
-                            fragmentEditVehicleDropdownVehicleTransmission.text.toString()
-                        wheelDrive = fragmentEditVehicleDropdownVehicleWheelDrive.text.toString()
-                        powerSource = fragmentEditVehicleDropdownVehiclePowerSource.text.toString()
+                            fragmentInsertVehicleDropdownVehicleTransmission.text.toString()
+                        wheelDrive = fragmentInsertVehicleDropdownVehicleWheelDrive.text.toString()
+                        powerSource = fragmentInsertVehicleDropdownVehiclePowerSource.text.toString()
                     }
                 }
 
-                // Update vehicle
-                observeUiStateOneShot(viewModel.updateVehicle(editedVehicle)) {
-                    Toast.makeText(requireContext(),
-                        getString(R.string.vehicle_updated), Toast.LENGTH_SHORT).show()
+                observeUiStateOneShot(viewModel.insertVehicle(newVehicle)) {
+                    Toast.makeText(requireContext(), "Vehicle added", Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
             }
         }
-    }
-
-    private fun setFormsValues() {
-        binding.fragmentEditVehicleTextInputLayoutVehicleName.editText?.setText(vehicle?.name)
-        binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.setText(
-            vehicle?.registrationNumber
-        )
-        binding.fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.setText(
-            vehicle?.licensePlateNumber
-        )
-        binding.fragmentEditVehicleTextInputLayoutVehicleYear.editText?.setText(vehicle?.year)
-        binding.fragmentEditVehicleTextInputLayoutVehicleEngineCapacity.editText?.setText(vehicle?.engineCapacity)
-        binding.fragmentEditVehicleTextInputLayoutVehiclePowerOutput.editText?.setText(vehicle?.powerOutput)
-        binding.fragmentEditVehicleTextInputLayoutVehicleSeat.editText?.setText(vehicle?.seat)
-
-        // Set default value for vehicle type
-        val selectedVehicleType = vehicleTypes.find { it.id == vehicle?.typeId }
-        binding.fragmentEditVehicleDropdownVehicleType.setText(selectedVehicleType?.name, false)
-
-        // Set default value for transmission
-        binding.fragmentEditVehicleDropdownVehicleTransmission.setText(vehicle?.transmission, false)
-
-        // Set default value for wheel drive
-        binding.fragmentEditVehicleDropdownVehicleWheelDrive.setText(vehicle?.wheelDrive, false)
-
-        // Set default value for power source
-        binding.fragmentEditVehicleDropdownVehiclePowerSource.setText(vehicle?.powerSource, false)
     }
 
     private fun setDropdownsOptions() {
@@ -182,7 +140,7 @@ class EditVehicleFragment : BaseFragment() {
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
             vehicleTypes.map { it.name })
-        binding.fragmentEditVehicleDropdownVehicleType.setAdapter(vehicleTypeAdapter)
+        binding.fragmentInsertVehicleDropdownVehicleType.setAdapter(vehicleTypeAdapter)
 
         // Transmission dropdown
         vehicleTransmissionAdapter = ArrayAdapter(
@@ -191,7 +149,7 @@ class EditVehicleFragment : BaseFragment() {
             VehicleTransmission.toListString()
         )
         vehicleTransmissionAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
-        binding.fragmentEditVehicleDropdownVehicleTransmission.setAdapter(vehicleTransmissionAdapter)
+        binding.fragmentInsertVehicleDropdownVehicleTransmission.setAdapter(vehicleTransmissionAdapter)
 
         // Wheel drive dropdown
         vehicleWheelDriveAdapter = ArrayAdapter(
@@ -200,7 +158,7 @@ class EditVehicleFragment : BaseFragment() {
             VehicleWheelDrive.toListString()
         )
         vehicleWheelDriveAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
-        binding.fragmentEditVehicleDropdownVehicleWheelDrive.setAdapter(vehicleWheelDriveAdapter)
+        binding.fragmentInsertVehicleDropdownVehicleWheelDrive.setAdapter(vehicleWheelDriveAdapter)
 
         // Power source dropdown
         vehiclePowerSourceAdapter = ArrayAdapter(
@@ -209,18 +167,17 @@ class EditVehicleFragment : BaseFragment() {
             VehiclePowerSource.toListString()
         )
         vehiclePowerSourceAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
-        binding.fragmentEditVehicleDropdownVehiclePowerSource.setAdapter(vehiclePowerSourceAdapter)
+        binding.fragmentInsertVehicleDropdownVehiclePowerSource.setAdapter(vehiclePowerSourceAdapter)
     }
 
     private fun setupFormListener() {
-        // Setup form validation on text change
-        binding.fragmentEditVehicleTextInputLayoutVehicleName.editText?.addTextChangedListener { validateName() }
-        binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.addTextChangedListener { validateRegistrationNumber() }
-        binding.fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.addTextChangedListener { validateLicensePlateNumber() }
-        binding.fragmentEditVehicleDropdownVehicleType.addTextChangedListener { validateVehicleType() }
-        binding.fragmentEditVehicleDropdownVehiclePowerSource.addTextChangedListener { validateVehiclePowerSource() }
-        binding.fragmentEditVehicleDropdownVehicleTransmission.addTextChangedListener { validateVehicleTransmission() }
-        binding.fragmentEditVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
+        binding.fragmentInsertVehicleTextInputLayoutVehicleName.editText?.addTextChangedListener { validateName() }
+        binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.editText?.addTextChangedListener { validateRegistrationNumber() }
+        binding.fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.addTextChangedListener { validateLicensePlateNumber() }
+        binding.fragmentInsertVehicleDropdownVehicleType.addTextChangedListener { validateVehicleType() }
+        binding.fragmentInsertVehicleDropdownVehiclePowerSource.addTextChangedListener { validateVehiclePowerSource() }
+        binding.fragmentInsertVehicleDropdownVehicleTransmission.addTextChangedListener { validateVehicleTransmission() }
+        binding.fragmentInsertVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
     }
 
     private fun isFormValid(): Boolean {
@@ -236,11 +193,11 @@ class EditVehicleFragment : BaseFragment() {
 
     private fun validateName(): Boolean {
         // Validate name (required)
-        return if (binding.fragmentEditVehicleTextInputLayoutVehicleName.editText?.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleName.error = getString(R.string.x_is_required, getString(R.string.name))
+        return if (binding.fragmentInsertVehicleTextInputLayoutVehicleName.editText?.text.isNullOrBlank()) {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleName.error = getString(R.string.x_is_required, getString(R.string.name))
             false
         } else {
-            binding.fragmentEditVehicleTextInputLayoutVehicleName.apply {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleName.apply {
                 error = null
                 isErrorEnabled = false
             }
@@ -250,12 +207,12 @@ class EditVehicleFragment : BaseFragment() {
 
     private fun validateRegistrationNumber(): Boolean {
         // Validate registration number (required)
-        return if (binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.error =
+        return if (binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.isNullOrBlank()) {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.error =
                 getString(R.string.x_is_required,getString(R.string.registration_number))
             false
         } else {
-            binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.apply {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.apply {
                 error = null
                 isErrorEnabled = false
             }
@@ -265,12 +222,12 @@ class EditVehicleFragment : BaseFragment() {
 
     private fun validateLicensePlateNumber(): Boolean {
         // Validate license plate number (required)
-        return if (binding.fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.error =
+        return if (binding.fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.text.isNullOrBlank()) {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber.error =
                 getString(R.string.x_is_required, getString(R.string.license_plate_number))
             false
         } else {
-            binding.fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.apply {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber.apply {
                 error = null
                 isErrorEnabled = false
             }
@@ -280,16 +237,16 @@ class EditVehicleFragment : BaseFragment() {
 
     private fun validateVehicleType(): Boolean {
         // Validate vehicle type (required and valid vehicle type)
-        return if (binding.fragmentEditVehicleDropdownVehicleType.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_required, getString(R.string.type))
+        return if (binding.fragmentInsertVehicleDropdownVehicleType.text.isNullOrBlank()) {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_required, getString(R.string.type))
             false
         } else if (!vehicleTypes.any {
-                it.name.equals(binding.fragmentEditVehicleDropdownVehicleType.text.toString(), true)
+                it.name.equals(binding.fragmentInsertVehicleDropdownVehicleType.text.toString(), true)
             }) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_invalid, getString(R.string.type))
+            binding.fragmentInsertVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_invalid, getString(R.string.type))
             false
         } else {
-            binding.fragmentEditVehicleTextInputLayoutVehicleType.apply {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleType.apply {
                 error = null
                 isErrorEnabled = false
             }
@@ -299,21 +256,21 @@ class EditVehicleFragment : BaseFragment() {
 
     private fun validateVehiclePowerSource(): Boolean {
         // Validate vehicle power source (required and valid power source)
-        return if (binding.fragmentEditVehicleDropdownVehiclePowerSource.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehiclePowerSource.error =
+        return if (binding.fragmentInsertVehicleDropdownVehiclePowerSource.text.isNullOrBlank()) {
+            binding.fragmentInsertVehicleTextInputLayoutVehiclePowerSource.error =
                 getString(R.string.x_is_required, getString(R.string.power_source))
             false
         } else if (!VehiclePowerSource.toListString().any {
                 it.equals(
-                    binding.fragmentEditVehicleDropdownVehiclePowerSource.text.toString(),
+                    binding.fragmentInsertVehicleDropdownVehiclePowerSource.text.toString(),
                     true
                 )
             }) {
-            binding.fragmentEditVehicleTextInputLayoutVehiclePowerSource.error =
+            binding.fragmentInsertVehicleTextInputLayoutVehiclePowerSource.error =
                 getString(R.string.x_is_invalid, getString(R.string.power_source))
             false
         } else {
-            binding.fragmentEditVehicleTextInputLayoutVehiclePowerSource.apply {
+            binding.fragmentInsertVehicleTextInputLayoutVehiclePowerSource.apply {
                 error = null
                 isErrorEnabled = false
             }
@@ -323,21 +280,21 @@ class EditVehicleFragment : BaseFragment() {
 
     private fun validateVehicleTransmission(): Boolean {
         // Validate vehicle transmission (required and valid transmission)
-        return if (binding.fragmentEditVehicleDropdownVehicleTransmission.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleTransmission.error =
+        return if (binding.fragmentInsertVehicleDropdownVehicleTransmission.text.isNullOrBlank()) {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleTransmission.error =
                 getString(R.string.x_is_required, getString(R.string.transmission))
             false
         } else if (!VehicleTransmission.toListString().any {
                 it.equals(
-                    binding.fragmentEditVehicleDropdownVehicleTransmission.text.toString(),
+                    binding.fragmentInsertVehicleDropdownVehicleTransmission.text.toString(),
                     true
                 )
             }) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleTransmission.error =
+            binding.fragmentInsertVehicleTextInputLayoutVehicleTransmission.error =
                 getString(R.string.x_is_invalid, getString(R.string.transmission))
             false
         } else {
-            binding.fragmentEditVehicleTextInputLayoutVehicleTransmission.apply {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleTransmission.apply {
                 error = null
                 isErrorEnabled = false
             }
@@ -347,21 +304,21 @@ class EditVehicleFragment : BaseFragment() {
 
     private fun validateVehicleWheelDrive(): Boolean {
         // Validate vehicle wheel drive (required and valid wheel drive)
-        return if (binding.fragmentEditVehicleDropdownVehicleWheelDrive.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleWheelDrive.error =
+        return if (binding.fragmentInsertVehicleDropdownVehicleWheelDrive.text.isNullOrBlank()) {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleWheelDrive.error =
                 getString(R.string.x_is_required, getString(R.string.wheel_drive))
             false
         } else if (!VehicleWheelDrive.toListString().any {
                 it.equals(
-                    binding.fragmentEditVehicleDropdownVehicleWheelDrive.text.toString(),
+                    binding.fragmentInsertVehicleDropdownVehicleWheelDrive.text.toString(),
                     true
                 )
             }) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleWheelDrive.error =
+            binding.fragmentInsertVehicleTextInputLayoutVehicleWheelDrive.error =
                 getString(R.string.x_is_invalid, getString(R.string.wheel_drive))
             false
         } else {
-            binding.fragmentEditVehicleTextInputLayoutVehicleWheelDrive.apply {
+            binding.fragmentInsertVehicleTextInputLayoutVehicleWheelDrive.apply {
                 error = null
                 isErrorEnabled = false
             }

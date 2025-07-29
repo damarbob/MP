@@ -1,14 +1,47 @@
 package id.monpres.app.model
+
 import android.os.Parcelable
-import com.google.firebase.firestore.DocumentSnapshot
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 
+/**
+ * Represents a vehicle entity.
+ *
+ * This data class is used to store information about a vehicle, such as its ID, user ID, type ID,
+ * name, model, registration number, license plate number, year, engine capacity, transmission,
+ * seat count, power output, wheel drive, power source, and active status.
+ *
+ * It is annotated with `@Entity` to be used with Room database and `@Parcelize` to be parcelable.
+ *
+ * @property id The unique ID of the vehicle.
+ * @property userId The ID of the user who owns the vehicle.
+ * @property typeId The ID of the vehicle type.
+ * @property name The name of the vehicle.
+ * @property model The model of the vehicle.
+ * @property registrationNumber The registration number of the vehicle.
+ * @property licensePlateNumber The license plate number of the vehicle.
+ * @property year The manufacturing year of the vehicle.
+ * @property engineCapacity The engine capacity of the vehicle.
+ * @property transmission The transmission type of the vehicle.
+ * @property seat The number of seats in the vehicle.
+ * @property powerOutput The power output of the vehicle.
+ * @property wheelDrive The wheel drive type of the vehicle.
+ * @property powerSource The power source of the vehicle (e.g., gasoline, electric).
+ * @property active Indicates whether the vehicle is active or not.
+ */
+@Entity(tableName = "vehicles")
 @Parcelize
 data class Vehicle(
-    var id: String? = null,
+    @PrimaryKey
+    var id: String = "",
     var userId: String? = null,
+    var typeId: String? = null,
     var name: String? = null,
+    var model: String? = null,
     var registrationNumber: String? = null,
+    var licensePlateNumber: String? = null,
     var year: String? = null,
     var engineCapacity: String? = null,
     var transmission: String? = null,
@@ -16,216 +49,68 @@ data class Vehicle(
     var powerOutput: String? = null,
     var wheelDrive: String? = null,
     var powerSource: String? = null,
-    var type: String? = null
+
+    var active: Boolean = true
 ) : Parcelable {
 
     companion object {
-        // Convert Firestore DocumentSnapshot to Vehicle object
-        fun fromDocumentSnapshot(document: DocumentSnapshot): Vehicle? {
-            return document.toObject(Vehicle::class.java)?.apply {
-                id = document.id
-            }
-        }
-
-        // Generate sample list of vehicles
-        fun getSampleList(): List<Vehicle> {
-            return listOf(
-                Vehicle(name = "Toyota Camry", year = "2020", transmission = "Automatic"),
-                Vehicle(name = "Honda Civic", year = "2019", transmission = "Manual"),
-                Vehicle(name = "Ford F-150", year = "2021", powerSource = "Gasoline"),
-                Vehicle(name = "Tesla Model 3", powerSource = "Electric", seat = "5"),
-                Vehicle(name = "BMW X5", engineCapacity = "3.0L", wheelDrive = "AWD"),
-                Vehicle(name = "Hyundai Tucson", type = "SUV", registrationNumber = "ABC-123"),
-                Vehicle(name = "Mercedes C-Class", powerOutput = "255 hp", year = "2022"),
-                Vehicle(name = "Audi Q7", seat = "7", transmission = "Automatic"),
-                Vehicle(name = "Nissan Rogue", wheelDrive = "FWD", year = "2020"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "Subaru Outback", type = "Wagon", powerSource = "Hybrid"),
-                Vehicle(name = "lala Outback", type = "Wagon", powerSource = "Hybrid"),
-            )
-        }
+        const val COLLECTION = "vehicles"
+        const val FIELD_ID = "id"
+        const val FIELD_USER_ID = "userId"
     }
 
-    // Convert Vehicle to Firestore compatible map
-    fun toFirestoreMap(): Map<String, Any?> {
-        return mapOf(
-            "userId" to userId,
-            "name" to name,
-            "registrationNumber" to registrationNumber,
-            "year" to year,
-            "engineCapacity" to engineCapacity,
-            "transmission" to transmission,
-            "seat" to seat,
-            "powerOutput" to powerOutput,
-            "wheelDrive" to wheelDrive,
-            "powerSource" to powerSource,
-            "type" to type
-        )
-    }
+    // Room will use this constructor, ignore others
+    @Ignore
+    constructor(
+        id: String,
+        userId: String,
+        typeId: String,
+        name: String,
+        model: String,
+        registrationNumber: String,
+        licensePlateNumber: String,
+        year: String,
+        engineCapacity: String,
+        transmission: String,
+        seat: String,
+        powerOutput: String,
+        wheelDrive: String,
+        powerSource: String
+    ) : this(
+        id,
+        userId,
+        typeId,
+        name,
+        model,
+        registrationNumber,
+        licensePlateNumber,
+        year,
+        engineCapacity,
+        transmission,
+        seat,
+        powerOutput,
+        wheelDrive,
+        powerSource,
+        true,
+    )
+
+    // For firestore serialization
+    @Ignore
+    constructor() : this(
+        "",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        true
+    )
 }
-//
-//import android.os.Parcel
-//import android.os.Parcelable
-//import com.google.firebase.firestore.DocumentSnapshot
-//import kotlinx.parcelize.Parcelize
-//
-//@Parcelize
-//data class Vehicle(
-//    var id: String? = null,
-//    var userId: String? = null,
-//    var name: String? = null,
-//    var registrationNumber: String? = null,
-//    var year: String? = null,
-//    var engineCapacity: String? = null,
-//    var transmission: String? = null,
-//    var seat: String? = null,
-//    var powerOutput: String? = null,
-//    var wheelDrive: String? = null,
-//    var powerSource: String? = null,
-//    var type: String? = null,
-//): Parcelable {
-//    constructor(parcel: Parcel) : this(
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: "",
-//        parcel.readString() ?: ""
-//    ) {
-//    }
-//
-//    fun toMap(): HashMap<String, Any?> {
-//        return hashMapOf(
-//            "id" to id,
-//            "userId" to userId,
-//            "name" to name,
-//            "registrationNumber" to registrationNumber,
-//            "year" to year,
-//            "engineCapacity" to engineCapacity,
-//            "transmission" to transmission,
-//            "seat" to seat,
-//            "powerOutput" to powerOutput,
-//            "wheelDrive" to wheelDrive,
-//            "powerSource" to powerSource,
-//            "type" to type,
-//        )
-//    }
-//
-//    fun empty(): Vehicle {
-//        return Vehicle()
-//    }
-//
-//    fun Vehicle.fromSnapshot(snapshot: DocumentSnapshot): Vehicle {
-//        val data = snapshot.data
-//        if (data.isNullOrEmpty()) return empty()
-//        return Vehicle(
-//            id = snapshot.id,
-//            userId = data["userId"] as? String ?: "",
-//            name = data["name"] as? String ?: "",
-//            registrationNumber = data["registrationNumber"] as? String ?: "",
-//            year = data["year"] as? String ?: "",
-//            engineCapacity = data["engineCapacity"] as? String ?: "",
-//            transmission = data["transmission"] as? String ?: "",
-//            seat = data["seat"] as? String ?: "",
-//            powerOutput = data["powerOutput"] as? String ?: "",
-//            wheelDrive = data["wheelDrive"] as? String ?: "",
-//            powerSource = data["powerSource"] as? String ?: "",
-//            type = data["type"] as? String ?: "",
-//        )
-//    }
-//
-//    fun exampleData(): List<Vehicle> {
-//        return listOf(
-//            Vehicle(
-//                "asdf",
-//                "asdf",
-//                "AAA",
-//                "asdf",
-//                "asdf",
-//                "asdf",
-//                "asdf",
-//                "asdf",
-//                "asdf",
-//                "asdf",
-//                "asdf",
-//                "asdf"
-//            ),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//            Vehicle("Tuatara", "Tuatara", "Tuatara", "AB 1 SSR"),
-//        )
-//    }
-//
-//    override fun describeContents(): Int {
-//        return 0
-//    }
-//
-//    override fun writeToParcel(parcel: Parcel, flags: Int) {
-//        parcel.writeString(id)
-//        parcel.writeString(userId)
-//        parcel.writeString(name)
-//        parcel.writeString(registrationNumber)
-//        parcel.writeString(year)
-//        parcel.writeString(engineCapacity)
-//        parcel.writeString(transmission)
-//        parcel.writeString(seat)
-//        parcel.writeString(powerOutput)
-//        parcel.writeString(wheelDrive)
-//        parcel.writeString(powerSource)
-//        parcel.writeString(type)
-//    }
-//
-//    companion object CREATOR : Parcelable.Creator<Vehicle> {
-//        override fun createFromParcel(parcel: Parcel): Vehicle {
-//            return Vehicle(parcel)
-//        }
-//
-//        override fun newArray(size: Int): Array<Vehicle?> {
-//            return arrayOfNulls(size)
-//        }
-//    }
-//}

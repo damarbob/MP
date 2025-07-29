@@ -1,38 +1,42 @@
 package id.monpres.app.ui.vehiclelist
 
-import androidx.fragment.app.viewModels
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import android.widget.Toast
+import androidx.appcompat.view.ActionMode
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
+import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentVehicleListBinding
-import id.monpres.app.model.Vehicle
+import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.VehicleAdapter
+import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 
-class VehicleListFragment : Fragment() {
+@AndroidEntryPoint
+class VehicleListFragment : BaseFragment() {
 
     companion object {
         fun newInstance() = VehicleListFragment()
     }
 
+    /* View Models */
     private val viewModel: VehicleListViewModel by viewModels()
 
+    /* Bindings */
     private lateinit var binding: FragmentVehicleListBinding
 
+    /* Variables */
     private lateinit var vehicleAdapter: VehicleAdapter
-    private lateinit var vehicles: List<Vehicle>
-    private var scrollPosition: Int = 0
-    private var scrollOffset: Int = 0
+    private var actionMode: ActionMode? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,92 +55,193 @@ class VehicleListFragment : Fragment() {
 
         binding = FragmentVehicleListBinding.inflate(inflater, container, false)
 
+        setupVehicleRecyclerView()
         setupVehiclesObservers()
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val navController = findNavController()
-        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
-        val appBarConfiguration =
-            AppBarConfiguration(navController.graph, drawerLayout = drawerLayout)
-
-        binding.fragmentListVehicleToolbar.setupWithNavController(
-            navController,
-            appBarConfiguration
-        )
+        super.onViewCreated(view, savedInstanceState)
+        (activity as MainActivity).binding.activityMainAppBarLayout.background = binding.root.background
+//        val navController = findNavController()
+//        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
+//        val appBarConfiguration =
+//            AppBarConfiguration(navController.graph, drawerLayout = drawerLayout)
+//
+//        binding.fragmentListVehicleToolbar.setupWithNavController(
+//            navController,
+//            appBarConfiguration
+//        )
     }
 
     private fun setupVehicleRecyclerView() {
-
         // Create adapter with current state
-        vehicleAdapter = VehicleAdapter(vehicles) { vehicle ->
-            saveScrollPosition()
-            findNavController().navigate(
-                R.id.action_vehicleListFragment_to_editVehicleFragment,
-                Bundle().apply { putParcelable("vehicle", vehicle) }
-            )
-        }
+        vehicleAdapter = VehicleAdapter(
+            onItemClick = { vehicle ->
+                val direction =
+                    VehicleListFragmentDirections.actionVehicleListFragmentToEditVehicleFragment(
+                        vehicle
+                    )
+                findNavController().navigate(
+                    direction
+                )
+            },
+            onSelectionModeChanged = { isInSelectionMode ->
+                if (isInSelectionMode) {
+                    if (actionMode == null) {
+                        actionMode =
+                            (requireActivity() as MainActivity).startSupportActionMode(
+                                actionModeCallback
+                            )
+                    }
+                    updateActionModeTitle()
+                } else {
+                    actionMode?.finish()
+                    actionMode = null
+                }
+
+            },
+            onItemSelected = {
+                updateActionModeTitle()
+            }
+        )
 
         binding.fragmentListVehicleRecyclerViewListVehicle.apply {
+            addItemDecoration(SpacingItemDecoration(2))
             adapter = vehicleAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            setHasFixedSize(true)
-            // Add scroll listener to save position
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    saveScrollPosition()
-                }
-            })
         }
     }
 
     private fun setupVehiclesObservers() {
-        viewModel.vehicles.observe(viewLifecycleOwner, Observer {
-            vehicles = it
-            setupVehicleRecyclerView()
-        })
-        viewModel.scrollPosition.observe(viewLifecycleOwner) {
-            scrollPosition = it
-        }
-        viewModel.scrollOffset.observe(viewLifecycleOwner) {
-            scrollOffset = it
+        observeUiState(viewModel.getVehiclesFlow()) {
+            vehicleAdapter.submitList(it)
         }
     }
 
-    private fun saveScrollPosition() {
-        val layoutManager =
-            binding.fragmentListVehicleRecyclerViewListVehicle.layoutManager as? LinearLayoutManager
-        layoutManager?.let {
-            val firstVisiblePosition = it.findFirstVisibleItemPosition()
-            if (firstVisiblePosition != RecyclerView.NO_POSITION) {
-                viewModel.saveScrollPosition(firstVisiblePosition)
-                val firstVisibleView = it.findViewByPosition(firstVisiblePosition)
-                viewModel.saveScrollOffset(firstVisibleView?.top ?: 0)
+    override fun showLoading(isLoading: Boolean) {
+        binding.fragmentListVehicleProgressIndicator.visibility =
+            if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private val actionModeCallback: ActionMode.Callback =
+        object : ActionMode.Callback {
+            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+                mode.menuInflater.inflate(R.menu.contextual_vehicle_menu, menu)
+                mode.title = getString(R.string.select_items) // Initial title
+                return true // Return true to show the CAB
             }
+
+            override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+                // Can be used to update the CAB's menu items if needed
+                return false // Return false if nothing is changed
+            }
+
+            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+                return when (item.itemId) {
+                    R.id.contextual_vehicle_menu_action_delete_selected -> {
+                        val selectedIds = vehicleAdapter.getSelectedVehicleIds()
+                        if (selectedIds.isNotEmpty()) {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle(getString(R.string.delete_vehicles))
+                                .setMessage(getString(R.string.delete_selected_vehicles_confirmation))
+                                .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                                    dialog.dismiss()
+                                }
+                                .setPositiveButton(getString(R.string.delete)) { dialog, _ ->
+                                    // Call ViewModel to delete these items
+                                    observeUiStateOneShot(viewModel.deleteVehicles(selectedIds)) {
+                                        Toast.makeText(
+                                            requireContext(),
+                                            resources.getQuantityString(R.plurals.deleted_x_items, selectedIds.size, selectedIds.size),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        dialog.dismiss()
+                                    }
+                                }.show()
+                            // The list will update via the ViewModel observer after deletion
+                        }
+                        mode.finish() // Close the CAB
+                        true
+                    }
+                    // Handle other actions
+                    else -> false
+                }
+            }
+
+            override fun onDestroyActionMode(mode: ActionMode) {
+                // Called when the CAB is removed (e.g., by pressing back or mode.finish())
+                vehicleAdapter.finishSelectionMode() // Ensure adapter is also out of selection mode
+                actionMode = null
+                (requireActivity() as MainActivity).supportActionBar?.show()
+            }
+
+//            override fun onActionItemClicked(
+//                mode: android.view.ActionMode?,
+//                item: MenuItem?
+//            ): Boolean {
+//                return when (item?.itemId) {
+//                    R.id.contextual_vehicle_menu_action_delete_selected -> {
+//                        val selectedIds = vehicleAdapter.getSelectedVehicleIds()
+//                        if (selectedIds.isNotEmpty()) {
+//                            // Call ViewModel to delete these items
+//                            observeUiStateOneShot(viewModel.deleteVehicles(selectedIds)) {
+//                                Toast.makeText(
+//                                    requireContext(),
+//                                    getString(R.string.deleted_x_items, selectedIds.size),
+//                                    Toast.LENGTH_SHORT
+//                                ).show()
+//                            }
+//                            // The list will update via the ViewModel observer after deletion
+//                        }
+//                        mode?.finish() // Close the CAB
+//                        true
+//                    }
+//                    // Handle other actions
+//                    else -> false
+//                }
+//            }
+//
+//            override fun onCreateActionMode(
+//                mode: android.view.ActionMode?,
+//                menu: Menu?
+//            ): Boolean {
+//                mode?.menuInflater?.inflate(R.menu.contextual_vehicle_menu, menu)
+//                mode?.title = getString(R.string.select_items) // Initial title
+//                return true // Return true to show the CAB
+//            }
+//
+//            override fun onDestroyActionMode(p0: android.view.ActionMode?) {
+//                // Called when the CAB is removed (e.g., by pressing back or mode.finish())
+//                vehicleAdapter.finishSelectionMode() // Ensure adapter is also out of selection mode
+//                actionMode = null
+//            }
+//
+//            override fun onPrepareActionMode(
+//                p0: android.view.ActionMode?,
+//                p1: Menu?
+//            ): Boolean {
+//                // Can be used to update the CAB's menu items if needed
+//                return false // Return false if nothing is changed
+//            }
         }
+
+    private fun updateActionModeTitle() {
+        actionMode?.title = resources.getQuantityString(
+            R.plurals.x_items_selected,
+            vehicleAdapter.getSelectedItemCount(), vehicleAdapter.getSelectedItemCount()
+        )
     }
 
-    private fun restoreScrollPosition() {
-        binding.fragmentListVehicleRecyclerViewListVehicle.post {
-            val layoutManager =
-                binding.fragmentListVehicleRecyclerViewListVehicle.layoutManager as? LinearLayoutManager
-            layoutManager?.scrollToPositionWithOffset(
-                scrollPosition,
-                scrollOffset
-            )
-        }
-    }
-
+    // It's good practice to finish action mode if the fragment is being destroyed
+    // or if the user navigates away while CAB is active.
     override fun onPause() {
         super.onPause()
-        // Save final scroll position
-        saveScrollPosition()
+        actionMode?.finish()
     }
 
-    override fun onResume() {
-        super.onResume()
-        restoreScrollPosition()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        actionMode?.finish() // Clean up CAB
     }
 }

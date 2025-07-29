@@ -54,7 +54,7 @@ class LoginFragment : Fragment() {
 
             }?.onFailure { exception ->
                 // Show error message
-                Toast.makeText(requireContext(), exception.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
             }
         }
         // Loading indicator visibility

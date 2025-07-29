@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="?colorSurfaceContainer"
     android:transitionGroup="true"
-    tools:context=".ui.editvehicle.EditVehicleFragment">
+    tools:context=".ui.insertvehicle.InsertVehicleFragment">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -26,14 +26,14 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="16dp"
-                app:layout_constraintBottom_toTopOf="@id/fragmentEditVehicleButtonSave"
+                app:layout_constraintBottom_toTopOf="@id/fragmentInsertVehicleButtonSave"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <!-- Name -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleName"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_between_input_field"
@@ -47,7 +47,7 @@
 
                 <!-- Registration Number -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_between_input_field"
@@ -61,7 +61,7 @@
 
                 <!-- License Plate Number -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_between_input_field"
@@ -75,7 +75,7 @@
 
                 <!-- Type -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleType"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleType"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -83,7 +83,7 @@
                     android:hint="@string/type">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/fragmentEditVehicleDropdownVehicleType"
+                        android:id="@+id/fragmentInsertVehicleDropdownVehicleType"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
@@ -92,7 +92,7 @@
 
                 <!-- Production Year -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleYear"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleYear"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_between_input_field"
@@ -106,7 +106,7 @@
 
                 <!-- Engine Capacity -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleEngineCapacity"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleEngineCapacity"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_between_input_field"
@@ -120,7 +120,7 @@
 
                 <!-- Transmission -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleTransmission"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleTransmission"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -128,7 +128,7 @@
                     android:hint="@string/transmission">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/fragmentEditVehicleDropdownVehicleTransmission"
+                        android:id="@+id/fragmentInsertVehicleDropdownVehicleTransmission"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
@@ -137,7 +137,7 @@
 
                 <!-- Seat -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleSeat"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleSeat"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_between_input_field"
@@ -151,7 +151,7 @@
 
                 <!-- Power Output -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehiclePowerOutput"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehiclePowerOutput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_between_input_field"
@@ -165,7 +165,7 @@
 
                 <!-- Wheel Drive -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleWheelDrive"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleWheelDrive"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -173,7 +173,7 @@
                     android:hint="@string/wheel_drive">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/fragmentEditVehicleDropdownVehicleWheelDrive"
+                        android:id="@+id/fragmentInsertVehicleDropdownVehicleWheelDrive"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
@@ -182,7 +182,7 @@
 
                 <!-- Power Source -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentEditVehicleTextInputLayoutVehiclePowerSource"
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehiclePowerSource"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -190,7 +190,8 @@
                     android:hint="@string/power_source">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/fragmentEditVehicleDropdownVehiclePowerSource"
+                        android:id="@+id/fragmentInsertVehicleDropdownVehiclePowerSource"
+                        style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="none"
@@ -200,7 +201,7 @@
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/fragmentEditVehicleButtonSave"
+                android:id="@+id/fragmentInsertVehicleButtonSave"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="@dimen/space_between_input_field"

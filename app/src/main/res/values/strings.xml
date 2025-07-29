@@ -74,10 +74,19 @@
     <string name="delete">Delete</string>
     <string name="x_not_found">%1$s not found</string>
     <string name="unknown_error">Unknown error</string>
-    <string name="x_items_selected">%1$d item(s) selected</string>
-    <string name="deleted_x_items">Deleted %1$d item(s)</string>
+    <plurals name="x_items_selected">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
+    <plurals name="deleted_x_items">
+        <item quantity="one">Deleted %d item</item>
+        <item quantity="other">Deleted %d items</item>
+    </plurals>
     <string name="select_items">Select Items</string>
     <string name="delete_vehicles">Delete Vehicle(s)</string>
     <string name="delete_selected_vehicles_confirmation">Are you sure delete these vehicles?</string>
     <string name="history">History</string>
+    <string name="vehicle_updated">Vehicle updated</string>
+    <string name="x_is_invalid">%s is invalid</string>
+    <string name="x_is_required">%s is required</string>
 </resources>

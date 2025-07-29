@@ -1,137 +1,180 @@
 package id.monpres.app.ui.adapter
 
+import android.util.SparseBooleanArray
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.util.isEmpty
+import androidx.core.util.isNotEmpty
+import androidx.core.util.size
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import id.monpres.app.databinding.ItemTwoLineBinding
-import id.monpres.app.databinding.ItemTwoLineFirstBinding
-import id.monpres.app.databinding.ItemTwoLineLastBinding
-import id.monpres.app.databinding.ItemTwoLineMidBinding
 import id.monpres.app.model.Vehicle
 
+/**
+ * Adapter for displaying a list of [Vehicle] items in a RecyclerView.
+ * This adapter supports item selection and a contextual action bar (CAB).
+ *
+ * @property onItemClick Lambda to be invoked when an item is clicked in normal mode.
+ * @property onSelectionModeChanged Lambda to be invoked when the selection mode changes
+ *                                  (e.g., to show or hide the CAB).
+ * @property onItemSelected Lambda to be invoked when an item's selection state changes.
+ */
 class VehicleAdapter(
-    private var vehicles: List<Vehicle>,
-    private val onItemClick: ((Vehicle) -> Unit)? = null
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private val onItemClick: (Vehicle) -> Unit, // Regular click
+    private val onSelectionModeChanged: (Boolean) -> Unit, // To notify Fragment about CAB
+    private val onItemSelected: (Vehicle) -> Unit // To notify when an item is selected/deselected
+) : ListAdapter<Vehicle, VehicleAdapter.ViewHolder>(VehicleDiffCallback()) {
 
-    companion object {
-        private const val VIEW_TYPE_ITEM_FIRST = 1
-        private const val VIEW_TYPE_ITEM_MID = 2
-        private const val VIEW_TYPE_ITEM_LAST = 3
-        private const val VIEW_TYPE_ITEM_ALONE = 4
+    constructor(onItemClick: (Vehicle) -> Unit): this(onItemClick,{},{}) {
+        this.activateLongClickListener = false
+    }
+    private var activateLongClickListener = true
+
+    private val selectedItems = SparseBooleanArray()
+    var isInSelectionMode = false
+        private set
+
+    class VehicleDiffCallback : DiffUtil.ItemCallback<Vehicle>() {
+        override fun areItemsTheSame(oldItem: Vehicle, newItem: Vehicle) =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: Vehicle, newItem: Vehicle) =
+            oldItem == newItem // Make sure your Vehicle data class implements equals correctly
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (itemCount == 1) {
-            VIEW_TYPE_ITEM_ALONE
-        } else if (position == 0) {
-            VIEW_TYPE_ITEM_FIRST
-        } else if (position == itemCount - 1) {
-            VIEW_TYPE_ITEM_LAST
+    inner class ViewHolder(val binding: ItemTwoLineBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            binding.root.setOnClickListener {
+                val position = absoluteAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val vehicle = getItem(position)
+                    if (isInSelectionMode) {
+                        toggleSelection(position, vehicle)
+                    } else {
+                        onItemClick(vehicle)
+                    }
+                }
+            }
+
+            binding.root.setOnLongClickListener {
+                val position = absoluteAdapterPosition
+                if (position != RecyclerView.NO_POSITION && activateLongClickListener) {
+                    if (!isInSelectionMode) {
+                        startSelectionMode()
+                    }
+                    toggleSelection(position, getItem(position))
+                    true // Consume the long click
+                } else {
+                    false
+                }
+            }
+        }
+
+        fun bind(vehicle: Vehicle, isSelected: Boolean) {
+            binding.itemTwoLineTextViewTitle.text = vehicle.name
+            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
+
+            // Visual indication for selection
+            binding.root.isActivated = isSelected // Use state_activated
+            // Or change background color directly (less ideal than state_activated with a selector drawable)
+            // itemView.setBackgroundColor(if (isSelected) Color.LTGRAY else Color.TRANSPARENT)
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        return ViewHolder(
+            ItemTwoLineBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+            )
+        )
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(getItem(position), selectedItems.get(position, false))
+    }
+
+    private fun startSelectionMode() {
+        if (!isInSelectionMode) {
+            isInSelectionMode = true
+            onSelectionModeChanged(true) // Notify Fragment to start CAB
+        }
+    }
+
+    fun finishSelectionMode() {
+        if (isInSelectionMode) {
+            isInSelectionMode = false
+            selectedItems.clear()
+            notifyDataSetChanged() // To clear visual selection
+            onSelectionModeChanged(false) // Notify Fragment to finish CAB
+        }
+    }
+
+    private fun toggleSelection(position: Int, vehicle: Vehicle) {
+        if (selectedItems.get(position, false)) {
+            selectedItems.delete(position)
         } else {
-            VIEW_TYPE_ITEM_MID
+            selectedItems.put(position, true)
+        }
+        notifyItemChanged(position)
+        onItemSelected(vehicle) // Notify fragment about the item selection change
+
+        // If no items are selected anymore, but still in selection mode, finish it
+        if (isInSelectionMode && selectedItems.isEmpty()) {
+            finishSelectionMode()
+        } else if (!isInSelectionMode && selectedItems.isNotEmpty()) {
+            // This case might happen if selection starts outside a long press (e.g. checkbox)
+            startSelectionMode()
         }
     }
 
-    override fun getItemCount(): Int {
-        return vehicles.size
-    }
-
-    inner class VehicleAloneViewHolder(val binding: ItemTwoLineBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind(vehicle: Vehicle) {
-            binding.itemTwoLineTextViewTitle.text = vehicle.name
-            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
-
-            binding.root.setOnClickListener {
-                onItemClick?.let { onClick ->
-                    onClick(vehicle)
-                }
+    fun getSelectedVehicleIds(): List<String> {
+        val ids = ArrayList<String>()
+        for (i in 0 until selectedItems.size) {
+            if (selectedItems.valueAt(i)) { // Check if the value is true (selected)
+                val position = selectedItems.keyAt(i)
+                ids.add(getItem(position).id)
             }
         }
+        return ids
     }
 
-    inner class VehicleFirstViewHolder(val binding: ItemTwoLineFirstBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind(vehicle: Vehicle) {
-            binding.itemTwoLineTextViewTitle.text = vehicle.name
-            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
-
-            binding.root.setOnClickListener {
-                onItemClick?.let { onClick ->
-                    onClick(vehicle)
-                }
+    fun getSelectedVehicles(): List<Vehicle> {
+        val vehicles = ArrayList<Vehicle>()
+        for (i in 0 until selectedItems.size) {
+            if (selectedItems.valueAt(i)) {
+                val position = selectedItems.keyAt(i)
+                vehicles.add(getItem(position))
             }
         }
+        return vehicles
     }
 
-    inner class VehicleLastViewHolder(val binding: ItemTwoLineLastBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind(vehicle: Vehicle) {
-            binding.itemTwoLineTextViewTitle.text = vehicle.name
-            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
 
-            binding.root.setOnClickListener {
-                onItemClick?.let { onClick ->
-                    onClick(vehicle)
-                }
+    fun getSelectedItemCount(): Int {
+        var count = 0
+        for (i in 0 until selectedItems.size) {
+            if (selectedItems.valueAt(i)) {
+                count++
             }
         }
+        return count
     }
 
-    inner class VehicleMidViewHolder(val binding: ItemTwoLineMidBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-        fun bind(vehicle: Vehicle) {
-            binding.itemTwoLineTextViewTitle.text = vehicle.name
-            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
-
-            binding.root.setOnClickListener {
-                onItemClick?.let { onClick ->
-                    onClick(vehicle)
-                }
+    // Call this if your list data changes externally while in selection mode
+    fun clearSelection() {
+        if (isInSelectionMode) {
+            selectedItems.clear()
+            notifyDataSetChanged()
+            // Optionally finish selection mode if desired
+            if (selectedItems.isEmpty()) {
+                finishSelectionMode()
             }
-        }
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == VIEW_TYPE_ITEM_ALONE) {
-            VehicleAloneViewHolder(
-                ItemTwoLineBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            )
-        } else if (viewType == VIEW_TYPE_ITEM_FIRST) {
-            VehicleFirstViewHolder(
-                ItemTwoLineFirstBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
-            )
-        } else if (viewType == VIEW_TYPE_ITEM_LAST) {
-            VehicleLastViewHolder(
-                ItemTwoLineLastBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
-            )
-        } else {
-            VehicleMidViewHolder(
-                ItemTwoLineMidBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
-                )
-            )
-
-        }
-    }
-
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder) {
-            is VehicleAloneViewHolder -> holder.bind(vehicles[position])
-            is VehicleFirstViewHolder -> holder.bind(vehicles[position])
-            is VehicleLastViewHolder -> holder.bind(vehicles[position])
-            is VehicleMidViewHolder -> holder.bind(vehicles[position])
         }
     }
 }
