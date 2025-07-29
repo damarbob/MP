@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="continue_">Lanjutkan</string>
+    <string name="submit">Kirim</string>
     <string name="send">Kirim</string>
     <string name="cancel">Batal</string>
     <string name="close">Tutup</string>
@@ -8,7 +9,7 @@
     <string name="sign_out">Keluar</string>
     <string name="are_you_sure">Apakah Anda yakin?</string>
     <string name="sign_in_with_email">Masuk dengan email</string>
-    <string name="refresh">Segarkan</string>
+    <string name="issue">Masalah</string>
     <string name="sign_in">Masuk</string>
     <string name="sign_in_to_access_all_features">Masuk untuk mengakses semua fitur dan nikmati pengalaman layanan tanpa batas.</string>
     <string name="email">Email</string>
@@ -36,8 +37,9 @@
     <string name="signed_in_as">Masuk sebagai %1$s</string>
     <string name="authentication_failed">Autentikasi gagal: %1$s</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="failed_to_send_the_verification_email">Gagal mengirim email verifikasi</string>
+    <string name="failed_to_send_the_verification_email">Gagal mengirim email verifikasi.</string>
     <string name="hello_blank_fragment">Halo fragmen kosong</string>
+    <string name="vehicle">Kendaraan</string>
     <string name="vehicles">Kendaraan</string>
     <string name="swift_and_precise_exchange_of_worn_or_damaged_vehicle_parts_with_high_quality_originals">Penukaran suku cadang kendaraan yang aus atau rusak secara cepat dan tepat dengan suku cadang asli berkualitas tinggi.</string>
     <string name="component_replacement">Penggantian Komponen</string>
@@ -52,15 +54,38 @@
     <string name="registration_number">Nomor Registrasi</string>
     <string name="show_more">Tampilkan lebih banyak</string>
     <string name="see_all">Lihat semua</string>
+    <string name="refresh">Muat ulang</string>
+    <string name="verification">Verifikasi</string>
+    <string name="please_verify_your_email">Harap verifikasi email Anda. Tekan tombol \"Kirim\", lalu klik tautan verifikasi di email yang kami kirimkan.</string>
+    <string name="verification_email_has_been_sent">Email verifikasi telah dikirim.</string>
+    <string name="select_the_issue">Pilih masalah yang dialami kendaraan Anda dari daftar.</string>
+    <string name="description">Deskripsi</string>
+    <string name="provide_any_additional_details">Berikan rincian atau pengamatan tambahan tentang masalah tersebut.</string>
+    <string name="location">Lokasi</string>
+    <string name="open_maps">Buka Maps</string>
+    <string name="enter_the_address_or_location">Masukkan alamat atau lokasi di mana layanan dibutuhkan.</string>
+    <string name="check_this_box_to_consent_to_sharing_your_location">Centang kotak ini untuk menyetujui pembagian lokasi Anda dengan penyedia layanan.</string>
+    <string name="place_order">Buat Pesanan</string>
+    <string name="date">Tanggal</string>
+    <string name="select_a_date_for_your_scheduled_service">Pilih tanggal untuk layanan terjadwal Anda.</string>
+    <string name="you_must_agree_to_share_your_location_before_placing_an_order">Anda harus setuju untuk membagikan lokasi Anda sebelum melakukan pemesanan.</string>
+    <string name="select_a_vehicle_to_repair">Pilih kendaraan yang akan diperbaiki.</string>
+    <string name="this_field_is_required">Bidang ini wajib diisi</string>
+    <string name="please_select_a_location_and_enable_gps">Silakan pilih lokasi dan aktifkan GPS</string>
+    <string name="select_a_location">Pilih lokasi</string>
+    <string name="re_select_a_location">Pilih kembali lokasi</string>
+    <string name="address">Alamat</string>
+    <string name="select_date">Pilih tanggal</string>
+    <string name="recurring">Berulang</string>
+    <string name="you_cannot_select_today_or_yesterday">Anda tidak dapat memilih hari ini atau kemarin!</string>
+    <string name="order_placed_successfully">Pesanan berhasil dilakukan</string>
+    <string name="failed_to_place_order">Gagal melakukan pemesanan</string>
     <string name="license_plate_number">Plat nomor</string>
     <string name="production_year">Tahun produksi</string>
     <string name="engine_capacity">Kapasitas mesin</string>
     <string name="seat">Kursi/jok/tempat duduk</string>
     <string name="power_output">Output daya</string>
     <string name="type">Tipe</string>
-    <string name="verification">Verifikasi</string>
-    <string name="please_verify_your_email">Mohon verifikasi email Anda. Tekan tombol \"Kirim\", lalu tekan tautan verifikasi di dalam email yang kami kirimkan ke Anda.</string>
-    <string name="verification_email_has_been_sent">Email verifikasi sudah terkirim.</string>
     <string name="update">Update</string>
     <string name="save">Simpan</string>
     <string name="insert_vehicle">Tambah kendaraan</string>

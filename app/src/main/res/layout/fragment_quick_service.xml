@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,9 +9,135 @@
     android:transitionName="shared_element_container"
     tools:context=".ui.quickservice.QuickServiceFragment">
 
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Hello" />
+        android:layout_height="match_parent">
 
-</FrameLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="@drawable/divider_gap_8"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:showDividers="middle">
+
+            <TextView
+                style="@style/Widget.App.H1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/quick_service" />
+
+            <TextView
+                style="@style/Widget.App.P"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/fast_on_the_spot_maintenance_and_diagnostics_to_get_your_vehicle_running_smoothly_in_no_time" />
+
+            <Button
+                android:id="@+id/quickServiceButtonSelectLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_a_location"
+                app:icon="@drawable/add_location_alt_24px" />
+
+            <Button
+                android:id="@+id/quickServiceButtonReSelectLocation"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/re_select_a_location"
+                app:icon="@drawable/edit_location_alt_24px" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/quickServiceInputLayoutLocation"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="true"
+                android:hint="@string/address"
+                app:endIconContentDescription="@string/address"
+                app:endIconDrawable="@drawable/home_24px"
+                app:endIconMode="custom"
+                app:helperText="@string/enter_the_address_or_location">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/quickServiceInputEditLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <CheckBox
+                android:id="@+id/quickServiceCheckBoxLocationConsent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/check_this_box_to_consent_to_sharing_your_location" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/quickServiceInputLayoutVehicle"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/vehicle"
+                app:helperText="@string/select_a_vehicle_to_repair">
+
+                <AutoCompleteTextView
+                    android:id="@+id/quickServiceAutoCompleteVehicle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:labelFor="@+id/quickServiceTextInputVehicle" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/quickServiceInputLayoutIssue"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/issue"
+                app:helperText="@string/select_the_issue">
+
+                <AutoCompleteTextView
+                    android:id="@+id/quickServiceAutoCompleteIssue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    app:simpleItems="@array/issues" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/quickServiceInputLayoutIssueDescription"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/description"
+                app:helperText="@string/provide_any_additional_details">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/quickServiceInputEditIssueDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:lines="5"
+                    android:minLines="3" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/quickServiceButtonPlaceOrder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"
+                android:text="@string/place_order"
+                app:icon="@drawable/outline_arrow_forward_ios_24" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

@@ -1,14 +1,164 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:transitionGroup="true"
+    android:transitionName="shared_element_container"
     tools:context=".ui.scheduledservice.ScheduledServiceFragment">
 
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Hello" />
+        android:layout_height="match_parent">
 
-</FrameLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="@drawable/divider_gap_8"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:showDividers="middle">
+
+            <TextView
+                style="@style/Widget.App.H1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/scheduled_service" />
+
+            <TextView
+                style="@style/Widget.App.P"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/plan_comprehensive_maintenance_ahead_of_time_ensuring_thorough_care_at_your_convenience" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/scheduledServiceButtonSelectDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_date"
+                    app:icon="@drawable/calendar_add_on_24px" />
+
+                <CheckBox
+                    android:id="@+id/scheduledServiceCheckBoxRecurring"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recurring"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/scheduledServiceButtonSelectLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_a_location"
+                app:icon="@drawable/add_location_alt_24px" />
+
+            <Button
+                android:id="@+id/scheduledServiceButtonReSelectLocation"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/re_select_a_location"
+                app:icon="@drawable/edit_location_alt_24px" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/scheduledServiceInputLayoutLocation"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="true"
+                android:hint="@string/address"
+                app:endIconContentDescription="@string/address"
+                app:endIconDrawable="@drawable/home_24px"
+                app:endIconMode="custom"
+                app:helperText="@string/enter_the_address_or_location">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/scheduledServiceInputEditLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <CheckBox
+                android:id="@+id/scheduledServiceCheckBoxLocationConsent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/check_this_box_to_consent_to_sharing_your_location" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/scheduledServiceInputLayoutVehicle"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/vehicle"
+                app:helperText="@string/select_a_vehicle_to_repair">
+
+                <AutoCompleteTextView
+                    android:id="@+id/scheduledServiceAutoCompleteVehicle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:labelFor="@+id/scheduledServiceTextInputVehicle" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/scheduledServiceInputLayoutIssue"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/issue"
+                app:helperText="@string/select_the_issue">
+
+                <AutoCompleteTextView
+                    android:id="@+id/scheduledServiceAutoCompleteIssue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    app:simpleItems="@array/issues" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/scheduledServiceInputLayoutIssueDescription"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/description"
+                app:helperText="@string/provide_any_additional_details">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/scheduledServiceInputEditIssueDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:lines="5"
+                    android:minLines="3" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/scheduledServiceButtonPlaceOrder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"
+                android:text="@string/place_order"
+                app:icon="@drawable/outline_arrow_forward_ios_24" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

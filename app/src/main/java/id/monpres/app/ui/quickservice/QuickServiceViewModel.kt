@@ -1,7 +1,10 @@
 package id.monpres.app.ui.quickservice
 
-import androidx.lifecycle.ViewModel
+import id.monpres.app.model.OrderService
+import id.monpres.app.ui.baseservice.BaseServiceViewModel
 
-class QuickServiceViewModel : ViewModel() {
-    // TODO: Implement the ViewModel
+class QuickServiceViewModel : BaseServiceViewModel() {
+    override fun placeOrder(orderService: OrderService) {
+        super.placeOrder(orderService)
+    }
 }

@@ -1,7 +1,10 @@
 package id.monpres.app.ui.scheduledservice
 
-import androidx.lifecycle.ViewModel
+import id.monpres.app.model.OrderService
+import id.monpres.app.ui.baseservice.BaseServiceViewModel
 
-class ScheduledServiceViewModel : ViewModel() {
-    // TODO: Implement the ViewModel
+class ScheduledServiceViewModel : BaseServiceViewModel() {
+    override fun placeOrder(orderService: OrderService) {
+        super.placeOrder(orderService)
+    }
 }
