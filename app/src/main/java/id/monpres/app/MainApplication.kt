@@ -4,6 +4,7 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 import id.monpres.app.model.Service
 import id.monpres.app.model.ServiceType
+import id.monpres.app.model.Vehicle
 
 @HiltAndroidApp
 class MainApplication : Application() {
@@ -14,6 +15,7 @@ class MainApplication : Application() {
         // Services
         var serviceTypes: List<ServiceType>? = null // TODO: Use repository
         var services: List<Service>? = null  // TODO: Use repository
+        var vehicles: List<Vehicle>? = null  // TODO: Use repository
     }
 
     override fun onCreate() {
@@ -56,5 +58,7 @@ class MainApplication : Application() {
                 categoryId = "2"
             ),
         )
+
+        vehicles = listOf(Vehicle("kjakekv", "FirebaseAuth.getInstance().currentUser?.uid","CAR", "Tuatara"))
     }
 }

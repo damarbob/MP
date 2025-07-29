@@ -12,7 +12,6 @@ import android.widget.CheckBox
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
@@ -28,7 +27,6 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.model.Service
 import id.monpres.app.model.Vehicle
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
-import id.monpres.app.ui.quickservice.QuickServiceViewModel
 
 /**
  * An abstract base class for fragments that handle service ordering.
@@ -56,7 +54,7 @@ abstract class BaseServiceFragment : Fragment() {
     protected val TAG = this::class.java.simpleName
     protected lateinit var binding: Any
     protected var service: Service? = null
-    protected var myVehicles = Vehicle.getSampleList()
+    protected var myVehicles: List<Vehicle> = MainApplication.vehicles!!
     protected var chosenMyVehicle: Vehicle? = null
     protected var selectedLocationPoint: Point? = null
 

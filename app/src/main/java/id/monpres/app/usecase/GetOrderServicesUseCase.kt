@@ -1,17 +1,16 @@
 package id.monpres.app.usecase
 
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
 import id.monpres.app.model.OrderService
+import javax.inject.Inject
 
-class GetOrderServicesUseCase {
+class GetOrderServicesUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
     // In your Repository or ViewModel
     operator fun invoke(userId: String? = null, onResult: (Result<List<OrderService>>) -> Unit) {
-        val baseQuery = Firebase
-            .firestore
+        val baseQuery = firestore
             .collection("orderServices") // TODO: Hardcoded collection name
 
-        var query = if (userId !== null) {
+        val query = if (userId !== null) {
             baseQuery
                 .whereEqualTo("userId", userId)
         } else {

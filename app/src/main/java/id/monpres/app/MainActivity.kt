@@ -23,8 +23,8 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import dagger.hilt.android.AndroidEntryPoint
 import com.google.gson.Gson
+import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
@@ -33,6 +33,7 @@ import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActivityRestartable {
@@ -47,7 +48,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     /* Use cases */
     private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
     private val resendVerificationEmailUseCase = ResendVerificationEmailUseCase()
-    private val getOrderServicesUseCase = GetOrderServicesUseCase()
+    @Inject
+    lateinit var getOrderServicesUseCase : GetOrderServicesUseCase
 
     /* Views */
     lateinit var binding: ActivityMainBinding

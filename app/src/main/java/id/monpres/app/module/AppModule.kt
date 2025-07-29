@@ -19,6 +19,7 @@ import id.monpres.app.database.AppDatabase
 import id.monpres.app.repository.VehicleRepository
 import id.monpres.app.usecase.DeleteBulkDataByIdsUseCase
 import id.monpres.app.usecase.DeleteVehicleUseCase
+import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.GetVehicleByIdUseCase
 import id.monpres.app.usecase.GetVehiclesByUserIdFlowUseCase
 import id.monpres.app.usecase.GetVehiclesByUserIdUseCase
@@ -96,6 +97,11 @@ object AppModule {
     @Singleton
     fun provideDeleteBulkDataByIdsUseCase(firestore: FirebaseFirestore): DeleteBulkDataByIdsUseCase =
         DeleteBulkDataByIdsUseCase(firestore)
+
+    @Provides
+    @Singleton
+    fun provideGetOrderServicesUseCase(firestore: FirebaseFirestore): GetOrderServicesUseCase =
+        GetOrderServicesUseCase(firestore)
 
     /* Repositories */
     @Provides
