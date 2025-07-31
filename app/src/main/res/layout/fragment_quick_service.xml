@@ -10,8 +10,13 @@
     tools:context=".ui.quickservice.QuickServiceFragment">
 
     <ScrollView
+        android:id="@+id/quickServiceScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always">
 
         <LinearLayout
             android:layout_width="match_parent"

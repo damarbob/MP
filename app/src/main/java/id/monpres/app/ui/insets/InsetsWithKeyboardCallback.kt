@@ -36,9 +36,9 @@ class InsetsWithKeyboardCallback(window: Window) : OnApplyWindowInsetsListener,
         lastWindowInsets = insets
         val types = when {
             // When the deferred flag is enabled, we only use the systemBars() insets
-            deferredInsets -> WindowInsetsCompat.Type.statusBars()
+            deferredInsets -> WindowInsetsCompat.Type.systemBars()
             // When the deferred flag is disabled, we use combination of the the systemBars() and ime() insets
-            else -> WindowInsetsCompat.Type.statusBars() + WindowInsetsCompat.Type.ime()
+            else -> WindowInsetsCompat.Type.systemBars() + WindowInsetsCompat.Type.ime()
         }
 
         val typeInsets = insets.getInsets(types)
@@ -77,5 +77,4 @@ class InsetsWithKeyboardCallback(window: Window) : OnApplyWindowInsetsListener,
             }
         }
     }
-
 }

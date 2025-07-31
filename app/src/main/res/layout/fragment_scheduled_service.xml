@@ -10,8 +10,13 @@
     tools:context=".ui.scheduledservice.ScheduledServiceFragment">
 
     <ScrollView
+        android:id="@+id/scheduledServiceScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -50,7 +55,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/recurring"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
             </LinearLayout>
 

@@ -131,11 +131,11 @@ class VehicleRepository(
      * Errors during the remote fetch are logged but do not interrupt the flow of
      * local data, ensuring the UI can still display cached information.
      *
-     * @param userId The ID of the user whose vehicles are to be fetched.
      * @return A [Flow] of [UiState] wrapping a list of [Vehicle] objects.
      *         The list will not contain null [Vehicle] objects.
      */
-    fun getVehiclesByUserId(userId: String): Flow<UiState<List<Vehicle>>> { // Note: Vehicle, not Vehicle? if local never stores nulls in the list
+    fun getVehiclesByUserId(): Flow<UiState<List<Vehicle>>> { // Note: Vehicle, not Vehicle? if local never stores nulls in the list
+        val userId = getCurrentUserId()
         return vehicleDao.getVehiclesByUserFlow(userId) // Assume this DAO method returns Flow<List<Vehicle>>
             .distinctUntilChanged() // Keep this
             .map<List<Vehicle>, UiState<List<Vehicle>>> { vehicles -> // Map the DB Flow to UiState

@@ -8,26 +8,39 @@
     android:transitionGroup="true"
     tools:context=".ui.vehiclelist.VehicleListFragment">
 
-    <androidx.core.widget.NestedScrollView
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentListVehicleProgressIndicator"
+        style="@style/Widget.Material3.LinearProgressIndicator"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        app:hideAnimationBehavior="outward"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="2dp"
+        app:wavelength="40dp"
+        app:wavelengthIndeterminate="20dp"
+        app:layout_insetEdge="top"/>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentListVehicleNestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always"
+        app:layout_dodgeInsetEdges="top">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/fragmentListVehicleProgressIndicator"
-                style="@style/Widget.Material3.LinearProgressIndicator"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:indeterminate="true" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/fragmentListVehicleRecyclerViewListVehicle"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:background="@drawable/rounded_rectangle_background_clip"
                 android:clipToOutline="true"
@@ -35,8 +48,9 @@
                 tools:targetApi="31" />
 
             <Space
-                android:layout_width="wrap_content"
-                android:layout_height="64dp" />
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

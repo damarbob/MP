@@ -58,19 +58,13 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
-            binding.navHostFragmentActivityMain.setPadding(
-                binding.navHostFragmentActivityMain.paddingLeft,
-                0,
-                binding.navHostFragmentActivityMain.paddingRight,
-                systemBars.bottom
-            )
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(systemBars.left, 0, systemBars.right, 0)
             insets
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)

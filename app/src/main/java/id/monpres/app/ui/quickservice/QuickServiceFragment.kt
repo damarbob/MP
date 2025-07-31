@@ -5,12 +5,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
+import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentQuickServiceBinding
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseServiceFragment
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
+import id.monpres.app.utils.UiState
 
+@AndroidEntryPoint
 class QuickServiceFragment : BaseServiceFragment() {
     private val viewModel: QuickServiceViewModel by viewModels()
 
@@ -21,6 +28,19 @@ class QuickServiceFragment : BaseServiceFragment() {
         savedInstanceState: Bundle?
     ): View {
         fragBinding = FragmentQuickServiceBinding.inflate(inflater, container, false)
+
+        // Set insets with keyboard
+        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.root) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.quickServiceScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+
         binding = fragBinding
         return fragBinding.root
     }
@@ -41,6 +61,23 @@ class QuickServiceFragment : BaseServiceFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewModel.getVehicles().observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is UiState.Loading -> Log.d(TAG, "Loading vehicles")
+                is UiState.Success -> {
+                    myVehicles = state.data
+                    val adapter = ArrayAdapter(requireContext(), R.layout.item_list, myVehicles.map { it.name })
+                    val vehicleInputView = getVehicleAutoCompleteTextView()
+                    vehicleInputView.setAdapter(adapter)
+                    vehicleInputView.setOnItemClickListener { _, _, position, _ ->
+                        chosenMyVehicle = myVehicles[position]
+                        Log.d(TAG, "Chosen vehicle: ${vehicleInputView.text}, object=$chosenMyVehicle")
+                    }
+                }
+                is UiState.Error -> Log.e(TAG, "Failed to load vehicles: ${state.exception?.message}")
+            }
+        }
 
         // Validate common inputs and place order
         fragBinding.quickServiceButtonPlaceOrder.setOnClickListener {

@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.ViewCompat
 import androidx.navigation.fragment.findNavController
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentLoginBinding
@@ -16,6 +17,7 @@ import androidx.fragment.app.viewModels
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import id.monpres.app.LoginActivity
 import id.monpres.app.MainActivity
+import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 class LoginFragment : Fragment() {
 
@@ -33,6 +35,11 @@ class LoginFragment : Fragment() {
     ): View {
         // Inflate the layout for this fragment
         binding = FragmentLoginBinding.inflate(layoutInflater, container, false)
+
+        // Set insets with keyboard
+        val insetsWithKeyboardCallback =
+            InsetsWithKeyboardCallback(requireActivity().window, 0, null)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root, insetsWithKeyboardCallback)
 
         /* Set up UI */
         binding.loginLayoutForm.visibility = View.GONE

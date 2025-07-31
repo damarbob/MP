@@ -23,6 +23,4 @@ class EditVehicleViewModel @Inject constructor(
     }
 
     fun updateVehicle(vehicle: Vehicle) = vehicleRepository.updateVehicle(vehicle.copy(userId = auth.currentUser?.uid))
-
-
 }

@@ -9,8 +9,7 @@
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
         <!-- AppBarLayout containing the Toolbar -->
         <com.google.android.material.appbar.AppBarLayout
@@ -45,6 +44,5 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:fitsSystemWindows="true"
         app:menu="@menu/activity_main_drawer_menu" />
 </androidx.drawerlayout.widget.DrawerLayout>

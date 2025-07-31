@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -21,7 +22,6 @@ import id.monpres.app.enums.VehicleWheelDrive
 import id.monpres.app.model.Vehicle
 import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.BaseFragment
-import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 @AndroidEntryPoint
 class InsertVehicleFragment : BaseFragment() {
@@ -61,8 +61,16 @@ class InsertVehicleFragment : BaseFragment() {
         binding = FragmentInsertVehicleBinding.inflate(inflater, container, false)
 
         // Set the window insets listener (so the keyboard can be detected and views not hide by keyboard)
-        val insetsWithKeyboardCallback = InsetsWithKeyboardCallback(requireActivity().window, 0, null)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root, insetsWithKeyboardCallback)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentInsertVehicleNestedScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
 
         /* Observe */
         // Observe vehicle types
@@ -78,7 +86,8 @@ class InsertVehicleFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as MainActivity).binding.activityMainAppBarLayout.background = binding.root.background
+        (activity as MainActivity).binding.activityMainAppBarLayout.background =
+            binding.root.background
 //        val navController = findNavController()
 //        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
 //        val appBarConfiguration =
@@ -93,6 +102,13 @@ class InsertVehicleFragment : BaseFragment() {
     private fun setupListeners() {
         // Setup form validation on text change
         setupFormListener()
+
+//        binding.fragmentInsertVehicleButtonTry.setOnClickListener {
+//            observeUiStateOneShot(viewModel.insertVehicle(Vehicle(name = "Pagani"))) {
+//                Toast.makeText(requireContext(), "Vehicle added", Toast.LENGTH_SHORT).show()
+//                findNavController().popBackStack()
+//            }
+//        }
 
         binding.fragmentInsertVehicleButtonSave.setOnClickListener {
             if (isFormValid()) {
@@ -122,7 +138,8 @@ class InsertVehicleFragment : BaseFragment() {
                         transmission =
                             fragmentInsertVehicleDropdownVehicleTransmission.text.toString()
                         wheelDrive = fragmentInsertVehicleDropdownVehicleWheelDrive.text.toString()
-                        powerSource = fragmentInsertVehicleDropdownVehiclePowerSource.text.toString()
+                        powerSource =
+                            fragmentInsertVehicleDropdownVehiclePowerSource.text.toString()
                     }
                 }
 
@@ -149,7 +166,9 @@ class InsertVehicleFragment : BaseFragment() {
             VehicleTransmission.toListString()
         )
         vehicleTransmissionAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
-        binding.fragmentInsertVehicleDropdownVehicleTransmission.setAdapter(vehicleTransmissionAdapter)
+        binding.fragmentInsertVehicleDropdownVehicleTransmission.setAdapter(
+            vehicleTransmissionAdapter
+        )
 
         // Wheel drive dropdown
         vehicleWheelDriveAdapter = ArrayAdapter(
@@ -178,6 +197,30 @@ class InsertVehicleFragment : BaseFragment() {
         binding.fragmentInsertVehicleDropdownVehiclePowerSource.addTextChangedListener { validateVehiclePowerSource() }
         binding.fragmentInsertVehicleDropdownVehicleTransmission.addTextChangedListener { validateVehicleTransmission() }
         binding.fragmentInsertVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
+
+        listOf(
+            binding.fragmentInsertVehicleTextInputLayoutVehicleName,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleType,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleYear,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleEngineCapacity,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleTransmission,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleSeat,
+            binding.fragmentInsertVehicleTextInputLayoutVehiclePowerOutput,
+            binding.fragmentInsertVehicleTextInputLayoutVehicleWheelDrive,
+            binding.fragmentInsertVehicleTextInputLayoutVehiclePowerSource,
+        ).forEach { textInputLayout ->
+            textInputLayout.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    binding.fragmentInsertVehicleNestedScrollView.post {
+                        // Scroll to the focused field
+//                        v.requestRectangleOnScreen(Rect(), false)
+//                        binding.fragmentInsertVehicleNestedScrollView.scro(0,v.top + bottomInsets)
+                    }
+                }
+            }
+        }
     }
 
     private fun isFormValid(): Boolean {
@@ -194,7 +237,11 @@ class InsertVehicleFragment : BaseFragment() {
     private fun validateName(): Boolean {
         // Validate name (required)
         return if (binding.fragmentInsertVehicleTextInputLayoutVehicleName.editText?.text.isNullOrBlank()) {
-            binding.fragmentInsertVehicleTextInputLayoutVehicleName.error = getString(R.string.x_is_required, getString(R.string.name))
+            binding.fragmentInsertVehicleTextInputLayoutVehicleName.apply {
+                error =
+                    getString(R.string.x_is_required, getString(R.string.name))
+                requestFocus()
+            }
             false
         } else {
             binding.fragmentInsertVehicleTextInputLayoutVehicleName.apply {
@@ -209,7 +256,7 @@ class InsertVehicleFragment : BaseFragment() {
         // Validate registration number (required)
         return if (binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.isNullOrBlank()) {
             binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.error =
-                getString(R.string.x_is_required,getString(R.string.registration_number))
+                getString(R.string.x_is_required, getString(R.string.registration_number))
             false
         } else {
             binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.apply {
@@ -238,12 +285,17 @@ class InsertVehicleFragment : BaseFragment() {
     private fun validateVehicleType(): Boolean {
         // Validate vehicle type (required and valid vehicle type)
         return if (binding.fragmentInsertVehicleDropdownVehicleType.text.isNullOrBlank()) {
-            binding.fragmentInsertVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_required, getString(R.string.type))
+            binding.fragmentInsertVehicleTextInputLayoutVehicleType.error =
+                getString(R.string.x_is_required, getString(R.string.type))
             false
         } else if (!vehicleTypes.any {
-                it.name.equals(binding.fragmentInsertVehicleDropdownVehicleType.text.toString(), true)
+                it.name.equals(
+                    binding.fragmentInsertVehicleDropdownVehicleType.text.toString(),
+                    true
+                )
             }) {
-            binding.fragmentInsertVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_invalid, getString(R.string.type))
+            binding.fragmentInsertVehicleTextInputLayoutVehicleType.error =
+                getString(R.string.x_is_invalid, getString(R.string.type))
             false
         } else {
             binding.fragmentInsertVehicleTextInputLayoutVehicleType.apply {

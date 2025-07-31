@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +17,7 @@ import id.monpres.app.R
 import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.VehicleAdapter
+import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 
 @AndroidEntryPoint
@@ -50,6 +53,13 @@ class HomeFragment : BaseFragment() {
     ): View {
 
         binding = FragmentHomeBinding.inflate(inflater, container, false)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHomeNestedScrollView) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+
         setupVehicleRecyclerView()
         vehiclesObservers()
         setupListeners()

@@ -8,28 +8,36 @@
     android:transitionGroup="true"
     tools:context=".ui.home.HomeFragment">
 
-    <androidx.core.widget.NestedScrollView
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentHomeProgressIndicator"
+        style="@style/Widget.Material3.LinearProgressIndicator"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:paddingHorizontal="4dp"
+        app:hideAnimationBehavior="outward"
+        app:layout_insetEdge="top"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="2dp"
+        app:wavelength="40dp"
+        app:wavelengthIndeterminate="20dp" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentHomeNestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always"
+        app:layout_dodgeInsetEdges="top">
 
         <LinearLayout
+            android:id="@+id/fragmentHomeLinearLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/fragmentHomeProgressIndicator"
-                style="@style/Widget.Material3.LinearProgressIndicator"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:indeterminate="true"
-                android:paddingHorizontal="4dp"
-                app:hideAnimationBehavior="escape"
-                app:showAnimationBehavior="inward"
-                app:wavelengthIndeterminate="20dp"
-                app:wavelength="40dp"
-                app:waveAmplitude="2dp"
-                app:trackThickness="6dp" />
 
             <!-- Quick Service -->
             <androidx.cardview.widget.CardView
@@ -206,7 +214,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/fragmentHomeRecyclerViewVehicle"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:background="@drawable/rounded_rectangle_background_clip"
                 android:clipToOutline="true"
@@ -254,7 +262,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/fragmentHomeRecyclerViewHistory"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:background="@drawable/rounded_rectangle_background_clip"
                 android:clipToOutline="true"

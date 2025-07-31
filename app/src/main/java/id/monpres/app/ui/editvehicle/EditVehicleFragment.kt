@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -67,14 +68,17 @@ class EditVehicleFragment : BaseFragment() {
         // Get vehicle from arguments
         vehicle = args.vehicle
 
-        // Set insets with keyboard
-        val insetsWithKeyboardCallback =
-            InsetsWithKeyboardCallback(requireActivity().window, 0, null)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root, insetsWithKeyboardCallback)
-//        ViewCompat.setWindowInsetsAnimationCallback(binding.root, insetsWithKeyboardCallback)
-//
-//        val insetsWithKeyboardAnimationCallback = InsetsWithKeyboardAnimationCallback(binding.fragmentEditVehicleButtonSave)
-//        ViewCompat.setWindowInsetsAnimationCallback(binding.fragmentEditVehicleButtonSave, insetsWithKeyboardAnimationCallback)
+        // Set insets
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentEditVehicleNestedScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
 
         /* Observe */
         // Observe vehicle types

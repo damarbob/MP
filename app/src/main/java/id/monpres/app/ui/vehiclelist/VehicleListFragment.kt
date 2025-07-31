@@ -8,6 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.view.ActionMode
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateMarginsRelative
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -55,6 +58,35 @@ class VehicleListFragment : BaseFragment() {
 
         binding = FragmentVehicleListBinding.inflate(inflater, container, false)
 
+        // Set insets
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentListVehicleNestedScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(
+                insets.left,
+                0,
+                insets.right,
+                insets.bottom
+            )
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentListVehicleFloatingActionButtonAddVehicle) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Apply the insets as a margin to the view. This solution sets
+            // only the bottom, left, and right dimensions, but you can apply whichever
+            // insets are appropriate to your layout. You can also update the view padding
+            // if that's more appropriate.
+            (v.layoutParams as ViewGroup.MarginLayoutParams).updateMarginsRelative(
+                insets.left + 16.dpToPx(),
+                0,
+                insets.right + 16.dpToPx(),
+                insets.bottom + 16.dpToPx()
+            )
+
+            // Return CONSUMED if you don't want the window insets to keep passing
+            // down to descendant views.
+            WindowInsetsCompat.CONSUMED
+        }
+
         setupVehicleRecyclerView()
         setupVehiclesObservers()
         return binding.root
@@ -62,7 +94,8 @@ class VehicleListFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as MainActivity).binding.activityMainAppBarLayout.background = binding.root.background
+        (activity as MainActivity).binding.activityMainAppBarLayout.background =
+            binding.root.background
 //        val navController = findNavController()
 //        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
 //        val appBarConfiguration =
@@ -114,8 +147,13 @@ class VehicleListFragment : BaseFragment() {
     }
 
     private fun setupVehiclesObservers() {
+        // Submit vehicles to adapter
         observeUiState(viewModel.getVehiclesFlow()) {
             vehicleAdapter.submitList(it)
+        }
+
+        binding.fragmentListVehicleFloatingActionButtonAddVehicle.setOnClickListener {
+            findNavController().navigate(VehicleListFragmentDirections.actionVehicleListFragmentToInsertVehicleFragment())
         }
     }
 
@@ -153,7 +191,11 @@ class VehicleListFragment : BaseFragment() {
                                     observeUiStateOneShot(viewModel.deleteVehicles(selectedIds)) {
                                         Toast.makeText(
                                             requireContext(),
-                                            resources.getQuantityString(R.plurals.deleted_x_items, selectedIds.size, selectedIds.size),
+                                            resources.getQuantityString(
+                                                R.plurals.deleted_x_items,
+                                                selectedIds.size,
+                                                selectedIds.size
+                                            ),
                                             Toast.LENGTH_SHORT
                                         ).show()
                                         dialog.dismiss()
@@ -231,6 +273,10 @@ class VehicleListFragment : BaseFragment() {
             R.plurals.x_items_selected,
             vehicleAdapter.getSelectedItemCount(), vehicleAdapter.getSelectedItemCount()
         )
+    }
+
+    private fun Int.dpToPx(): Int {
+        return (this * resources.displayMetrics.density).toInt()
     }
 
     // It's good practice to finish action mode if the fragment is being destroyed

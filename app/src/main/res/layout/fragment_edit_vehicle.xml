@@ -9,17 +9,22 @@
     tools:context=".ui.editvehicle.EditVehicleFragment">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentEditVehicleNestedScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <LinearLayout
-                android:id="@+id/linearLayout"
+                android:id="@+id/fragmentInsertVehicleLinearLayout"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:maxWidth="@dimen/input_field_max_width"
                 android:minWidth="@dimen/input_field_max_width"

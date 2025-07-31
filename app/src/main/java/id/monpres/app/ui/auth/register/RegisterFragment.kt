@@ -17,8 +17,10 @@ import id.monpres.app.MainActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentRegisterBinding
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import id.monpres.app.LoginActivity
+import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 
 class RegisterFragment : Fragment() {
@@ -37,6 +39,11 @@ class RegisterFragment : Fragment() {
     ): View {
         // Inflate the layout for this fragment
         binding = FragmentRegisterBinding.inflate(layoutInflater, container, false)
+
+        // Set insets with keyboard
+        val insetsWithKeyboardCallback =
+            InsetsWithKeyboardCallback(requireActivity().window, 0, null)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root, insetsWithKeyboardCallback)
 
         /* Observers */
         // Auth result
@@ -60,7 +67,7 @@ class RegisterFragment : Fragment() {
         }
         // Loading indicator visibility
         viewModel.progressVisibility.observe(viewLifecycleOwner) { isVisible ->
-            binding.registerLayoutLoading.visibility = if (isVisible) View.VISIBLE else View.GONE
+            binding.registerProgressIndicatorLoading.visibility = if (isVisible) View.VISIBLE else View.GONE
         }
 
         /* Listeners */
