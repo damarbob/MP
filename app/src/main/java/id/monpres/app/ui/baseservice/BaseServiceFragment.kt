@@ -223,7 +223,7 @@ abstract class BaseServiceFragment : Fragment() {
             selectedLocationLng = selectedLocationPoint?.longitude()
 
             /* User inputs */
-            address = getAddressText()
+            userAddress = getAddressText()
             vehicle = chosenMyVehicle
             issue = getIssueAutoCompleteTextView().text.toString()
             issueDescription = getIssueDescriptionText()
