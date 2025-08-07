@@ -89,6 +89,7 @@ class VehicleListFragment : BaseFragment() {
 
         setupVehicleRecyclerView()
         setupVehiclesObservers()
+        setupListeners()
         return binding.root
     }
 
@@ -151,7 +152,9 @@ class VehicleListFragment : BaseFragment() {
         observeUiState(viewModel.getVehiclesFlow()) {
             vehicleAdapter.submitList(it)
         }
+    }
 
+    fun setupListeners() {
         binding.fragmentListVehicleFloatingActionButtonAddVehicle.setOnClickListener {
             findNavController().navigate(VehicleListFragmentDirections.actionVehicleListFragmentToInsertVehicleFragment())
         }

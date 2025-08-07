@@ -97,9 +97,21 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 R.id.activityMainDrawerMenuProfile -> {
                     navController.navigate(R.id.profileFragment)
                 }
+
+                R.id.activityMainDrawerMenuOrder -> navController.navigate(R.id.action_global_orderServiceListFragment)
             }
             drawerLayout.close()
             return@setNavigationItemSelectedListener true
+        }
+        navController.addOnDestinationChangedListener { controller, destination, arguments ->
+            when (destination.id) {
+                R.id.orderServiceDetailFragment -> {
+                    supportActionBar?.hide()
+                }
+                else -> {
+                    supportActionBar?.show()
+                }
+            }
         }
 
         /* Testing. TODO: Remove on production */

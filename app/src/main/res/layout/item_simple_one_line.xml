@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Please add padding manually on recycler view or other container -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/list_background"
+    android:clickable="true"
+    android:focusable="true">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/itemSimpleOneLineImageViewImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="16dp"
+        android:background="?colorSecondaryContainer"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:src="@drawable/directions_car_24px"
+        android:tint="?colorOnSecondaryContainer"
+        app:contentPadding="8dp"
+        app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/itemSimpleOneLineTextViewTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="@string/title"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?colorOnPrimaryContainer" />
+
+        <TextView
+            android:id="@+id/itemSimpleOneLineTextViewSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="@dimen/information_title_list_text_view_max_width"
+            android:text="@string/subtitle"
+            android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+            android:textColor="?colorOnPrimaryContainer" />
+    </LinearLayout>
+</LinearLayout>

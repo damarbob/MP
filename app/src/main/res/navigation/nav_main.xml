@@ -62,7 +62,7 @@
         android:id="@+id/editVehicleFragment"
         android:name="id.monpres.app.ui.editvehicle.EditVehicleFragment"
         android:label="@string/edit_vehicle"
-        tools:layout="@layout/fragment_edit_vehicle" >
+        tools:layout="@layout/fragment_edit_vehicle">
         <argument
             android:name="vehicle"
             android:defaultValue="@null"
@@ -110,4 +110,32 @@
         android:name="id.monpres.app.ui.insertvehicle.InsertVehicleFragment"
         android:label="@string/add_vehicle"
         tools:layout="@layout/fragment_insert_vehicle" />
+    <fragment
+        android:id="@+id/orderServiceListFragment"
+        android:name="id.monpres.app.ui.orderservicelist.OrderServiceListFragment"
+        android:label="History"
+        tools:layout="@layout/fragment_order_service_list">
+        <action
+            android:id="@+id/action_orderServiceListFragment_to_orderServiceDetailFragment"
+            app:destination="@id/orderServiceDetailFragment" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_orderServiceListFragment"
+        app:destination="@id/orderServiceListFragment"
+        app:popUpTo="@id/orderServiceListFragment"
+        app:popUpToInclusive="true" />
+    <fragment
+        android:id="@+id/orderServiceDetailFragment"
+        android:name="id.monpres.app.ui.orderservicedetail.OrderServiceDetailFragment"
+        android:label="@string/invoice"
+        tools:layout="@layout/fragment_order_service_detail">
+        <argument
+            android:name="orderService"
+            app:argType="id.monpres.app.model.OrderService" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_orderServiceDetailFragment"
+        app:destination="@id/orderServiceDetailFragment"
+        app:popUpTo="@id/orderServiceDetailFragment"
+        app:popUpToInclusive="true" />
 </navigation>

@@ -3,6 +3,10 @@ package id.monpres.app.model
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.interfaces.IOrder
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class OrderService(
     override var id: String? = null,
     override var userId: String? = null,
@@ -32,4 +36,4 @@ data class OrderService(
     var issue: String? = null,
     var issueDescription: String? = null,
     var imageAttachmentUris: List<String>? = null,
-) : IOrder
+) : IOrder, Parcelable

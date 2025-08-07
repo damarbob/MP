@@ -114,4 +114,15 @@
     <string name="vehicle_updated">Vehicle updated</string>
     <string name="x_is_invalid">%s is invalid</string>
     <string name="x_is_required">%s is required</string>
+    <string name="invoice_number">Invoice number</string>
+    <string name="payment_method">Payment Method</string>
+    <string name="partner">Partner</string>
+    <string name="partner_location">Partner Location</string>
+    <string name="service_location">Service Location</string>
+    <string name="summary">Summary</string>
+    <string name="total">Total</string>
+    <string name="share">Share</string>
+    <string name="invoice">Invoice</string>
+    <string name="order_history">Order History</string>
+    <string name="setting">Setting</string>
 </resources>

@@ -17,7 +17,6 @@ import id.monpres.app.R
 import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.VehicleAdapter
-import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 
 @AndroidEntryPoint

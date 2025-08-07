@@ -7,10 +7,18 @@
         <item
             android:id="@+id/activityMainDrawerMenuProfile"
             android:icon="@drawable/menu_24px"
-            android:title="profile" />
+            android:title="@string/profile" />
         <item
             android:id="@+id/activityMainDrawerMenuLogOut"
             android:icon="@drawable/menu_24px"
-            android:title="Log Out"/>
+            android:title="@string/sign_out" />
+        <item
+            android:id="@+id/activityMainDrawerMenuSettings"
+            android:icon="@drawable/menu_24px"
+            android:title="@string/setting" />
+        <item
+            android:id="@+id/activityMainDrawerMenuOrder"
+            android:icon="@drawable/menu_24px"
+            android:title="@string/order_history" />
     </group>
 </menu>

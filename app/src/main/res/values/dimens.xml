@@ -6,4 +6,5 @@
     <dimen name="space_between_input_field">16dp</dimen>
     <dimen name="input_field_min_height">48dp</dimen>
     <dimen name="input_field_max_width">488dp</dimen>
+    <dimen name="information_title_list_text_view_max_width">140dp</dimen>
 </resources>

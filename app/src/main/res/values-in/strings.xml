@@ -111,4 +111,15 @@
     <string name="vehicle_updated">Vehicle updated</string>
     <string name="x_is_invalid">%s is invalid</string>
     <string name="x_is_required">%s is required</string>
+    <string name="invoice_number">Nomor Faktur</string>
+    <string name="payment_method">Metode Pembayaran</string>
+    <string name="partner">Mitra</string>
+    <string name="partner_location">Lokasi Mitra</string>
+    <string name="service_location">Lokasi Layanan</string>
+    <string name="summary">Ringkasan</string>
+    <string name="total">Total</string>
+    <string name="share">Bagikan</string>
+    <string name="invoice">Faktur</string>
+    <string name="order_history">Riwayat order</string>
+    <string name="setting">Pengaturan</string>
 </resources>
