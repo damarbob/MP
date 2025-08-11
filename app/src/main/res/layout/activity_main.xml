@@ -23,7 +23,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:navigationIcon="@drawable/menu_24px"
-                app:title="@string/app_name" /> <!-- Hamburger icon -->
+                app:title="@string/app_name"
+                app:titleTextAppearance="@style/Widget.App.H4.Bold" /> <!-- Hamburger icon -->
 
         </com.google.android.material.appbar.AppBarLayout>
 

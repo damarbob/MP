@@ -3,6 +3,7 @@ package id.monpres.app
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -22,6 +23,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,6 +44,10 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         val TAG: String = MainActivity::class.java.simpleName
     }
 
+    /* Authentication */
+    private val auth = Firebase.auth // Initialize Firebase Auth
+    private var currentUser: FirebaseUser? = null
+
     /* View models */
     private val viewModel: MainViewModel by viewModels()
 
@@ -51,7 +57,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     @Inject
     lateinit var getOrderServicesUseCase : GetOrderServicesUseCase
 
-    /* Views */
+    /* UI */
     lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -69,15 +75,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(binding.navHostFragmentActivityMain.id) as NavHostFragment
-        navController = navHostFragment.navController
-        appBarConfiguration = AppBarConfiguration(navController.graph, drawerLayout)
-        setSupportActionBar(binding.activityMainToolbar)
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        binding.activityMainNavigationView.setupWithNavController(navController)
-
         runAuthentication()
+
+        setupUIComponents()
 
         /* Observers */
         // Observe sign-out event
@@ -133,12 +133,34 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 || super.onSupportNavigateUp()
     }
 
+    private fun setupUIComponents() {
+        // NavHost fragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(binding.navHostFragmentActivityMain.id) as NavHostFragment
+        navController = navHostFragment.navController
+
+        // App bar
+        appBarConfiguration = AppBarConfiguration(navController.graph, drawerLayout)
+        setSupportActionBar(binding.activityMainToolbar)
+        setupActionBarWithNavController(navController, appBarConfiguration)
+
+        // Navigation view
+        val navView = binding.activityMainNavigationView
+        navView.setupWithNavController(navController)
+
+        // Navigation view header user infos
+        val navViewCardHeader = navView.inflateHeaderView(R.layout.header_navigation_activity_main)
+        navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainDisplayName).text =
+            currentUser?.displayName
+        navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainEmail).text =
+            currentUser?.email
+    }
+
     private fun runAuthentication() {
         /* Auth */
-        val auth = Firebase.auth // Initialize Firebase Auth
-        val currentUser = auth.currentUser ?: return // Get current user
+        currentUser = auth.currentUser ?: return // Get current user
 
-        Log.d(TAG, "Current user name: ${currentUser.displayName}")
+        Log.d(TAG, "Current user name: ${currentUser?.displayName}")
 
         checkEmailVerificationUseCase(
             { isVerified ->

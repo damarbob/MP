@@ -2,10 +2,12 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/Widget.Material3.CardView.Elevated"
+    android:id="@+id/itemServiceCardView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:transitionName="shared_element_container">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,67 +15,40 @@
         android:padding="16dp">
 
         <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/itemTwoLineImageViewImage"
+            android:id="@+id/itemServiceImageViewImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:background="?colorSecondaryContainer"
             android:minWidth="48dp"
             android:minHeight="48dp"
-            android:src="@drawable/directions_car_24px"
+            android:src="@drawable/add_24px"
             android:tint="?colorOnSecondaryContainer"
             app:contentPadding="8dp"
             app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="16dp"
-            android:layout_weight="2"
-            android:orientation="vertical"
-            android:paddingEnd="4dp">
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/itemTwoLineTextViewTitle"
+                android:id="@+id/itemServiceTextViewTitle"
                 style="@style/Widget.App.H5.Bold.Primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:text="@string/title"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?colorOnPrimaryContainer" />
+                android:text="@string/quick_service"
+                android:textAppearance="?attr/textAppearanceTitleLarge" />
 
             <TextView
-                android:id="@+id/itemTwoLineTextViewSubtitle"
+                android:id="@+id/itemServiceTextViewSubtitle"
                 style="@style/Widget.App.P"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/subtitle"
-                android:textColor="?colorOnPrimaryContainer" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="16dp"
-            android:gravity="end"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/itemTwoLineTextViewFirstLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?colorOnPrimaryContainer" />
-
-            <TextView
-                android:id="@+id/itemTwoLineTextViewSecondLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="?colorOnPrimaryContainer" />
+                android:text="@string/fast_on_the_spot_maintenance_and_diagnostics_to_get_your_vehicle_running_smoothly_in_no_time" />
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

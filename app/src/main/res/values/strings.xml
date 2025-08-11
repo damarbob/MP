@@ -124,5 +124,8 @@
     <string name="share">Share</string>
     <string name="invoice">Invoice</string>
     <string name="order_history">Order History</string>
-    <string name="setting">Setting</string>
+    <string name="settings">Settings</string>
+    <string name="coming_soon">Coming soon</string>
+    <string name="general">General</string>
+    <string name="other">Other</string>
 </resources>

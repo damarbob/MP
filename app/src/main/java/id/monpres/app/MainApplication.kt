@@ -57,6 +57,18 @@ class MainApplication : Application() {
                 searchTokens = null,
                 categoryId = "2"
             ),
+            Service(
+                "3",
+                "internal",
+                getString(R.string.component_replacement),
+                getString(R.string.swift_and_precise_exchange_of_worn_or_damaged_vehicle_parts_with_high_quality_originals),
+                -1.0,
+                true,
+                true,
+                imageUris = null,
+                searchTokens = null,
+                categoryId = "3"
+            ),
         )
 
         vehicles = listOf(Vehicle("kjakekv", "FirebaseAuth.getInstance().currentUser?.uid","CAR", "Tuatara"))

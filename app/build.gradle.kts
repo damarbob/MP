@@ -116,4 +116,7 @@ dependencies {
 
     /* Mapbox */
     implementation(libs.mapbox)
+
+    /* Glide */
+    implementation(libs.glide)
 }

@@ -27,7 +27,7 @@
             android:showDividers="middle">
 
             <TextView
-                style="@style/Widget.App.H1"
+                style="@style/Widget.App.H1.Bold.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/scheduled_service" />

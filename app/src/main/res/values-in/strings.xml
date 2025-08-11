@@ -121,5 +121,8 @@
     <string name="share">Bagikan</string>
     <string name="invoice">Faktur</string>
     <string name="order_history">Riwayat order</string>
-    <string name="setting">Pengaturan</string>
+    <string name="settings">Pengaturan</string>
+    <string name="coming_soon">Segera datang</string>
+    <string name="general">Umum</string>
+    <string name="other">Lainnya</string>
 </resources>
