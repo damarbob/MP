@@ -125,4 +125,5 @@
     <string name="coming_soon">Segera datang</string>
     <string name="general">Umum</string>
     <string name="other">Lainnya</string>
+    <string name="make_sure_your_full_name_matches_your_national_id_card">Pastikan nama lengkap Anda sesuai dengan kartu identitas nasional (KTP/SIM) Anda.</string>
 </resources>

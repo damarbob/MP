@@ -54,7 +54,7 @@ abstract class BaseServiceFragment : Fragment() {
     protected val TAG = this::class.java.simpleName
     protected lateinit var binding: Any
     protected var service: Service? = null
-    protected var myVehicles: List<Vehicle> = MainApplication.vehicles!!
+    protected var myVehicles: List<Vehicle> = listOf()
     protected var chosenMyVehicle: Vehicle? = null
     protected var selectedLocationPoint: Point? = null
 

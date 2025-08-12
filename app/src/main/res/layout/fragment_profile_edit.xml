@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?colorSurfaceContainer"
+    android:divider="@drawable/divider_gap_8"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:showDividers="middle"
+    tools:context=".ui.profile.ProfileFragment">
+
+    <ImageView
+        android:id="@+id/editProfileAvatar"
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:scaleType="centerInside" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/editProfileInputLayoutFullName"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/full_name"
+        app:endIconMode="clear_text"
+        app:helperText="@string/make_sure_your_full_name_matches_your_national_id_card"
+        app:startIconContentDescription="@string/full_name"
+        app:startIconDrawable="@drawable/baseline_person_outline_24">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editProfileInputEditFullName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/editProfileTextInputLayoutEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="@string/email"
+        app:endIconMode="clear_text"
+        app:startIconContentDescription="@string/email"
+        app:startIconDrawable="@drawable/outline_alternate_email_24">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editProfileInputEmailAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/editProfileButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/save"
+        app:icon="@drawable/check_24px" />
+
+</LinearLayout>

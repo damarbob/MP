@@ -15,7 +15,6 @@ class MainApplication : Application() {
         // Services
         var serviceTypes: List<ServiceType>? = null // TODO: Use repository
         var services: List<Service>? = null  // TODO: Use repository
-        var vehicles: List<Vehicle>? = null  // TODO: Use repository
     }
 
     override fun onCreate() {
@@ -70,7 +69,5 @@ class MainApplication : Application() {
                 categoryId = "3"
             ),
         )
-
-        vehicles = listOf(Vehicle("kjakekv", "FirebaseAuth.getInstance().currentUser?.uid","CAR", "Tuatara"))
     }
 }
