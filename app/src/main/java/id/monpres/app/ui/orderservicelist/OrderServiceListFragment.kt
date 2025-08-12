@@ -1,20 +1,19 @@
 package id.monpres.app.ui.orderservicelist
 
-import androidx.fragment.app.viewModels
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
-import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceListBinding
+import id.monpres.app.enums.OrderStatus
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
@@ -47,17 +46,6 @@ class OrderServiceListFragment : BaseFragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentOrderServiceListBinding.inflate(inflater, container, false)
-        // Set insets
-        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceListNestedScrollView) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(
-                insets.left,
-                0,
-                insets.right,
-                insets.bottom
-            )
-            WindowInsetsCompat.CONSUMED
-        }
 
         setupOrderServiceListRecyclerView()
         setupOrderServiceListObservers()
@@ -68,15 +56,37 @@ class OrderServiceListFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         (activity as MainActivity).binding.activityMainAppBarLayout.background =
             binding.root.background
+        // Set insets
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceListNestedScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+//            val isAppbarShowing = (requireActivity() as MainActivity).supportActionBar?.isShowing ?: false
+            v.setPadding(
+                insets.left,
+//                if (isAppbarShowing) 0 else insets.top,
+                0,
+                insets.right,
+                insets.bottom
+            )
+            windowInsets
+        }
     }
 
     fun setupOrderServiceListRecyclerView() {
         orderServiceAdapter = OrderServiceAdapter { orderService ->
-            findNavController().navigate(
-                OrderServiceListFragmentDirections.actionOrderServiceListFragmentToOrderServiceDetailFragment(
-                    orderService
+            when (orderService.status) {
+                OrderStatus.RETURNED, OrderStatus.FAILED, OrderStatus.CANCELLED, OrderStatus.COMPLETED -> {
+                    findNavController().navigate(
+                        OrderServiceListFragmentDirections.actionOrderServiceListFragmentToOrderServiceDetailFragment(
+                            orderService
+                        )
+                    )
+                }
+                else -> findNavController().navigate(
+                    OrderServiceListFragmentDirections.actionOrderServiceListFragmentToServiceProcessFragment(
+                        orderService.id!!
+                    )
                 )
-            )
+            }
         }
 
         binding.fragmentOrderServiceListRecyclerViewOrderServiceList.apply {

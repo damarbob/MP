@@ -42,10 +42,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:background="@drawable/rounded_rectangle_background_clip"
-                android:clipToOutline="true"
-                android:nestedScrollingEnabled="false"
-                tools:targetApi="31" />
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false" />
 
             <Space
                 android:layout_width="match_parent"

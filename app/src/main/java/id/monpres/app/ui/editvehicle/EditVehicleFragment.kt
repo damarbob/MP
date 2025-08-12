@@ -23,7 +23,6 @@ import id.monpres.app.enums.VehicleWheelDrive
 import id.monpres.app.model.Vehicle
 import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.BaseFragment
-import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 @AndroidEntryPoint
 class EditVehicleFragment : BaseFragment() {
@@ -70,7 +69,8 @@ class EditVehicleFragment : BaseFragment() {
 
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
             windowInsets
         }
@@ -86,15 +86,16 @@ class EditVehicleFragment : BaseFragment() {
             vehicleTypes = it
             setDropdownsOptions()
             setFormsValues()
+            setupListeners()
         }
 
-        setupListeners()
 
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        (activity as MainActivity).binding.activityMainAppBarLayout.background = binding.root.background
+        (activity as MainActivity).binding.activityMainAppBarLayout.background =
+            binding.root.background
 //        val navController = findNavController()
 //        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
 //        val appBarConfiguration =
@@ -145,8 +146,10 @@ class EditVehicleFragment : BaseFragment() {
 
                 // Update vehicle
                 observeUiStateOneShot(viewModel.updateVehicle(editedVehicle)) {
-                    Toast.makeText(requireContext(),
-                        getString(R.string.vehicle_updated), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.vehicle_updated), Toast.LENGTH_SHORT
+                    ).show()
                     findNavController().popBackStack()
                 }
             }
@@ -241,7 +244,8 @@ class EditVehicleFragment : BaseFragment() {
     private fun validateName(): Boolean {
         // Validate name (required)
         return if (binding.fragmentEditVehicleTextInputLayoutVehicleName.editText?.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleName.error = getString(R.string.x_is_required, getString(R.string.name))
+            binding.fragmentEditVehicleTextInputLayoutVehicleName.error =
+                getString(R.string.x_is_required, getString(R.string.name))
             false
         } else {
             binding.fragmentEditVehicleTextInputLayoutVehicleName.apply {
@@ -256,7 +260,7 @@ class EditVehicleFragment : BaseFragment() {
         // Validate registration number (required)
         return if (binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.isNullOrBlank()) {
             binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.error =
-                getString(R.string.x_is_required,getString(R.string.registration_number))
+                getString(R.string.x_is_required, getString(R.string.registration_number))
             false
         } else {
             binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.apply {
@@ -285,12 +289,14 @@ class EditVehicleFragment : BaseFragment() {
     private fun validateVehicleType(): Boolean {
         // Validate vehicle type (required and valid vehicle type)
         return if (binding.fragmentEditVehicleDropdownVehicleType.text.isNullOrBlank()) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_required, getString(R.string.type))
+            binding.fragmentEditVehicleTextInputLayoutVehicleType.error =
+                getString(R.string.x_is_required, getString(R.string.type))
             false
         } else if (!vehicleTypes.any {
                 it.name.equals(binding.fragmentEditVehicleDropdownVehicleType.text.toString(), true)
             }) {
-            binding.fragmentEditVehicleTextInputLayoutVehicleType.error = getString(R.string.x_is_invalid, getString(R.string.type))
+            binding.fragmentEditVehicleTextInputLayoutVehicleType.error =
+                getString(R.string.x_is_invalid, getString(R.string.type))
             false
         } else {
             binding.fragmentEditVehicleTextInputLayoutVehicleType.apply {

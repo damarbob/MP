@@ -38,7 +38,7 @@
             android:gravity="center_vertical"
             android:text="@string/title"
             android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?colorOnPrimaryContainer" />
+            android:textColor="?colorOnSurface" />
 
         <TextView
             android:id="@+id/itemSimpleOneLineTextViewSubtitle"
@@ -47,6 +47,6 @@
             android:maxWidth="@dimen/information_title_list_text_view_max_width"
             android:text="@string/subtitle"
             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-            android:textColor="?colorOnPrimaryContainer" />
+            android:textColor="?colorOnSurface" />
     </LinearLayout>
 </LinearLayout>

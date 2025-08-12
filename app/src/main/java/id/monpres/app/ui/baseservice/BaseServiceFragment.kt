@@ -12,16 +12,17 @@ import android.widget.CheckBox
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import com.mapbox.geojson.Point
 import id.monpres.app.MainApplication
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
+import id.monpres.app.enums.OrderStatus
 import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.Service
@@ -57,6 +58,12 @@ abstract class BaseServiceFragment : Fragment() {
     protected var myVehicles: List<Vehicle> = listOf()
     protected var chosenMyVehicle: Vehicle? = null
     protected var selectedLocationPoint: Point? = null
+    protected var orderPlacedCallback: OrderPlacedCallback? = null
+
+    interface OrderPlacedCallback {
+        fun onSuccess(orderService: OrderService)
+        fun onFailure(orderService: OrderService, throwable: Throwable)
+    }
 
     private val pickLocationLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -93,6 +100,9 @@ abstract class BaseServiceFragment : Fragment() {
     abstract fun getIssueInputLayout(): TextInputLayout
     abstract fun getPlaceOrderButton(): Button
     abstract fun getBaseOrderService(): OrderService
+    protected fun registerOrderPlacedCallback(callback: OrderPlacedCallback) {
+        orderPlacedCallback = callback
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -122,13 +132,15 @@ abstract class BaseServiceFragment : Fragment() {
 
         // Order result observer
         getViewModel().placeOrderResult.observe(viewLifecycleOwner) { result ->
-            result?.onSuccess {
+            result?.onSuccess { orderService ->
                 Toast.makeText(
                     requireContext(),
                     getString(R.string.order_placed_successfully),
                     Toast.LENGTH_SHORT
                 ).show()
-                findNavController().popBackStack()
+                if (orderService != null) {
+                    orderPlacedCallback?.onSuccess(orderService)
+                }
             }?.onFailure {
                 val error = it.localizedMessage ?: it.message ?: "Unknown error"
                 Log.e(TAG, error)
@@ -137,6 +149,7 @@ abstract class BaseServiceFragment : Fragment() {
                     getString(R.string.failed_to_place_order),
                     Toast.LENGTH_SHORT
                 ).show()
+                orderPlacedCallback?.onFailure(getBaseOrderService(), it)
             }
         }
 
@@ -208,8 +221,11 @@ abstract class BaseServiceFragment : Fragment() {
     protected fun placeOrder() {
         val orderService = getBaseOrderService().apply {
             /* System */
-            userId = Firebase.auth.uid
+            userId = Firebase.auth.currentUser?.uid
             serviceId = service?.id
+            status = OrderStatus.PENDING
+            createdAt = Timestamp.now()
+            updatedAt = Timestamp.now()
 
             /* Service snapshot */
             type = MainApplication.serviceTypes?.find { it.id == service?.typeId }?.name

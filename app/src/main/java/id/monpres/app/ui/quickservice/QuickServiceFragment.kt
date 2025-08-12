@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentQuickServiceBinding
@@ -31,7 +32,8 @@ class QuickServiceFragment : BaseServiceFragment() {
 
         // Set insets with keyboard
         ViewCompat.setOnApplyWindowInsetsListener(fragBinding.root) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
             windowInsets
         }
@@ -67,15 +69,25 @@ class QuickServiceFragment : BaseServiceFragment() {
                 is UiState.Loading -> Log.d(TAG, "Loading vehicles")
                 is UiState.Success -> {
                     myVehicles = state.data
-                    val adapter = ArrayAdapter(requireContext(), R.layout.item_list, myVehicles.map { it.name })
+                    val adapter = ArrayAdapter(
+                        requireContext(),
+                        R.layout.item_list,
+                        myVehicles.map { it.name })
                     val vehicleInputView = getVehicleAutoCompleteTextView()
                     vehicleInputView.setAdapter(adapter)
                     vehicleInputView.setOnItemClickListener { _, _, position, _ ->
                         chosenMyVehicle = myVehicles[position]
-                        Log.d(TAG, "Chosen vehicle: ${vehicleInputView.text}, object=$chosenMyVehicle")
+                        Log.d(
+                            TAG,
+                            "Chosen vehicle: ${vehicleInputView.text}, object=$chosenMyVehicle"
+                        )
                     }
                 }
-                is UiState.Error -> Log.e(TAG, "Failed to load vehicles: ${state.exception?.message}")
+
+                is UiState.Error -> Log.e(
+                    TAG,
+                    "Failed to load vehicles: ${state.exception?.message}"
+                )
             }
         }
 
@@ -89,6 +101,25 @@ class QuickServiceFragment : BaseServiceFragment() {
                 placeOrder()
             } else Log.d(TAG, "Validation failed")
         }
+
+        registerOrderPlacedCallback(object : OrderPlacedCallback {
+            override fun onSuccess(orderService: OrderService) {
+                orderService.id?.let {
+                    findNavController().navigate(
+                        QuickServiceFragmentDirections.actionQuickServiceFragmentToServiceProcessFragment(
+                            it
+                        )
+                    )
+                }
+            }
+
+            override fun onFailure(
+                orderService: OrderService,
+                throwable: Throwable
+            ) {
+                findNavController().popBackStack()
+            }
+        })
     }
 
     override fun getViewModel(): BaseServiceViewModel {

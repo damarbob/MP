@@ -18,9 +18,11 @@ import id.monpres.app.MainActivity
 import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentHomeBinding
+import id.monpres.app.enums.OrderStatus
 import id.monpres.app.model.Banner
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
+import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.adapter.ServiceAdapter
 import id.monpres.app.ui.adapter.VehicleAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
@@ -41,6 +43,7 @@ class HomeFragment : BaseFragment() {
     /* UI */
     private lateinit var serviceAdapter: ServiceAdapter
     private lateinit var vehicleAdapter: VehicleAdapter
+    private lateinit var orderServiceAdapter: OrderServiceAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,13 +64,15 @@ class HomeFragment : BaseFragment() {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHomeNestedScrollView) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
             WindowInsetsCompat.CONSUMED
         }
 
         setupServiceRecyclerView()
         setupVehicleRecyclerView()
+        setupOrderServiceRecyclerView()
+        setupOrderServiceObservers()
         vehiclesObservers()
         setupListeners()
 
@@ -100,6 +105,10 @@ class HomeFragment : BaseFragment() {
 
             fragmentHomeButtonAddVehicle.setOnClickListener {
                 findNavController().navigate(R.id.action_homeFragment_to_insertVehicleFragment)
+            }
+
+            fragmentHomeButtonSeeAllHistory.setOnClickListener {
+                findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToOrderServiceListFragment())
             }
         }
     }
@@ -171,11 +180,44 @@ class HomeFragment : BaseFragment() {
         observeUiState(viewModel.getVehiclesFlow()) { vehicles ->
             vehicleAdapter.submitList(vehicles.take(5))
 
-            if (vehicles.size > 0) {
+            if (vehicles.isNotEmpty()) {
                 binding.fragmentHomeButtonSeeAllVehicle.visibility = View.VISIBLE
             } else {
                 binding.fragmentHomeButtonSeeAllVehicle.visibility = View.GONE
             }
+        }
+    }
+
+    fun setupOrderServiceRecyclerView() {
+        orderServiceAdapter = OrderServiceAdapter { orderService ->
+            when (orderService.status) {
+                OrderStatus.RETURNED, OrderStatus.FAILED, OrderStatus.CANCELLED, OrderStatus.COMPLETED -> {
+                    findNavController().navigate(
+                        HomeFragmentDirections.actionHomeFragmentToOrderServiceDetailFragment(
+                            orderService
+                        )
+                    )
+                }
+                else -> findNavController().navigate(
+                    HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(
+                        orderService.id!!
+                    )
+                )
+            }
+        }
+
+        binding.fragmentHomeRecyclerViewHistory.apply {
+            addItemDecoration(SpacingItemDecoration(2))
+            adapter = orderServiceAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+        }
+    }
+
+    fun setupOrderServiceObservers() {
+        observeUiState(viewModel.getOrderServiceFlow()) {
+            orderServiceAdapter.submitList(it.take(5))
+
+            binding.fragmentHomeButtonSeeAllHistory.visibility = if (it.isEmpty()) View.GONE else View.VISIBLE
         }
     }
 }

@@ -61,10 +61,10 @@
                 android:layout_height="wrap_content">
 
                 <TextView
+                    style="@style/Widget.App.H4.Bold"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/vehicles"
-                    style="@style/Widget.App.H4.Bold"
                     android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
 
                 <Space
@@ -87,12 +87,9 @@
                 android:id="@+id/fragmentHomeRecyclerViewVehicle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/rounded_rectangle_background_clip"
-                android:clipToOutline="true"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
-                android:padding="1dp"
-                tools:targetApi="31" />
+                android:padding="1dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentHomeButtonAddVehicle"
@@ -109,10 +106,10 @@
                 android:layout_height="wrap_content">
 
                 <TextView
+                    style="@style/Widget.App.H4.Bold"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/history"
-                    style="@style/Widget.App.H4.Bold"
                     android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
 
                 <Space
@@ -134,12 +131,9 @@
                 android:id="@+id/fragmentHomeRecyclerViewHistory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/rounded_rectangle_background_clip"
-                android:clipToOutline="true"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
-                android:padding="1dp"
-                tools:targetApi="31" />
+                android:padding="1dp" />
 
         </LinearLayout>
 

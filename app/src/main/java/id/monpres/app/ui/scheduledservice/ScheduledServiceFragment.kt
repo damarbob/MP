@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -125,6 +126,21 @@ class ScheduledServiceFragment : BaseServiceFragment() {
                 placeOrder()
             } else Log.d(TAG, "Validation failed")
         }
+
+        registerOrderPlacedCallback(object : OrderPlacedCallback {
+            override fun onSuccess(orderService: OrderService) {
+                orderService.id?.let {
+                    findNavController().popBackStack()
+                }
+            }
+
+            override fun onFailure(
+                orderService: OrderService,
+                throwable: Throwable
+            ) {
+                findNavController().popBackStack()
+            }
+        })
     }
 
     private fun validateDate(): Boolean {

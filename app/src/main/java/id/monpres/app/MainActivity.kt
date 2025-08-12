@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -21,7 +20,9 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.transition.MaterialFade
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
@@ -54,8 +55,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     /* Use cases */
     private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
     private val resendVerificationEmailUseCase = ResendVerificationEmailUseCase()
+
     @Inject
-    lateinit var getOrderServicesUseCase : GetOrderServicesUseCase
+    lateinit var getOrderServicesUseCase: GetOrderServicesUseCase
 
     /* UI */
     lateinit var binding: ActivityMainBinding
@@ -68,12 +70,33 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            v.setPadding(systemBars.left, 0, systemBars.right, 0)
-            insets
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, 0, insets.right, 0)
+            windowInsets
         }
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+//        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainAppBarLayout) { v, windowInsets ->
+//            val insets =
+//                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+//            lifecycleScope.launch {
+//                delay(150L)
+//                v.setPadding(
+//                    insets.left,
+//                    if (supportActionBar?.isShowing == true) insets.top else 0,
+//                    insets.right,
+//                    0
+//                )
+//            }
+//            windowInsets
+//        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainNavigationView) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, 0, insets.right, 0)
+            windowInsets
+        }
+//        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         runAuthentication()
 
@@ -105,10 +128,19 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
             when (destination.id) {
-                R.id.orderServiceDetailFragment -> {
+                R.id.orderServiceDetailFragment, R.id.serviceProcessFragment -> {
+                    val materialFade = MaterialFade().apply {
+                        duration = 150L
+                    }
+                    TransitionManager.beginDelayedTransition(binding.root, materialFade)
                     supportActionBar?.hide()
                 }
+
                 else -> {
+                    val materialFade = MaterialFade().apply {
+                        duration = 150L
+                    }
+                    TransitionManager.beginDelayedTransition(binding.root, materialFade)
                     supportActionBar?.show()
                 }
             }

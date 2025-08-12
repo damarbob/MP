@@ -60,7 +60,8 @@ class VehicleListFragment : BaseFragment() {
 
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentListVehicleNestedScrollView) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(
                 insets.left,
                 0,
@@ -70,7 +71,8 @@ class VehicleListFragment : BaseFragment() {
             WindowInsetsCompat.CONSUMED
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentListVehicleFloatingActionButtonAddVehicle) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             // Apply the insets as a margin to the view. This solution sets
             // only the bottom, left, and right dimensions, but you can apply whichever
             // insets are appropriate to your layout. You can also update the view padding
