@@ -124,9 +124,24 @@
     <string name="share">Share</string>
     <string name="invoice">Invoice</string>
     <string name="order_history">Order History</string>
+    <string name="setting">Setting</string>
+    <string name="service_process">Service Process</string>
     <string name="settings">Settings</string>
     <string name="coming_soon">Coming soon</string>
     <string name="general">General</string>
     <string name="other">Other</string>
+    <string name="order_id">Order ID</string>
+    <string name="x_x">%1$s %2$s</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+    <string name="notification">Notification</string>
+    <string name="x_permission_is_not_granted">%s permission is not granted</string>
+    <string name="this_permission_is_disabled">This permission is disabled. Please enable it in Setting app</string>
+    <string name="go_to_settings">Go to Setting</string>
+    <string name="x_permission_required">%s permission required</string>
+    <string name="please_grant_permission">Please grant permission to run all features</string>
+    <string name="okay">Okay</string>
+    <string name="invoice_saved_to_gallery">Invoice saved to gallery</string>
+    <string name="share_image">Share Image</string>
     <string name="make_sure_your_full_name_matches_your_national_id_card">Make sure your full name matches your national ID card.</string>
 </resources>

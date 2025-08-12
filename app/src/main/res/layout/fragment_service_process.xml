@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.view.insets.ProtectionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?colorSurfaceContainer"
+    android:transitionGroup="true"
+    tools:context=".ui.serviceprocess.ServiceProcessFragment">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentServiceProcessNestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+
+            android:gravity="center_horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="24dp">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/fragmentServiceProcessProgressIndicator"
+                style="@style/Widget.Material3.CircularProgressIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:paddingHorizontal="4dp"
+                android:progress="70"
+                app:hideAnimationBehavior="outward"
+                app:indicatorInset="16dp"
+                app:indicatorSize="200dp"
+                app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessTextViewTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:showAnimationBehavior="inward"
+                app:trackThickness="20dp"
+                app:waveAmplitude="6dp"
+                app:wavelength="60dp"
+                app:wavelengthDeterminate="60dp"
+                app:wavelengthIndeterminate="60dp" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/fragmentServiceProcessTextViewTitle"
+                style="@style/Widget.App.H1.Bold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium.Emphasized"
+                app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessLinearLayoutDetailContainer"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/fragmentServiceProcessLinearLayoutDetailContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="96dp"
+                android:background="@drawable/rounded_large_rectangle_background"
+                android:divider="@drawable/divider_gap_8"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:showDividers="middle"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="@dimen/information_title_list_text_view_max_width"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:ellipsize="marquee"
+                        android:text="@string/order_id"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessOrderId"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="1"
+                        android:autoSizeTextType="uniform"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="@dimen/information_title_list_text_view_max_width"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:ellipsize="marquee"
+                        android:text="@string/location"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessLocation"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="1"
+                        android:autoSizeTextType="uniform"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="@dimen/information_title_list_text_view_max_width"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:ellipsize="marquee"
+                        android:text="@string/address"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessAddress"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="1"
+                        android:autoSizeTextType="uniform"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="@dimen/information_title_list_text_view_max_width"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:ellipsize="marquee"
+                        android:text="@string/partner"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessPartner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="1"
+                        android:autoSizeTextType="uniform"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="@dimen/information_title_list_text_view_max_width"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:ellipsize="marquee"
+                        android:text="@string/vehicle"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessVehicle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="1"
+                        android:autoSizeTextType="uniform"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="@dimen/information_title_list_text_view_max_width"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:ellipsize="marquee"
+                        android:text="@string/issue"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessIssue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="1"
+                        android:autoSizeTextType="uniform"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="@dimen/information_title_list_text_view_max_width"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:ellipsize="marquee"
+                        android:text="@string/description"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessIssueDescription"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="1"
+                        android:autoSizeTextType="uniform"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fragmentServiceProcessButtonCancel"
+                style="@style/Widget.Material3Expressive.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="?colorError"
+                android:maxWidth="60dp"
+                android:text="@string/cancel"
+                app:icon="@drawable/close_24px"
+                app:iconGravity="textStart"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fragmentServiceProcessButtonComplete"
+                style="@style/Widget.Material3Expressive.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Done"
+                android:visibility="gone"
+                app:icon="@drawable/check_24px"
+                app:iconGravity="textStart"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.core.view.insets.ProtectionLayout>

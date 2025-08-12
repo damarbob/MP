@@ -52,6 +52,15 @@
         <action
             android:id="@+id/action_homeFragment_to_insertVehicleFragment"
             app:destination="@id/insertVehicleFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_serviceProcessFragment"
+            app:destination="@id/serviceProcessFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_orderServiceDetailFragment"
+            app:destination="@id/orderServiceDetailFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_orderServiceListFragment"
+            app:destination="@id/orderServiceListFragment" />
     </fragment>
     <fragment
         android:id="@+id/profileFragment"
@@ -74,7 +83,12 @@
         android:id="@+id/quickServiceFragment"
         android:name="id.monpres.app.ui.quickservice.QuickServiceFragment"
         android:label="@string/quick_service"
-        tools:layout="@layout/fragment_quick_service" />
+        tools:layout="@layout/fragment_quick_service" >
+        <action
+            android:id="@+id/action_quickServiceFragment_to_serviceProcessFragment"
+            app:destination="@id/serviceProcessFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
     <fragment
         android:id="@+id/scheduledServiceFragment"
         android:name="id.monpres.app.ui.scheduledservice.ScheduledServiceFragment"
@@ -118,6 +132,9 @@
         <action
             android:id="@+id/action_orderServiceListFragment_to_orderServiceDetailFragment"
             app:destination="@id/orderServiceDetailFragment" />
+        <action
+            android:id="@+id/action_orderServiceListFragment_to_serviceProcessFragment"
+            app:destination="@id/serviceProcessFragment" />
     </fragment>
     <action
         android:id="@+id/action_global_orderServiceListFragment"
@@ -138,4 +155,17 @@
         app:destination="@id/orderServiceDetailFragment"
         app:popUpTo="@id/orderServiceDetailFragment"
         app:popUpToInclusive="true" />
+    <fragment
+        android:id="@+id/serviceProcessFragment"
+        android:name="id.monpres.app.ui.serviceprocess.ServiceProcessFragment"
+        android:label="@string/service_process"
+        tools:layout="@layout/fragment_service_process" >
+        <argument
+            android:name="orderServiceId"
+            app:argType="string" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_serviceProcessFragment"
+        app:destination="@id/serviceProcessFragment"
+        app:popUpTo="@id/homeFragment" />
 </navigation>

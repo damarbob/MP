@@ -121,9 +121,24 @@
     <string name="share">Bagikan</string>
     <string name="invoice">Faktur</string>
     <string name="order_history">Riwayat order</string>
+    <string name="setting">Pengaturan</string>
+    <string name="service_process">Proses Servis</string>
     <string name="settings">Pengaturan</string>
     <string name="coming_soon">Segera datang</string>
     <string name="general">Umum</string>
     <string name="other">Lainnya</string>
+    <string name="order_id">Order ID</string>
+    <string name="x_x">%1$s %2$s</string>
+    <string name="camera">Kamera</string>
+    <string name="gallery">Galeri</string>
+    <string name="notification">Notifikasi</string>
+    <string name="x_permission_is_not_granted">%s tidak diizinkan</string>
+    <string name="this_permission_is_disabled">Izin ini dinonaktifkan. Harap aktifkan di aplikasi Pengaturan.</string>
+    <string name="go_to_settings">Pergi ke Pengaturan</string>
+    <string name="x_permission_required">Diperlukan izin %s</string>
+    <string name="please_grant_permission">Harap berikan izin untuk menjalankan semua fitur</string>
+    <string name="okay">Oke</string>
+    <string name="invoice_saved_to_gallery">Faktur terismpan di galeri</string>
+    <string name="share_image">Bagikan gambar</string>
     <string name="make_sure_your_full_name_matches_your_national_id_card">Pastikan nama lengkap Anda sesuai dengan kartu identitas nasional (KTP/SIM) Anda.</string>
 </resources>

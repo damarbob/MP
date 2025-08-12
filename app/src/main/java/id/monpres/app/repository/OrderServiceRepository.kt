@@ -1,15 +1,19 @@
 package id.monpres.app.repository
 
 import android.security.keystore.UserNotAuthenticatedException
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import id.monpres.app.model.OrderService
+import id.monpres.app.usecase.GetDataByUserIdUseCase
+import id.monpres.app.usecase.ObserveCollectionByIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByUserIdUseCase
 import id.monpres.app.utils.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -18,24 +22,64 @@ import javax.inject.Inject
 class OrderServiceRepository @Inject constructor(
     firestore: FirebaseFirestore,
     val firebaseAuth: FirebaseAuth
-) {
+) : Repository<OrderService>() {
+    companion object {
+        const val TAG = "OrderServiceRepository"
+    }
     val observeCollectionByUserIdUseCase: ObserveCollectionByUserIdUseCase =
         ObserveCollectionByUserIdUseCase(firestore)
+    val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase =
+        ObserveCollectionByIdUseCase(firestore)
+    val getDataByUserIdUseCase: GetDataByUserIdUseCase = GetDataByUserIdUseCase(firestore)
 
     fun observeOrderServiceByUserId(): Flow<UiState<List<OrderService>>> =
         observeCollectionByUserIdUseCase(
             getCurrentUserId(),
-            "orderServices", OrderService::class.java
+            OrderService.COLLECTION, OrderService::class.java
         )
             .distinctUntilChanged()
             .map<List<OrderService?>?, UiState<List<OrderService>>> { orderServices ->
-                UiState.Success(orderServices?.mapNotNull { it } ?: listOf())
+                setRecords(orderServices?.mapNotNull { it } ?: listOf(), false)
+                UiState.Success(orderServices?.mapNotNull { it } ?: throw NullPointerException())
             }
             .onStart { emit(UiState.Loading) }
             .catch { e ->
                 emit(UiState.Error(e))
             }
             .flowOn(Dispatchers.IO)
+
+    suspend fun observeOrderServiceById(id: String): Flow<UiState<OrderService>> {
+        val orderServices = getOrderServiceByUserId()
+        Log.d(TAG, "OrderServices: $orderServices")
+        Log.d(TAG, "id: $id")
+        Log.d(TAG, "userId: ${getCurrentUserId()}")
+        val isOwned = orderServices?.any {
+            it.id == id
+            it.userId == getCurrentUserId()
+        } ?: false
+        return if (orderServices?.isEmpty() == true)
+            flowOf(UiState.Error(NullPointerException()))
+        else if (!isOwned)
+            flowOf(UiState.Error(Exception()))
+        else
+            observeCollectionByIdUseCase(
+                id,
+                OrderService.COLLECTION, OrderService::class.java
+            )
+                .distinctUntilChanged()
+                .map<OrderService?, UiState<OrderService>> { orderService ->
+                    UiState.Success(
+                        orderService ?: throw NullPointerException()
+                    )
+                }
+                .onStart { emit(UiState.Loading) }
+                .catch { e ->
+                    emit(UiState.Error(e))
+                }
+                .flowOn(Dispatchers.IO)
+    }
+
+    suspend fun getOrderServiceByUserId() = getDataByUserIdUseCase(getCurrentUserId(), OrderService.COLLECTION, OrderService::class.java)
 
     /**
      * Retrieves the UID of the currently authenticated Firebase user.
@@ -46,5 +90,29 @@ class OrderServiceRepository @Inject constructor(
     private fun getCurrentUserId(): String {
         return firebaseAuth.currentUser?.uid
             ?: throw UserNotAuthenticatedException()
+    }
+
+    override fun onStart() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onDestroy() {
+        TODO("Not yet implemented")
+    }
+
+    override fun createRecord(record: OrderService) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onRecordAdded(record: OrderService) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onRecordDeleted(record: OrderService) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onRecordCleared() {
+        TODO("Not yet implemented")
     }
 }
