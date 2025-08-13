@@ -3,11 +3,15 @@ package id.monpres.app
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.ClearCredentialStateRequest
@@ -21,6 +25,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.transition.TransitionManager
+import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialFade
 import com.google.firebase.Firebase
@@ -31,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
+import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -58,11 +64,13 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
     @Inject
     lateinit var getOrderServicesUseCase: GetOrderServicesUseCase
+    private val getColorFromAttrUseCase = GetColorFromAttrUseCase()
 
     /* UI */
     lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
+    private var optionsMenu: Menu? = null
     val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,35 +106,67 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
 //        WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        /* Auth */
         runAuthentication()
 
+        /* UI */
         setupUIComponents()
 
         /* Observers */
-        // Observe sign-out event
-        lifecycleScope.launch {
-            viewModel.signOutEvent.collect {
-                clearCredentialsAndNavigate()
-            }
-        }
+        setupObservers()
 
         /* Listeners */
-        binding.activityMainNavigationView.setNavigationItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.activityMainDrawerMenuLogOut -> {
-                    onLogoutClicked()
-                }
+        setupUIListeners()
+        setupNavControllerListeners()
 
-                R.id.activityMainDrawerMenuProfile -> {
-                    navController.navigate(R.id.profileFragment)
+        /* Testing. TODO: Remove on production */
+        getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
+            result.onSuccess { orders ->
+                for (order in orders) {
+                    val orderJson = Gson().toJson(order.vehicle)
+                    Log.d(TAG, "Order: $orderJson")
                 }
-
-                R.id.activityMainDrawerMenuOrder -> navController.navigate(R.id.action_global_orderServiceListFragment)
             }
-            drawerLayout.close()
-            return@setNavigationItemSelectedListener true
+                .onFailure { t ->
+                    Log.e(TAG, t.localizedMessage ?: t.message ?: "Unknown error")
+                }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        optionsMenu = menu // Save menu for later use
+
+        // Inflate the menu
+        menuInflater.inflate(R.menu.activity_main_profile_menu, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        prepareProfileIconMenu(menu) // Prepare profile menu
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        Log.d(TAG, "onOptionsItemSelected: ${item.itemId}")
+        return when (item.itemId) {
+            android.R.id.home -> {
+                // Preserve navigation controller's behavior
+                return super.onOptionsItemSelected(item)
+            }
+            // Add other menu items here (if any)
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp(appBarConfiguration)
+                || super.onSupportNavigateUp()
+    }
+
+    private fun setupNavControllerListeners() {
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
+
+            // Action bar visibility
             when (destination.id) {
                 R.id.orderServiceDetailFragment, R.id.serviceProcessFragment -> {
                     val materialFade = MaterialFade().apply {
@@ -144,25 +184,24 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                     supportActionBar?.show()
                 }
             }
-        }
 
-        /* Testing. TODO: Remove on production */
-        getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
-            result.onSuccess { orders ->
-                for (order in orders) {
-                    val orderJson = Gson().toJson(order.vehicle)
-                    Log.d(TAG, "Order: $orderJson")
-                }
+            // Profile menu visibility
+            if (destination.id !== R.id.homeFragment) {
+                optionsMenu?.findItem(R.id.menu_profile)?.isVisible = false
             }
-                .onFailure { t ->
-                    Log.e(TAG, t.localizedMessage ?: t.message ?: "Unknown error")
-                }
+            else {
+                optionsMenu?.findItem(R.id.menu_profile)?.isVisible = true
+            }
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
+    private fun setupObservers() {
+        // Observe sign-out event
+        lifecycleScope.launch {
+            viewModel.signOutEvent.collect {
+                clearCredentialsAndNavigate()
+            }
+        }
     }
 
     private fun setupUIComponents() {
@@ -186,6 +225,76 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             currentUser?.displayName
         navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainEmail).text =
             currentUser?.email
+    }
+
+    private fun setupUIListeners() {
+        binding.activityMainNavigationView.setNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.activityMainDrawerMenuLogOut -> {
+                    onLogoutClicked()
+                }
+
+                R.id.activityMainDrawerMenuProfile -> {
+                    navController.navigate(R.id.profileFragment)
+                }
+
+                R.id.activityMainDrawerMenuOrder -> navController.navigate(R.id.action_global_orderServiceListFragment)
+            }
+            drawerLayout.close()
+            return@setNavigationItemSelectedListener true
+        }
+    }
+
+    /**
+     * Prepare profile menu with avatar icon
+     *
+     * @param menu Menu to prepare
+     */
+    private fun prepareProfileIconMenu(menu: Menu) {
+        // Handle avatar loading AFTER menu creation
+        val profileItem = menu.findItem(R.id.menu_profile)
+        val profileView = profileItem.actionView?.findViewById<ImageView>(R.id.profile_icon)
+
+        profileView.let { view ->
+            // Remove old listeners to prevent duplicates
+            view?.setOnClickListener(null)
+
+            // Set explicit click listener
+            view?.setOnClickListener {
+                // Handle profile navigation
+                navController.navigate(R.id.action_global_profileFragment)
+                // Optional: close drawer if open
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
+            }
+        }
+
+        // Load avatar icon from UI avatars
+        Glide.with(this)
+            .load(
+                "https://ui-avatars.com/api/?size=192&name=${
+                    auth.currentUser?.displayName?.replace(
+                        " ",
+                        "-"
+                    )
+                }&rounded=true&" +
+                        "background=${
+                            getColorFromAttrUseCase.getColorHex(
+                                com.google.android.material.R.attr.colorPrimarySurface,
+                                this
+                            )
+                        }&" +
+                        "color=${
+                            getColorFromAttrUseCase.getColorHex(
+                                com.google.android.material.R.attr.colorOnPrimary,
+                                this
+                            )
+                        }&bold=true"
+            )
+            .circleCrop() // Circular avatar
+            .error(R.drawable.person_24px) // Error state
+            .into(profileView!!)
     }
 
     private fun runAuthentication() {
@@ -302,8 +411,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         finish()
     }
 
-    // Example usage
-    fun onLogoutClicked() {
+    // Sign out
+    private fun onLogoutClicked() {
         viewModel.signOut()
     }
 }

@@ -19,13 +19,14 @@
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true">
 
-            <androidx.appcompat.widget.Toolbar
+            <!-- Toolbar button (for menu) -->
+            <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/activityMainToolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:navigationIcon="@drawable/menu_24px"
                 app:title="@string/app_name"
-                app:titleTextAppearance="@style/Widget.App.H4.Bold" /> <!-- Hamburger icon -->
+                app:titleTextAppearance="@style/Widget.App.H4.Bold" />
 
         </com.google.android.material.appbar.AppBarLayout>
 

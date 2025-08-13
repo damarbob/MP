@@ -18,11 +18,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="?colorSecondaryContainer"
+            android:background="?colorPrimaryContainer"
             android:minWidth="48dp"
             android:minHeight="48dp"
             android:src="@drawable/directions_car_24px"
-            android:tint="?colorOnSecondaryContainer"
+            android:tint="?colorOnPrimaryContainer"
             app:contentPadding="8dp"
             app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
 

@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?colorSurfaceContainer"
     android:transitionGroup="true"
     tools:context=".ui.home.HomeFragment">
 
@@ -39,7 +38,8 @@
             android:layout_height="wrap_content"
             android:divider="@drawable/divider_gap_8"
             android:orientation="vertical"
-            android:padding="16dp"
+            android:paddingVertical="16dp"
+            android:paddingHorizontal="24dp"
             android:showDividers="middle">
 
             <androidx.recyclerview.widget.RecyclerView
@@ -74,7 +74,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/fragmentHomeButtonSeeAllVehicle"
-                    style="@style/Widget.Material3Expressive.Button.TonalButton"
+                    style="@style/Widget.Material3Expressive.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/see_all"
@@ -93,7 +93,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentHomeButtonAddVehicle"
-                style="@style/Widget.Material3Expressive.Button.ElevatedButton"
+                style="@style/Widget.Material3Expressive.Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -119,7 +119,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/fragmentHomeButtonSeeAllHistory"
-                    style="@style/Widget.Material3Expressive.Button.TonalButton"
+                    style="@style/Widget.Material3Expressive.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/see_all"

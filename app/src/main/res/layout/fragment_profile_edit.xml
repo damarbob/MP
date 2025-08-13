@@ -4,18 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?colorSurfaceContainer"
     android:divider="@drawable/divider_gap_8"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:paddingHorizontal="32dp"
+    android:paddingVertical="16dp"
     android:showDividers="middle"
     tools:context=".ui.profile.ProfileFragment">
 
     <ImageView
         android:id="@+id/editProfileAvatar"
         android:layout_width="wrap_content"
-        android:layout_height="200dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginBottom="16dp"
+        android:minHeight="120dp"
         android:scaleType="centerInside" />
 
     <com.google.android.material.textfield.TextInputLayout
