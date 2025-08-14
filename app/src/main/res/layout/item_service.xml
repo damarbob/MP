@@ -19,11 +19,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="?colorPrimaryContainer"
+            android:background="?colorSecondaryContainer"
             android:minWidth="48dp"
             android:minHeight="48dp"
             android:src="@drawable/add_24px"
-            android:tint="?colorOnPrimaryContainer"
+            android:tint="?colorOnSecondaryContainer"
             app:contentPadding="8dp"
             app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
 

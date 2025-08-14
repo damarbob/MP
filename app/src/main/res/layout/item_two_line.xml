@@ -18,11 +18,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="?colorPrimaryContainer"
+            android:background="?colorSecondaryContainer"
             android:minWidth="48dp"
             android:minHeight="48dp"
             android:src="@drawable/directions_car_24px"
-            android:tint="?colorOnPrimaryContainer"
+            android:tint="?colorOnSecondaryContainer"
             app:contentPadding="8dp"
             app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
 
@@ -41,8 +41,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:text="@string/title"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?colorOnPrimaryContainer" />
+                android:textAppearance="?attr/textAppearanceTitleLarge" />
 
             <TextView
                 android:id="@+id/itemTwoLineTextViewSubtitle"
@@ -53,8 +52,7 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:scrollHorizontally="true"
                 android:singleLine="true"
-                android:text="@string/subtitle"
-                android:textColor="?colorOnPrimaryContainer" />
+                android:text="@string/subtitle" />
         </LinearLayout>
 
         <LinearLayout
@@ -90,8 +88,9 @@
                 android:maxWidth="80dp"
                 android:scrollHorizontally="true"
                 android:singleLine="true"
-                android:textColor="?colorOnPrimaryContainer"
                 tools:targetApi="26" />
+
         </LinearLayout>
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
