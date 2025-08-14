@@ -9,7 +9,5 @@ import javax.inject.Inject
 class VehicleListViewModel @Inject constructor(
     private val vehicleRepository: VehicleRepository
 ) : ViewModel() {
-
-    fun getVehiclesFlow() = vehicleRepository.getVehiclesByUserIdFlow()
     fun deleteVehicles(vehicleIds: List<String>) = vehicleRepository.deleteVehicles(vehicleIds)
 }

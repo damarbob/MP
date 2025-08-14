@@ -43,6 +43,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:clipToPadding="false"
+                android:padding="1dp"
                 android:nestedScrollingEnabled="false" />
 
             <Space

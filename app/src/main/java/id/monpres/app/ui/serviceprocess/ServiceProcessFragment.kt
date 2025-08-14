@@ -10,12 +10,14 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentServiceProcessBinding
 import id.monpres.app.enums.OrderStatus
@@ -32,6 +34,7 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private val viewModel: ServiceProcessViewModel by viewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
 
     private val args: ServiceProcessFragmentArgs by navArgs()
 
@@ -68,6 +71,8 @@ class ServiceProcessFragment : BaseFragment() {
             windowInsets
         }
 
+        mainViewModel.observeOrderServiceById(args.orderServiceId)
+
         setupObservers()
         setupListeners()
 
@@ -77,7 +82,8 @@ class ServiceProcessFragment : BaseFragment() {
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
         lifecycleScope.launch {
-            observeUiState(viewModel.getOrderServiceById(args.orderServiceId)) { data ->
+//            observeUiState(viewModel.getOrderServiceById(args.orderServiceId)) { data ->
+            observeUiState(mainViewModel.userOrderServiceState) { data ->
                 orderService = data
                 Log.d(TAG, "OrderService: $orderService")
                 setupView()
@@ -139,5 +145,10 @@ class ServiceProcessFragment : BaseFragment() {
             }
             binding.fragmentServiceProcessProgressIndicator.bottom
         } else binding.fragmentServiceProcessProgressIndicator.isIndeterminate = true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mainViewModel.stopObserve()
     }
 }

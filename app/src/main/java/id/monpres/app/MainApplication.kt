@@ -4,7 +4,6 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 import id.monpres.app.model.Service
 import id.monpres.app.model.ServiceType
-import id.monpres.app.model.Vehicle
 
 @HiltAndroidApp
 class MainApplication : Application() {

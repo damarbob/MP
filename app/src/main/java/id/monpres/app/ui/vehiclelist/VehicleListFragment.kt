@@ -11,6 +11,7 @@ import androidx.appcompat.view.ActionMode
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateMarginsRelative
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +19,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
+import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentVehicleListBinding
 import id.monpres.app.ui.BaseFragment
@@ -33,6 +35,7 @@ class VehicleListFragment : BaseFragment() {
 
     /* View Models */
     private val viewModel: VehicleListViewModel by viewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
 
     /* Bindings */
     private lateinit var binding: FragmentVehicleListBinding
@@ -151,7 +154,7 @@ class VehicleListFragment : BaseFragment() {
 
     private fun setupVehiclesObservers() {
         // Submit vehicles to adapter
-        observeUiState(viewModel.getVehiclesFlow()) {
+        observeUiState(mainViewModel.userVehiclesState) {
             vehicleAdapter.submitList(it)
         }
     }

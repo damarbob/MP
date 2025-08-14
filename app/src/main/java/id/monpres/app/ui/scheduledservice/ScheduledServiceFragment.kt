@@ -18,6 +18,7 @@ import id.monpres.app.databinding.FragmentScheduledServiceBinding
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseServiceFragment
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
+import id.monpres.app.ui.quickservice.QuickServiceFragmentDirections
 import id.monpres.app.utils.UiState
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -130,7 +131,11 @@ class ScheduledServiceFragment : BaseServiceFragment() {
         registerOrderPlacedCallback(object : OrderPlacedCallback {
             override fun onSuccess(orderService: OrderService) {
                 orderService.id?.let {
-                    findNavController().popBackStack()
+                    findNavController().navigate(
+                        ScheduledServiceFragmentDirections.actionGlobalServiceProcessFragment(
+                            it
+                        )
+                    )
                 }
             }
 

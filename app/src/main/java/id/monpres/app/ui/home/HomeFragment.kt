@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +17,7 @@ import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
 import id.monpres.app.MainApplication
+import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.enums.OrderStatus
@@ -36,6 +38,7 @@ class HomeFragment : BaseFragment() {
 
     /* View models */
     private val viewModel: HomeViewModel by viewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
 
     /* Bindings */
     private lateinit var binding: FragmentHomeBinding
@@ -64,7 +67,8 @@ class HomeFragment : BaseFragment() {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHomeNestedScrollView) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val systemBars =
+                insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
             WindowInsetsCompat.CONSUMED
         }
@@ -77,11 +81,22 @@ class HomeFragment : BaseFragment() {
         setupListeners()
 
         val carousel = binding.fragmentHomeRecyclerViewCarousel
-        carousel.adapter = BannerAdapter(listOf(
-            Banner("https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.13.jpeg", 0),
-            Banner("https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.11-1-1536x1025.jpeg", 1),
-            Banner("https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.12.jpeg", 2),
-        ))
+        carousel.adapter = BannerAdapter(
+            listOf(
+                Banner(
+                    "https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.13.jpeg",
+                    0
+                ),
+                Banner(
+                    "https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.11-1-1536x1025.jpeg",
+                    1
+                ),
+                Banner(
+                    "https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.12.jpeg",
+                    2
+                ),
+            )
+        )
         carousel.layoutManager = CarouselLayoutManager(HeroCarouselStrategy())
 
         return binding.root
@@ -177,14 +192,12 @@ class HomeFragment : BaseFragment() {
      * Updates the [VehicleAdapter] with the list of vehicles, limiting it to the first 5 vehicles.
      */
     private fun vehiclesObservers() {
-        observeUiState(viewModel.getVehiclesFlow()) { vehicles ->
+        observeUiState(mainViewModel.userVehiclesState) { vehicles ->
             vehicleAdapter.submitList(vehicles.take(5))
 
-            if (vehicles.isNotEmpty()) {
-                binding.fragmentHomeButtonSeeAllVehicle.visibility = View.VISIBLE
-            } else {
-                binding.fragmentHomeButtonSeeAllVehicle.visibility = View.GONE
-            }
+            binding.fragmentHomeButtonSeeAllVehicle.visibility =
+                if (vehicles.isNotEmpty()) View.VISIBLE else View.GONE
+
         }
     }
 
@@ -198,6 +211,7 @@ class HomeFragment : BaseFragment() {
                         )
                     )
                 }
+
                 else -> findNavController().navigate(
                     HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(
                         orderService.id!!
@@ -214,10 +228,11 @@ class HomeFragment : BaseFragment() {
     }
 
     fun setupOrderServiceObservers() {
-        observeUiState(viewModel.getOrderServiceFlow()) {
+        observeUiState(mainViewModel.userOrderServicesState) {
             orderServiceAdapter.submitList(it.take(5))
 
-            binding.fragmentHomeButtonSeeAllHistory.visibility = if (it.isEmpty()) View.GONE else View.VISIBLE
+            binding.fragmentHomeButtonSeeAllHistory.visibility =
+                if (it.isEmpty()) View.GONE else View.VISIBLE
         }
     }
 }

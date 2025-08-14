@@ -331,7 +331,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
                                 }
                                 .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
-                                    logoutAndNavigateToLogin() // Sign out
+                                    onLogoutClicked() // Sign out
                                 }
                                 .setCancelable(false) // Prevent dismissing by back button
                                 .create()
@@ -342,7 +342,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
                         }
                         .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
-                            logoutAndNavigateToLogin() // Sign out
+                            onLogoutClicked() // Sign out
                         }
                         .setCancelable(false) // Prevent dismissing by back button
                         .create()
