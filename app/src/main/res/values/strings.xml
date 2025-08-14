@@ -144,4 +144,5 @@
     <string name="invoice_saved_to_gallery">Invoice saved to gallery</string>
     <string name="share_image">Share Image</string>
     <string name="make_sure_your_full_name_matches_your_national_id_card">Make sure your full name matches your national ID card.</string>
+    <string name="done">Done</string>
 </resources>
