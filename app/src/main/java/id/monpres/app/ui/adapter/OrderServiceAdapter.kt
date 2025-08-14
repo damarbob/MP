@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import id.monpres.app.databinding.ItemTwoLineBinding
 import id.monpres.app.model.OrderService
+import id.monpres.app.utils.toDateTimeDisplayString
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -29,16 +30,17 @@ class OrderServiceAdapter(
     inner class ViewHolder(val binding: ItemTwoLineBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(orderService: OrderService) {
-            // TODO: Bind data to view
+            val date = orderService.updatedAt.toDateTimeDisplayString()
             binding.itemTwoLineTextViewTitle.text = orderService.name
             binding.itemTwoLineTextViewSubtitle.text =
-                "${orderService.vehicle?.name} - ${orderService.serviceId}"
+                "${orderService.vehicle?.name} - $date"
 
             val idrFormat = NumberFormat.getCurrencyInstance(
                 Locale.Builder().setRegion("ID").setLanguage("id").build()
             )
             idrFormat.maximumFractionDigits = 0
-            binding.itemTwoLineTextViewFirstLabel.text = if (orderService.price!= null) idrFormat.format(orderService.price) else ""
+            binding.itemTwoLineTextViewFirstLabel.text =
+                if (orderService.price != null) idrFormat.format(orderService.price) else ""
             binding.itemTwoLineTextViewSecondLabel.text = (orderService.status?.name ?: "")
             binding.itemTwoLineTextViewFirstLabel.isSelected = true
             binding.itemTwoLineTextViewSecondLabel.isSelected = true

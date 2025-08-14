@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.activityViewModels
@@ -21,6 +22,7 @@ import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.enums.OrderStatus
+import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
@@ -148,10 +150,12 @@ class HomeFragment : BaseFragment() {
                 when (serviceId) {
                     // Quick Service (temp id) TODO: Finalize ID
                     "1" ->
-                        findNavController().navigate(R.id.action_homeFragment_to_quickServiceFragment)
+                        findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToQuickServiceFragment(serviceId))
                     // Scheduled Service (temp id) TODO: Finalize ID
                     "2" ->
-                        findNavController().navigate(R.id.action_homeFragment_to_scheduledServiceFragment)
+                        findNavController().navigate(R.id.action_homeFragment_to_scheduledServiceFragment,
+                            bundleOf(Pair("serviceId", serviceId))
+                        )
                     // Component Replacement (temp id) TODO: Finalize ID
                     "3" ->
                         Toast.makeText(
@@ -204,7 +208,8 @@ class HomeFragment : BaseFragment() {
     fun setupOrderServiceRecyclerView() {
         orderServiceAdapter = OrderServiceAdapter { orderService ->
             when (orderService.status) {
-                OrderStatus.RETURNED, OrderStatus.FAILED, OrderStatus.CANCELLED, OrderStatus.COMPLETED -> {
+                in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
+                    // The status is closed (completed, cancelled, returned, failed)
                     findNavController().navigate(
                         HomeFragmentDirections.actionHomeFragmentToOrderServiceDetailFragment(
                             orderService

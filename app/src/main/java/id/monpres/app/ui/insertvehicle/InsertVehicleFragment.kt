@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -376,5 +377,9 @@ class InsertVehicleFragment : BaseFragment() {
             }
             true
         }
+    }
+
+    override fun showLoading(isLoading: Boolean) {
+        binding.fragmentInsertVehicleProgressIndicator.isVisible = isLoading
     }
 }

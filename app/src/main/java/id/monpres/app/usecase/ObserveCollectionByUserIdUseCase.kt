@@ -2,6 +2,7 @@ package id.monpres.app.usecase
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
@@ -35,6 +36,7 @@ class ObserveCollectionByUserIdUseCase @Inject constructor(private val firestore
         val listenerRegistration = firestore
             .collection(collection) // Use enum's path
             .whereEqualTo("userId", userId)
+            .orderBy("updatedAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error -> // Renamed 'e' to 'error' for clarity
                 if (error != null) {
                     // It's good practice to log the error before canceling

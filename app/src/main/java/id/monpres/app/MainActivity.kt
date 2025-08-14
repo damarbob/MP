@@ -173,7 +173,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         duration = 150L
                     }
                     TransitionManager.beginDelayedTransition(binding.root, materialFade)
-                    supportActionBar?.hide()
+//                    supportActionBar?.hide()
                 }
 
                 else -> {
@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         duration = 150L
                     }
                     TransitionManager.beginDelayedTransition(binding.root, materialFade)
-                    supportActionBar?.show()
+//                    supportActionBar?.show()
                 }
             }
 

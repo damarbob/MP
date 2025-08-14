@@ -106,7 +106,6 @@ abstract class BaseServiceFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        service = MainApplication.services?.get(0)
 
         // Setup vehicle dropdown
         val vehicleInputView = getVehicleAutoCompleteTextView()

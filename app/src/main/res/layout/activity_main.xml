@@ -17,6 +17,7 @@
             android:id="@+id/activityMainAppBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:clipToPadding="false"
             android:fitsSystemWindows="true">
 
             <!-- Toolbar button (for menu) -->

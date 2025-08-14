@@ -10,7 +10,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentQuickServiceBinding
 import id.monpres.app.model.OrderService
@@ -23,6 +25,8 @@ class QuickServiceFragment : BaseServiceFragment() {
     private val viewModel: QuickServiceViewModel by viewModels()
 
     private lateinit var fragBinding: FragmentQuickServiceBinding
+
+    private val args: QuickServiceFragmentArgs by navArgs()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,6 +67,7 @@ class QuickServiceFragment : BaseServiceFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        service = MainApplication.services?.find { it.id == args.serviceId }
 
         viewModel.getVehicles().observe(viewLifecycleOwner) { state ->
             when (state) {
@@ -98,6 +103,8 @@ class QuickServiceFragment : BaseServiceFragment() {
                 validateVehicle() &&
                 validateIssue()
             ) {
+                showLoading(true)
+                fragBinding.quickServiceButtonPlaceOrder.isEnabled = false
                 placeOrder()
             } else Log.d(TAG, "Validation failed")
         }
@@ -117,9 +124,14 @@ class QuickServiceFragment : BaseServiceFragment() {
                 orderService: OrderService,
                 throwable: Throwable
             ) {
-                findNavController().popBackStack()
+                showLoading(false)
+                fragBinding.quickServiceButtonPlaceOrder.isEnabled = true
             }
         })
+    }
+
+    fun showLoading(show: Boolean) {
+        fragBinding.quickServiceProgressIndicator.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     override fun getViewModel(): BaseServiceViewModel {

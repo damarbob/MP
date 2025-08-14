@@ -88,12 +88,19 @@
             android:id="@+id/action_quickServiceFragment_to_serviceProcessFragment"
             app:destination="@id/serviceProcessFragment"
             app:popUpTo="@id/homeFragment" />
+        <argument
+            android:name="serviceId"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/scheduledServiceFragment"
         android:name="id.monpres.app.ui.scheduledservice.ScheduledServiceFragment"
         android:label="@string/scheduled_service"
-        tools:layout="@layout/fragment_scheduled_service" />
+        tools:layout="@layout/fragment_scheduled_service" >
+        <argument
+            android:name="serviceId"
+            app:argType="string" />
+    </fragment>
     <action
         android:id="@+id/action_global_profileFragment"
         app:destination="@id/profileFragment"

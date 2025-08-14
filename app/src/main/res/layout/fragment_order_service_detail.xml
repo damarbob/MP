@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?colorSecondaryContainer"
+    android:background="?colorSurfaceContainer"
     android:transitionGroup="true"
     tools:context=".ui.orderservicedetail.OrderServiceDetailFragment">
 
@@ -58,7 +58,7 @@
                         android:autoSizeTextType="uniform"
                         android:textAlignment="center"
                         android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="?colorOnSecondaryContainer"
+                        android:textColor="?colorOnSurface"
                         tools:targetApi="26" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -68,7 +68,7 @@
                         android:autoSizeTextType="uniform"
                         android:textAlignment="center"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textColor="?colorOnSecondaryContainer"
+                        android:textColor="?colorOnSurface"
                         tools:targetApi="26" />
                 </LinearLayout>
 
@@ -79,7 +79,7 @@
                     android:autoSizeTextType="uniform"
                     android:textAlignment="center"
                     android:textAppearance="?attr/textAppearanceHeadlineMediumEmphasized"
-                    android:textColor="?colorOnSecondaryContainer"
+                    android:textColor="?colorOnSurface"
                     tools:targetApi="26" />
 
                 <!-- General details -->

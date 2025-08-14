@@ -16,6 +16,7 @@ import id.monpres.app.MainActivity
 import id.monpres.app.MainViewModel
 import id.monpres.app.databinding.FragmentOrderServiceListBinding
 import id.monpres.app.enums.OrderStatus
+import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
@@ -77,7 +78,8 @@ class OrderServiceListFragment : BaseFragment() {
     fun setupOrderServiceListRecyclerView() {
         orderServiceAdapter = OrderServiceAdapter { orderService ->
             when (orderService.status) {
-                OrderStatus.RETURNED, OrderStatus.FAILED, OrderStatus.CANCELLED, OrderStatus.COMPLETED -> {
+                in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
+                    // The status is closed (completed, cancelled, returned, failed)
                     findNavController().navigate(
                         OrderServiceListFragmentDirections.actionOrderServiceListFragmentToOrderServiceDetailFragment(
                             orderService

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 
-open class BaseFragment : Fragment() {
+abstract class BaseFragment : Fragment() {
 
     // Counter for active loading operations
     private val activeLoaders = AtomicInteger(0)
@@ -43,7 +43,7 @@ open class BaseFragment : Fragment() {
      * @param onSuccess Callback to be executed when the [UiState] is [UiState.Success].
      *                  It receives the data of type [T].
      */
-    fun <T> observeUiState(
+    protected fun <T> observeUiState(
         flow: Flow<UiState<T>>,
         lifecycleState: Lifecycle.State = Lifecycle.State.STARTED,
         onError: (message: String) -> Unit = { message ->
@@ -123,7 +123,7 @@ open class BaseFragment : Fragment() {
      * @param onSuccess Callback to be executed when the [UiState] is [UiState.Success].
      *                  It receives the data of type [T].
      */
-    fun <T> observeUiStateOneShot(
+    protected fun <T> observeUiStateOneShot(
         flow: Flow<UiState<T>>,
         onError: (message: String) -> Unit = { message ->
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
@@ -189,8 +189,6 @@ open class BaseFragment : Fragment() {
         }
     }
 
-    open fun showLoading(isLoading: Boolean) {
-
-    }
+    abstract fun showLoading(isLoading: Boolean)
 }
 
