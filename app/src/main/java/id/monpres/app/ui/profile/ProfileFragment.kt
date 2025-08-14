@@ -92,7 +92,7 @@ class ProfileFragment : Fragment() {
         Glide
             .with(requireContext())
             .load(
-                "https://ui-avatars.com/api/?size=192&name=${
+                "https://ui-avatars.com/api/?size=512&name=${
                     user?.displayName?.replace(
                         " ",
                         "-"
@@ -106,7 +106,7 @@ class ProfileFragment : Fragment() {
                         }&" +
                         "color=${
                             getColorFromAttrUseCase.getColorHex(
-                                com.google.android.material.R.attr.colorOnPrimary,
+                                com.google.android.material.R.attr.colorOnPrimarySurface,
                                 requireContext()
                             )
                         }&bold=true"

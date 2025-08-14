@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             }
 
             // Profile menu visibility
-            if (destination.id !== R.id.homeFragment) {
+            if (destination.id != R.id.homeFragment) {
                 optionsMenu?.findItem(R.id.menu_profile)?.isVisible = false
             }
             else {
@@ -273,7 +273,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         // Load avatar icon from UI avatars
         Glide.with(this)
             .load(
-                "https://ui-avatars.com/api/?size=192&name=${
+                "https://ui-avatars.com/api/?size=128&name=${
                     auth.currentUser?.displayName?.replace(
                         " ",
                         "-"
@@ -287,7 +287,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         }&" +
                         "color=${
                             getColorFromAttrUseCase.getColorHex(
-                                com.google.android.material.R.attr.colorOnPrimary,
+                                com.google.android.material.R.attr.colorOnPrimarySurface,
                                 this
                             )
                         }&bold=true"

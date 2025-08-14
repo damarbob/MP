@@ -17,8 +17,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginBottom="16dp"
+        android:minWidth="120dp"
         android:minHeight="120dp"
-        android:scaleType="centerInside" />
+        android:scaleType="centerInside"
+        android:contentDescription="@string/profile"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/editProfileInputLayoutFullName"
