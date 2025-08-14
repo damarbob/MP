@@ -23,8 +23,11 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class VehicleRepository(
+@Singleton
+class VehicleRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val vehicleDao: VehicleDao,
     private val getVehiclesByUserIdFlowUseCase: GetVehiclesByUserIdFlowUseCase,
@@ -168,16 +171,16 @@ class VehicleRepository(
      * If the vehicle is not found locally, it attempts to fetch it from the remote data source.
      * If the vehicle is found remotely, it is inserted into the local database and then emitted
      * as a [UiState.Success].
-     * If the vehicle is not found either locally or remotely, it emits a [UiState.Success] with null.
+     * If the vehicle is not found either locally or remotely, it emits a [UiState.Error].
      *
      * The flow emits [UiState.Loading] initially and [UiState.Error] if any exception occurs
      * during the process. All operations are performed on the IO dispatcher.
      *
      * @param vehicleId The ID of the vehicle to retrieve.
      * @return A [Flow] of [UiState] that emits the state of the vehicle retrieval operation.
-     *         The [UiState] will contain a [Vehicle] object if found, or null otherwise.
+     *         The [UiState] will contain a [Vehicle] object if found.
      */
-    fun getVehicleById(vehicleId: String): Flow<UiState<Vehicle?>> {
+    fun getVehicleById(vehicleId: String): Flow<UiState<Vehicle>> {
         return flow {
             emit(UiState.Loading)
 
@@ -190,7 +193,7 @@ class VehicleRepository(
                 remoteVehicle?.let { vehicle ->
                     vehicleDao.insertVehicle(vehicle)
                     emit(UiState.Success(vehicle))
-                } ?: emit(UiState.Success(null)) // Emit null if remote is also null
+                } ?: emit(UiState.Error(NullPointerException())) // Emit null if remote is also null
             }
         }.catch {
             emit(UiState.Error(it))

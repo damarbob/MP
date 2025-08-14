@@ -27,9 +27,10 @@ class VehicleAdapter(
     private val onItemSelected: (Vehicle) -> Unit // To notify when an item is selected/deselected
 ) : ListAdapter<Vehicle, VehicleAdapter.ViewHolder>(VehicleDiffCallback()) {
 
-    constructor(onItemClick: (Vehicle) -> Unit): this(onItemClick,{},{}) {
+    constructor(onItemClick: (Vehicle) -> Unit) : this(onItemClick, {}, {}) {
         this.activateLongClickListener = false
     }
+
     private var activateLongClickListener = true
 
     private val selectedItems = SparseBooleanArray()
@@ -79,8 +80,12 @@ class VehicleAdapter(
             binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
 
             // Visual indication for selection
-            binding.root.isActivated = isSelected // Use state_activated
-            // Or change background color directly (less ideal than state_activated with a selector drawable)
+            binding.root.apply {
+                isCheckable = true
+                isChecked = isSelected // Use state_checked
+            }
+
+            // Or change background color directly (less ideal than state_checked with a selector drawable)
             // itemView.setBackgroundColor(if (isSelected) Color.LTGRAY else Color.TRANSPARENT)
         }
     }

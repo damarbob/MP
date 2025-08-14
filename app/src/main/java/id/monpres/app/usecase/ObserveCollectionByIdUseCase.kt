@@ -9,9 +9,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
+import javax.inject.Singleton
 
-// Consider a more specific name like ObserveDocumentByIdUseCase
+@Singleton
 class ObserveCollectionByIdUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
+    companion object {
+        val TAG = ObserveCollectionByIdUseCase::class.simpleName
+    }
     /**
      * Observes a single Firestore document by its ID.
      *
@@ -29,7 +33,7 @@ class ObserveCollectionByIdUseCase @Inject constructor(private val firestore: Fi
         itemClass: Class<T>
     ): Flow<T?> = callbackFlow { // Return Flow<T?> to allow emitting null
         if (id.isBlank()) {
-            Log.w("ObserveDocumentById", "Document ID is blank. Closing flow.")
+            Log.w(TAG, "Document ID is blank. Closing flow.")
             cancel("Document ID is blank") // Or send(null) then close(), depending on desired behavior
             return@callbackFlow
         }
@@ -39,7 +43,7 @@ class ObserveCollectionByIdUseCase @Inject constructor(private val firestore: Fi
             .document(id)
             .addSnapshotListener { documentSnapshot, error ->
                 if (error != null) {
-                    Log.e("ObserveDocumentById", "Error fetching document $id from $collection", error)
+                    Log.e(TAG, "Error fetching document $id from $collection", error)
                     cancel("Error fetching document $id from $collection", error)
                     return@addSnapshotListener
                 }
@@ -51,25 +55,25 @@ class ObserveCollectionByIdUseCase @Inject constructor(private val firestore: Fi
                             trySend(data)
                         } else {
                             // Document exists but could not be converted to T (e.g. type mismatch)
-                            Log.w("ObserveDocumentById", "Document $id exists but failed to convert to ${itemClass.simpleName}")
+                            Log.w(TAG, "Document $id exists but failed to convert to ${itemClass.simpleName}")
                             trySend(null) // Or cancel with a more specific error
                         }
                     } catch (e: Exception) {
-                        Log.e("ObserveDocumentById", "Error deserializing document $id to ${itemClass.simpleName}", e)
+                        Log.e(TAG, "Error deserializing document $id to ${itemClass.simpleName}", e)
                         // Decide if you want to cancel or send null
                         // cancel("Deserialization error for document $id", e)
                         trySend(null) // Sending null if deserialization fails
                     }
                 } else {
                     // Document does not exist or snapshot is null
-                    Log.d("ObserveDocumentById", "Document $id does not exist in $collection")
+                    Log.d(TAG, "Document $id does not exist in $collection")
                     trySend(null) // Emit null if the document doesn't exist
                 }
             }
 
         // This block is called when the Flow is cancelled or completes.
         awaitClose {
-            Log.d("ObserveDocumentById", "Removing Firestore listener for $collection/$id")
+            Log.d(TAG, "Removing Firestore listener for $collection/$id")
             listenerRegistration.remove()
         }
     }.flowOn(Dispatchers.IO)

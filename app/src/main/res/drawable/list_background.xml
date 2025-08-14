@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/md_theme_primaryContainer" android:state_activated="true" />
-    <item android:drawable="@drawable/rounded_small_rectangle_background" />
+<!--    <item android:drawable="@drawable/rounded_small_rectangle_background" />-->
+    <item android:drawable="@android:color/transparent" />
 </selector>
