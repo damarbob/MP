@@ -34,9 +34,13 @@ import com.google.firebase.auth.auth
 import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
+import id.monpres.app.enums.UserRole
 import id.monpres.app.libraries.ActivityRestartable
+import id.monpres.app.repository.UserRepository
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetColorFromAttrUseCase
+import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
+import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +54,10 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
     }
+
+    /* Repositories */
+    @Inject
+    lateinit var userRepository: UserRepository
 
     /* Authentication */
     private val auth = Firebase.auth // Initialize Firebase Auth
@@ -65,6 +73,11 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     @Inject
     lateinit var getOrderServicesUseCase: GetOrderServicesUseCase
     private val getColorFromAttrUseCase = GetColorFromAttrUseCase()
+
+    @Inject
+    lateinit var getOrCreateUserUseCase: GetOrCreateUserUseCase
+    @Inject
+    lateinit var getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase
 
     /* UI */
     lateinit var binding: ActivityMainBinding
@@ -108,6 +121,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
         /* Auth */
         runAuthentication()
+        getUserData()
 
         /* UI */
         setupUIComponents()
@@ -188,8 +202,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             // Profile menu visibility
             if (destination.id != R.id.homeFragment) {
                 optionsMenu?.findItem(R.id.menu_profile)?.isVisible = false
-            }
-            else {
+            } else {
                 optionsMenu?.findItem(R.id.menu_profile)?.isVisible = true
             }
         }
@@ -357,6 +370,45 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                     .show()
             }
         )
+    }
+
+    private fun getUserData() {
+        lifecycleScope.launch {
+            getOrCreateUserUseCase(UserRole.CUSTOMER).onSuccess { user ->
+                Log.d(TAG, "User: ${user.userId}")
+                user.userId?.let { Log.d(TAG, "User: ${userRepository.getRecordByUserId(it)}") }
+            }.onFailure { exception ->
+                when (exception) {
+                    is GetOrCreateUserUseCase.UserNotAuthenticatedException -> {
+                        // Handle unauthenticated user
+                        Log.e(TAG, "User not authenticated")
+                    }
+
+                    is GetOrCreateUserUseCase.UserDataParseException,
+                    is GetOrCreateUserUseCase.FirestoreOperationException -> {
+                        // Handle specific exceptions
+                        Log.e(TAG, "Error: ${exception.message}")
+                    }
+
+                    else -> {
+                        // Handle generic errors
+                        Log.e(TAG, "Unexpected error: ${exception.message}")
+                    }
+                }
+            }
+            getOrCreateUserIdentityUseCase().onSuccess { userIdentity ->
+                Log.d(TAG, "User: ${userIdentity.userId}")
+                userIdentity.userId?.let {
+                    Log.d(
+                        TAG,
+                        "User: ${userRepository.getRecordByUserId(it)}"
+                    )
+                }
+            }.onFailure { exception ->
+                // Handle generic errors
+                Log.e(TAG, "Unexpected error: ${exception.message}")
+            }
+        }
     }
 
     private fun resendVerificationEmail() {
