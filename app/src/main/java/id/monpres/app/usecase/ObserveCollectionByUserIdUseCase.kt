@@ -2,6 +2,7 @@ package id.monpres.app.usecase
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
@@ -9,9 +10,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.collections.emptyList
 
+@Singleton
 class ObserveCollectionByUserIdUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
+    companion object {
+        val TAG = ObserveCollectionByUserIdUseCase::class.simpleName
+    }
     /**
      * Observes a Firestore collection for documents matching the given userId.
      *
@@ -30,16 +36,18 @@ class ObserveCollectionByUserIdUseCase @Inject constructor(private val firestore
         val listenerRegistration = firestore
             .collection(collection) // Use enum's path
             .whereEqualTo("userId", userId)
+            .orderBy("updatedAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error -> // Renamed 'e' to 'error' for clarity
                 if (error != null) {
                     // It's good practice to log the error before canceling
-                    Log.e("ObserveCollectionByUserId", "Error fetching data from $collection", error)
+                    Log.e(TAG, "Error fetching data from $collection", error)
                     cancel("Error fetching data from $collection", error)
                     return@addSnapshotListener
                 }
 
                 // Defensive null check for snapshots, though Firestore listener usually provides it
                 if (snapshots == null) {
+                    Log.w(TAG, "Null snapshots received for $collection")
                     trySend(emptyList()) // Emit empty list if snapshots are unexpectedly null
                     return@addSnapshotListener
                 }
@@ -49,16 +57,17 @@ class ObserveCollectionByUserIdUseCase @Inject constructor(private val firestore
                         documentSnapshot.toObject(itemClass)
                     } catch (e: Exception) {
                         // Log deserialization error for a specific document if needed
-                         Log.w("ObserveCollectionByUserId", "Failed to deserialize document ${documentSnapshot.id}", e)
+                         Log.w(TAG, "Failed to deserialize document ${documentSnapshot.id}", e)
                         null // This document will be filtered out by mapNotNull
                     }
                 }
+                Log.d(TAG, "Received ${data.size} items from $collection")
                 trySend(data) // Simply trySend the data
             }
 
         // This block is called when the Flow is cancelled or completes.
         awaitClose {
-             Log.d("ObserveCollectionByUserId", "Removing Firestore listener for $collection and userId: $userId")
+             Log.d(TAG, "Removing Firestore listener for $collection and userId: $userId")
             listenerRegistration.remove()
         }
     }.flowOn(Dispatchers.IO)

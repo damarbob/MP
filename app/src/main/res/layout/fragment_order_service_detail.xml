@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?colorSecondaryContainer"
+    android:background="?colorSurfaceContainer"
     android:transitionGroup="true"
     tools:context=".ui.orderservicedetail.OrderServiceDetailFragment">
 
@@ -40,7 +40,7 @@
                     android:layout_width="96dp"
                     android:layout_height="96dp"
                     android:background="?colorPrimary"
-                    android:src="@drawable/menu_24px"
+                    android:src="@drawable/check_24px"
                     android:tint="?colorOnPrimary"
                     app:contentPadding="16dp"
                     app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.ExtraExtraLarge" />
@@ -56,10 +56,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:autoSizeTextType="uniform"
-                        android:text="Quick Service Successful!"
                         android:textAlignment="center"
                         android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="?colorOnSecondaryContainer"
+                        android:textColor="?colorOnSurface"
                         tools:targetApi="26" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -67,10 +66,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:autoSizeTextType="uniform"
-                        android:text="Friday, August 1, 2025 - 1:00 pm"
                         android:textAlignment="center"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textColor="?colorOnSecondaryContainer"
+                        android:textColor="?colorOnSurface"
                         tools:targetApi="26" />
                 </LinearLayout>
 
@@ -79,10 +77,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:autoSizeTextType="uniform"
-                    android:text="Rp100.000.000"
                     android:textAlignment="center"
                     android:textAppearance="?attr/textAppearanceHeadlineMediumEmphasized"
-                    android:textColor="?colorOnSecondaryContainer"
+                    android:textColor="?colorOnSurface"
                     tools:targetApi="26" />
 
                 <!-- General details -->
@@ -120,7 +117,6 @@
                             android:layout_gravity="end"
                             android:layout_weight="1"
                             android:autoSizeTextType="uniform"
-                            android:text="asdasdfasdfasdfasdfasdfasdfasdfasdfasdf"
                             android:textAlignment="textEnd"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
@@ -151,7 +147,6 @@
                             android:layout_gravity="end"
                             android:layout_weight="1"
                             android:autoSizeTextType="uniform"
-                            android:text="QRIS"
                             android:textAlignment="textEnd"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
@@ -182,7 +177,6 @@
                             android:layout_gravity="end"
                             android:layout_weight="1"
                             android:autoSizeTextType="uniform"
-                            android:text="Constellation Forever Ltd."
                             android:textAlignment="textEnd"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
@@ -213,7 +207,6 @@
                             android:layout_gravity="end"
                             android:layout_weight="1"
                             android:autoSizeTextType="uniform"
-                            android:text="Tuatara"
                             android:textAlignment="textEnd"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
@@ -244,7 +237,6 @@
                             android:layout_gravity="end"
                             android:layout_weight="1"
                             android:autoSizeTextType="uniform"
-                            android:text="Heat"
                             android:textAlignment="textEnd"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
@@ -275,7 +267,6 @@
                             android:layout_gravity="end"
                             android:layout_weight="1"
                             android:autoSizeTextType="uniform"
-                            android:text="Puanas poll rek"
                             android:textAlignment="textEnd"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
@@ -316,7 +307,6 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:autoSizeTextType="uniform"
-                            android:text="Partner Location"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
                             tools:targetApi="26" />
@@ -340,7 +330,6 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:autoSizeTextType="uniform"
-                            android:text="100 KM"
                             android:textAppearance="?attr/textAppearanceBodyMediumEmphasized"
                             android:textColor="?colorOnSurface"
                             tools:targetApi="26" />
@@ -367,7 +356,6 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:autoSizeTextType="uniform"
-                            android:text="Partner Location"
                             android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
                             android:textColor="?colorOnSurface"
                             tools:targetApi="26" />
@@ -427,7 +415,6 @@
                             android:layout_gravity="end"
                             android:layout_weight="1"
                             android:autoSizeTextType="uniform"
-                            android:text="Rp100.000.000"
                             android:textAlignment="textEnd"
                             android:textAppearance="?attr/textAppearanceTitleLargeEmphasized"
                             android:textColor="?colorOnSurface"
@@ -444,6 +431,7 @@
                 android:divider="@drawable/divider_gap_8"
                 android:gravity="fill|center_vertical"
                 android:paddingHorizontal="16dp"
+                android:layout_marginBottom="64dp"
                 android:showDividers="middle">
 
                 <com.google.android.material.button.MaterialButton

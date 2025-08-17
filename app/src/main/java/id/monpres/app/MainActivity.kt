@@ -36,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.enums.UserRole
 import id.monpres.app.libraries.ActivityRestartable
+import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetColorFromAttrUseCase
@@ -59,6 +60,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     @Inject
     lateinit var userRepository: UserRepository
 
+    @Inject
+    lateinit var userIdentityRepository: UserIdentityRepository
+
     /* Authentication */
     private val auth = Firebase.auth // Initialize Firebase Auth
     private var currentUser: FirebaseUser? = null
@@ -76,6 +80,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
     @Inject
     lateinit var getOrCreateUserUseCase: GetOrCreateUserUseCase
+
     @Inject
     lateinit var getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase
 
@@ -187,7 +192,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         duration = 150L
                     }
                     TransitionManager.beginDelayedTransition(binding.root, materialFade)
-                    supportActionBar?.hide()
+//                    supportActionBar?.hide()
                 }
 
                 else -> {
@@ -195,7 +200,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         duration = 150L
                     }
                     TransitionManager.beginDelayedTransition(binding.root, materialFade)
-                    supportActionBar?.show()
+//                    supportActionBar?.show()
                 }
             }
 
@@ -344,7 +349,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
                                 }
                                 .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
-                                    logoutAndNavigateToLogin() // Sign out
+                                    onLogoutClicked() // Sign out
                                 }
                                 .setCancelable(false) // Prevent dismissing by back button
                                 .create()
@@ -355,7 +360,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
                         }
                         .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
-                            logoutAndNavigateToLogin() // Sign out
+                            onLogoutClicked() // Sign out
                         }
                         .setCancelable(false) // Prevent dismissing by back button
                         .create()
@@ -374,9 +379,15 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
     private fun getUserData() {
         lifecycleScope.launch {
+            /* Get user profile */
             getOrCreateUserUseCase(UserRole.CUSTOMER).onSuccess { user ->
                 Log.d(TAG, "User: ${user.userId}")
-                user.userId?.let { Log.d(TAG, "User: ${userRepository.getRecordByUserId(it)}") }
+                user.userId?.let {
+                    Log.d(
+                        TAG,
+                        "UserRepository record: ${userRepository.getRecordByUserId(it)}"
+                    )
+                }
             }.onFailure { exception ->
                 when (exception) {
                     is GetOrCreateUserUseCase.UserNotAuthenticatedException -> {
@@ -396,12 +407,18 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                     }
                 }
             }
+
+            /* Get user identity */
             getOrCreateUserIdentityUseCase().onSuccess { userIdentity ->
                 Log.d(TAG, "User: ${userIdentity.userId}")
                 userIdentity.userId?.let {
                     Log.d(
                         TAG,
-                        "User: ${userRepository.getRecordByUserId(it)}"
+                        "UserIdentityRepository record: ${
+                            userIdentityRepository.getRecordByUserId(
+                                it
+                            )
+                        }"
                     )
                 }
             }.onFailure { exception ->

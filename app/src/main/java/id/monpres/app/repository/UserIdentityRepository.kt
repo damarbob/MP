@@ -1,8 +1,12 @@
 package id.monpres.app.repository
 
+import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.UserIdentity
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class UserIdentityRepository: Repository<UserIdentity>() {
+@Singleton
+class UserIdentityRepository @Inject constructor(): Repository<UserIdentity>() {
     override fun onStart() {
         // TODO("Not yet implemented")
     }
@@ -25,5 +29,9 @@ class UserIdentityRepository: Repository<UserIdentity>() {
 
     override fun onRecordCleared() {
         // TODO("Not yet implemented")
+    }
+
+    fun getRecordByUserId(userId: String): UserIdentity? {
+        return getRecords().find { it.userId == userId }
     }
 }

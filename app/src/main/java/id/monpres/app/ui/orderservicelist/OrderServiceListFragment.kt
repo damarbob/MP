@@ -6,14 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
+import id.monpres.app.MainViewModel
 import id.monpres.app.databinding.FragmentOrderServiceListBinding
 import id.monpres.app.enums.OrderStatus
+import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
@@ -26,6 +29,7 @@ class OrderServiceListFragment : BaseFragment() {
     }
 
     private val viewModel: OrderServiceListViewModel by viewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
 
     private lateinit var binding: FragmentOrderServiceListBinding
 
@@ -74,7 +78,8 @@ class OrderServiceListFragment : BaseFragment() {
     fun setupOrderServiceListRecyclerView() {
         orderServiceAdapter = OrderServiceAdapter { orderService ->
             when (orderService.status) {
-                OrderStatus.RETURNED, OrderStatus.FAILED, OrderStatus.CANCELLED, OrderStatus.COMPLETED -> {
+                in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
+                    // The status is closed (completed, cancelled, returned, failed)
                     findNavController().navigate(
                         OrderServiceListFragmentDirections.actionOrderServiceListFragmentToOrderServiceDetailFragment(
                             orderService
@@ -97,7 +102,7 @@ class OrderServiceListFragment : BaseFragment() {
     }
 
     fun setupOrderServiceListObservers() {
-        observeUiState(viewModel.getOrderService()) {
+        observeUiState(mainViewModel.userOrderServicesState) {
             orderServiceAdapter.submitList(it)
         }
     }

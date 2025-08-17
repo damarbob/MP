@@ -17,6 +17,7 @@
             android:id="@+id/activityMainAppBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:clipToPadding="false"
             android:fitsSystemWindows="true">
 
             <!-- Toolbar button (for menu) -->
@@ -26,6 +27,7 @@
                 android:layout_height="?attr/actionBarSize"
                 app:navigationIcon="@drawable/menu_24px"
                 app:title="@string/app_name"
+                app:titleCentered="true"
                 app:titleTextAppearance="@style/Widget.App.H4.Bold" />
 
         </com.google.android.material.appbar.AppBarLayout>

@@ -378,4 +378,8 @@ class EditVehicleFragment : BaseFragment() {
             true
         }
     }
+
+    override fun showLoading(isLoading: Boolean) {
+        binding.fragmentEditVehicleProgressIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
 }

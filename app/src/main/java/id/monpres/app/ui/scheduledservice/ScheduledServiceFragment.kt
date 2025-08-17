@@ -10,9 +10,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentScheduledServiceBinding
 import id.monpres.app.model.OrderService
@@ -35,6 +37,8 @@ class ScheduledServiceFragment : BaseServiceFragment() {
             .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
             .build()
     }
+
+    private val args: ScheduledServiceFragmentArgs by navArgs()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -78,6 +82,7 @@ class ScheduledServiceFragment : BaseServiceFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        service = MainApplication.services?.find { it.id == args.serviceId }
 
         viewModel.getVehicles().observe(viewLifecycleOwner) { state ->
             when (state) {
@@ -123,6 +128,8 @@ class ScheduledServiceFragment : BaseServiceFragment() {
                 validateVehicle() &&
                 validateIssue()
             ) {
+                showLoading(true)
+                fragBinding.scheduledServiceButtonPlaceOrder.isEnabled = false
                 placeOrder()
             } else Log.d(TAG, "Validation failed")
         }
@@ -130,7 +137,11 @@ class ScheduledServiceFragment : BaseServiceFragment() {
         registerOrderPlacedCallback(object : OrderPlacedCallback {
             override fun onSuccess(orderService: OrderService) {
                 orderService.id?.let {
-                    findNavController().popBackStack()
+                    findNavController().navigate(
+                        ScheduledServiceFragmentDirections.actionGlobalServiceProcessFragment(
+                            it
+                        )
+                    )
                 }
             }
 
@@ -138,9 +149,14 @@ class ScheduledServiceFragment : BaseServiceFragment() {
                 orderService: OrderService,
                 throwable: Throwable
             ) {
-                findNavController().popBackStack()
+                showLoading(false)
+                fragBinding.scheduledServiceButtonPlaceOrder.isEnabled = true
             }
         })
+    }
+
+    private fun showLoading(show: Boolean) {
+        fragBinding.scheduledServiceProgressIndicator.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     private fun validateDate(): Boolean {

@@ -3,7 +3,6 @@ package id.monpres.app.repository
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import id.monpres.app.model.OrderService
 import id.monpres.app.usecase.GetDataByUserIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByIdUseCase
@@ -18,28 +17,27 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class OrderServiceRepository @Inject constructor(
-    firestore: FirebaseFirestore,
-    val firebaseAuth: FirebaseAuth
-) : Repository<OrderService>() {
+    private val firebaseAuth: FirebaseAuth,
+    private val observeCollectionByUserIdUseCase: ObserveCollectionByUserIdUseCase,
+    private val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase,
+    private val getDataByUserIdUseCase: GetDataByUserIdUseCase,
+
+    ) : Repository<OrderService>() {
     companion object {
         const val TAG = "OrderServiceRepository"
     }
-    val observeCollectionByUserIdUseCase: ObserveCollectionByUserIdUseCase =
-        ObserveCollectionByUserIdUseCase(firestore)
-    val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase =
-        ObserveCollectionByIdUseCase(firestore)
-    val getDataByUserIdUseCase: GetDataByUserIdUseCase = GetDataByUserIdUseCase(firestore)
 
-    fun observeOrderServiceByUserId(): Flow<UiState<List<OrderService>>> =
+    fun observeOrderServicesByUserId(): Flow<UiState<List<OrderService>>> =
         observeCollectionByUserIdUseCase(
             getCurrentUserId(),
             OrderService.COLLECTION, OrderService::class.java
         )
             .distinctUntilChanged()
             .map<List<OrderService?>?, UiState<List<OrderService>>> { orderServices ->
-                setRecords(orderServices?.mapNotNull { it } ?: listOf(), false)
                 UiState.Success(orderServices?.mapNotNull { it } ?: throw NullPointerException())
             }
             .onStart { emit(UiState.Loading) }
@@ -79,7 +77,11 @@ class OrderServiceRepository @Inject constructor(
                 .flowOn(Dispatchers.IO)
     }
 
-    suspend fun getOrderServiceByUserId() = getDataByUserIdUseCase(getCurrentUserId(), OrderService.COLLECTION, OrderService::class.java)
+    suspend fun getOrderServiceByUserId() = getDataByUserIdUseCase(
+        getCurrentUserId(),
+        OrderService.COLLECTION,
+        OrderService::class.java
+    )
 
     /**
      * Retrieves the UID of the currently authenticated Firebase user.

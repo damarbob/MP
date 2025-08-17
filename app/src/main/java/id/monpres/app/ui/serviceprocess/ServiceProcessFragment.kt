@@ -10,18 +10,23 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentServiceProcessBinding
 import id.monpres.app.enums.OrderStatus
+import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.utils.toDateTimeDisplayString
 import kotlinx.coroutines.launch
+import java.text.DateFormat
 
 @AndroidEntryPoint
 class ServiceProcessFragment : BaseFragment() {
@@ -32,6 +37,7 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private val viewModel: ServiceProcessViewModel by viewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
 
     private val args: ServiceProcessFragmentArgs by navArgs()
 
@@ -61,12 +67,14 @@ class ServiceProcessFragment : BaseFragment() {
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(
                 insets.left,
-                insets.top,
+                0,
                 insets.right,
                 insets.bottom
             )
             windowInsets
         }
+
+        mainViewModel.observeOrderServiceById(args.orderServiceId)
 
         setupObservers()
         setupListeners()
@@ -77,12 +85,13 @@ class ServiceProcessFragment : BaseFragment() {
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
         lifecycleScope.launch {
-            observeUiState(viewModel.getOrderServiceById(args.orderServiceId)) { data ->
+//            observeUiState(viewModel.getOrderServiceById(args.orderServiceId)) { data ->
+            observeUiState(mainViewModel.userOrderServiceState) { data ->
                 orderService = data
                 Log.d(TAG, "OrderService: $orderService")
                 setupView()
                 showCancelButton(orderService.status == OrderStatus.PENDING)
-                showCompleteStatus(orderService.status == OrderStatus.COMPLETED)
+                showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
             }
         }
     }
@@ -100,14 +109,15 @@ class ServiceProcessFragment : BaseFragment() {
                 )
             )
             fragmentServiceProcessTextViewTitle.text = orderService.status?.name ?: "-"
+            fragmentServiceProcessTextViewSubtitle.text = orderService.updatedAt.toDateTimeDisplayString(dateStyle = DateFormat.FULL, timeStyle = DateFormat.LONG)
             fragmentServiceProcessOrderId.text = orderService.id ?: "-"
             fragmentServiceProcessLocation.text =
                 "${orderService.selectedLocationLat}, ${orderService.selectedLocationLng}"
-            fragmentServiceProcessAddress.text = orderService.userAddress ?: "-"
+            fragmentServiceProcessAddress.text = if (orderService.userAddress?.isNotBlank() == true) orderService.userAddress else "-"
             fragmentServiceProcessPartner.text = orderService.partnerId ?: "-"
             fragmentServiceProcessVehicle.text = orderService.vehicle?.name ?: "-"
             fragmentServiceProcessIssue.text = orderService.issue ?: "-"
-            fragmentServiceProcessIssueDescription.text = orderService.issueDescription ?: "-"
+            fragmentServiceProcessIssueDescription.text = if (orderService.issueDescription?.isNotBlank() == true) orderService.issueDescription else "-"
         }
     }
 
@@ -139,5 +149,14 @@ class ServiceProcessFragment : BaseFragment() {
             }
             binding.fragmentServiceProcessProgressIndicator.bottom
         } else binding.fragmentServiceProcessProgressIndicator.isIndeterminate = true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mainViewModel.stopObserve()
+    }
+
+    override fun showLoading(isLoading: Boolean) {
+        // Already handled by showCompleteStatus()
     }
 }

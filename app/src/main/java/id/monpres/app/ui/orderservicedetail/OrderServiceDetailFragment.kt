@@ -36,9 +36,11 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.model.Summary
 import id.monpres.app.ui.adapter.SummaryAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
+import id.monpres.app.utils.toDateTimeDisplayString
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
+import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -123,7 +125,7 @@ class OrderServiceDetailFragment : Fragment() {
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(
                 insets.left,
-                insets.top,
+                0,
                 insets.right,
                 insets.bottom
             )
@@ -269,7 +271,7 @@ class OrderServiceDetailFragment : Fragment() {
                 listOf(
                     GradientProtection(
                         WindowInsetsCompat.Side.TOP, resources.getColor(
-                            R.color.md_theme_secondaryContainer, null
+                            R.color.md_theme_surfaceContainer, null
                         )
                     )
                 )
@@ -278,7 +280,7 @@ class OrderServiceDetailFragment : Fragment() {
             fragmentOrderServiceDetailTitle.text =
                 getString(R.string.x_x, orderService.name, orderService.status?.name)
             fragmentOrderServiceDetailDate.text =
-                if (orderService.updatedAt != null) orderService.updatedAt.toString() else ""
+                orderService.updatedAt.toDateTimeDisplayString(dateStyle = DateFormat.FULL, timeStyle = DateFormat.LONG)
             val idrFormat = NumberFormat.getCurrencyInstance(
                 Locale.Builder().setRegion("ID").setLanguage("id").build()
             )
@@ -318,7 +320,6 @@ class OrderServiceDetailFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        // TODO: Set up listeners
         with(binding) {
             fragmentOrderServiceDetailButtonShare.setOnClickListener {
                 shareInvoice()

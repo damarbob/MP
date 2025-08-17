@@ -9,8 +9,25 @@ import id.monpres.app.R
 import id.monpres.app.utils.UiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 
-open class BaseFragment : Fragment() {
+abstract class BaseFragment : Fragment() {
+
+    // Counter for active loading operations
+    private val activeLoaders = AtomicInteger(0)
+
+    /**
+     * Shows or hides the loading indicator based on the activeLoaders count.
+     * This should be the ONLY place that directly calls your actual showLoading(Boolean) implementation.
+     */
+    private fun updateGlobalLoadingState() {
+        if (activeLoaders.get() > 0) {
+            // If you have a specific showLoading function in BaseFragment that subclasses override:
+            showLoading(true)
+        } else {
+            showLoading(false)
+        }
+    }
 
     /**
      * Observes a [Flow] of [UiState] and executes the provided callbacks based on the state.
@@ -21,44 +38,74 @@ open class BaseFragment : Fragment() {
      * @param flow The [Flow] of [UiState] to observe.
      * @param lifecycleState The [Lifecycle.State] at which the flow collection should start and stop.
      *                       Defaults to [Lifecycle.State.STARTED].
-     * @param onLoading Optional callback to be executed when the [UiState] is [UiState.Loading].
-     *                  Defaults to calling [showLoading] with `true`.
      * @param onError Optional callback to be executed when the [UiState] is [UiState.Error].
      *                It receives the error message. Defaults to showing a [Toast] with the error message.
-     * @param onFinished Optional callback to be executed after either [onSuccess] or [onError] is called,
-     *                   or when a new state is emitted (before processing the new state).
-     *                   This is useful for hiding loading indicators or performing cleanup.
-     *                   Defaults to calling [showLoading] with `false`.
      * @param onSuccess Callback to be executed when the [UiState] is [UiState.Success].
      *                  It receives the data of type [T].
      */
-    fun <T> observeUiState(
+    protected fun <T> observeUiState(
         flow: Flow<UiState<T>>,
         lifecycleState: Lifecycle.State = Lifecycle.State.STARTED,
-        onLoading: () -> Unit = { showLoading(true) }, // Default actions
         onError: (message: String) -> Unit = { message ->
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         },
-        onFinished: () -> Unit = { showLoading(false) }, // Called after success or error
         onSuccess: (data: T) -> Unit,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(lifecycleState) { // Or pass lifecycle state as param
+            // Increment loader count when this observation starts
+            // and it's expected to potentially go into a loading state.
+            // This is tricky if the flow doesn't immediately emit Loading.
+            // A better place to increment is right before the flow collection starts
+            // if the flow is guaranteed to start with Loading or if you always want
+            // to assume a potential load.
+
+            // Alternative: Increment when UiState.Loading is first received.
+            // Decrement when UiState.Success or UiState.Error is received for THIS flow.
+
+            var thisFlowIsLoading =
+                false // Track if this specific flow instance caused a loading increment
+
+            repeatOnLifecycle(lifecycleState) {
                 flow.collect { state ->
-                    onFinished() // Hide loading from previous state first
+                    // --- Handle Finish for the PREVIOUS state of THIS flow ---
+                    if (thisFlowIsLoading) {
+                        if (state !is UiState.Loading) {
+                            activeLoaders.decrementAndGet()
+                            thisFlowIsLoading = false
+                        }
+                    }
+                    // --- Current State Processing ---
                     when (state) {
-                        is UiState.Loading -> onLoading()
-                        is UiState.Success -> onSuccess(state.data)
+                        is UiState.Loading -> {
+                            if (!thisFlowIsLoading) { // Only increment if it wasn't already loading
+                                activeLoaders.incrementAndGet()
+                                thisFlowIsLoading = true
+                            }
+                        }
+
+                        is UiState.Success -> {
+                            // Decrement was handled above if it was previously loading
+                            onSuccess(state.data)
+                        }
+
                         is UiState.Error -> {
+                            // Decrement was handled above if it was previously loading
                             val message = when (state.exception) {
                                 is NullPointerException -> getString(
-                                    R.string.x_not_found,  "Data"
+                                    R.string.x_not_found, "Data"
                                 )
-                                else -> state.exception?.localizedMessage ?: getString(R.string.unknown_error)
+                                // Add NoSuchElementException for "not found"
+                                is NoSuchElementException -> state.exception.localizedMessage
+                                    ?: getString(R.string.x_not_found, "Item")
+
+                                else -> state.exception?.localizedMessage
+                                    ?: getString(R.string.unknown_error)
                             }
                             onError(message)
                         }
                     }
+                    // Update the global loading UI based on the overall count
+                    updateGlobalLoadingState()
                 }
             }
         }
@@ -71,47 +118,77 @@ open class BaseFragment : Fragment() {
      *
      * @param T The type of data wrapped in [UiState.Success].
      * @param flow The [Flow] of [UiState] to observe.
-     * @param onLoading Optional callback to be executed when the [UiState] is [UiState.Loading].
-     *                  Defaults to an empty lambda.
      * @param onError Optional callback to be executed when the [UiState] is [UiState.Error].
      *                It receives the error message. Defaults to showing a [Toast] with the error message.
-     * @param onFinished Optional callback to be executed after either [onSuccess] or [onError] is called.
-     *                   This is useful for hiding loading indicators or performing cleanup.
-     *                   Defaults to an empty lambda.
      * @param onSuccess Callback to be executed when the [UiState] is [UiState.Success].
      *                  It receives the data of type [T].
      */
-    fun <T> observeUiStateOneShot(
+    protected fun <T> observeUiStateOneShot(
         flow: Flow<UiState<T>>,
-        onLoading: () -> Unit = { showLoading(true) }, // Default actions
         onError: (message: String) -> Unit = { message ->
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         },
-        onFinished: () -> Unit = { showLoading(false) }, // Called after success or error
         onSuccess: (data: T) -> Unit
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
+            // Increment loader count when this observation starts
+            // and it's expected to potentially go into a loading state.
+            // This is tricky if the flow doesn't immediately emit Loading.
+            // A better place to increment is right before the flow collection starts
+            // if the flow is guaranteed to start with Loading or if you always want
+            // to assume a potential load.
+
+            // Alternative: Increment when UiState.Loading is first received.
+            // Decrement when UiState.Success or UiState.Error is received for THIS flow.
+
+            var thisFlowIsLoading =
+                false // Track if this specific flow instance caused a loading increment
+
             flow.collect { state ->
-                onFinished() // Hide loading from previous state first
+                // --- Handle Finish for the PREVIOUS state of THIS flow ---
+                if (thisFlowIsLoading) {
+                    if (state !is UiState.Loading) {
+                        activeLoaders.decrementAndGet()
+                        thisFlowIsLoading = false
+                    }
+                }
+                // --- Current State Processing ---
                 when (state) {
-                    is UiState.Loading -> onLoading()
-                    is UiState.Success -> onSuccess(state.data)
+                    is UiState.Loading -> {
+                        if (!thisFlowIsLoading) { // Only increment if it wasn't already loading
+                            activeLoaders.incrementAndGet()
+                            thisFlowIsLoading = true
+                        }
+                    }
+
+                    is UiState.Success -> {
+                        // Decrement was handled above if it was previously loading
+                        onSuccess(state.data)
+                    }
+
                     is UiState.Error -> {
+                        // Decrement was handled above if it was previously loading
                         val message = when (state.exception) {
                             is NullPointerException -> getString(
                                 R.string.x_not_found, "Data"
                             )
-                            else -> state.exception?.localizedMessage ?: getString(R.string.unknown_error)
+                            // Add NoSuchElementException for "not found"
+                            is NoSuchElementException -> state.exception.localizedMessage
+                                ?: getString(R.string.x_not_found, "Item")
+
+                            else -> state.exception?.localizedMessage
+                                ?: getString(R.string.unknown_error)
                         }
                         onError(message)
                     }
                 }
+                // Update the global loading UI based on the overall count
+                updateGlobalLoadingState()
             }
+
         }
     }
 
-    open fun showLoading(isLoading: Boolean) {
-
-    }
+    abstract fun showLoading(isLoading: Boolean)
 }
 
