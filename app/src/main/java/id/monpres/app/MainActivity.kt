@@ -152,6 +152,34 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
     }
 
+    private fun updateNavigationTree() {
+        // Update navigation tree
+        val currentUserProfile = userRepository.getCurrentUserRecord()
+        if (currentUserProfile == null) {
+            Log.e(TAG, "Current user profile is null")
+            return
+        }
+
+        // If the user is a partner, update start destination to partner home
+        // TODO (low priority): Handle admin role
+        if (currentUserProfile.role == UserRole.PARTNER) {
+            Log.d(TAG, "Current user is a partner")
+            val navGraph = navController.navInflater.inflate(R.navigation.nav_main)
+            navGraph.setStartDestination(R.id.partnerHomeFragment)
+            navController.graph = navGraph
+        }
+
+        setupAppBar() // Update app bar is required to reflect navigation tree changes
+
+    }
+
+    private fun setupAppBar() {
+        // App bar
+        appBarConfiguration = AppBarConfiguration(navController.graph, drawerLayout)
+        setSupportActionBar(binding.activityMainToolbar)
+        setupActionBarWithNavController(navController, appBarConfiguration)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         optionsMenu = menu // Save menu for later use
 
@@ -205,7 +233,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             }
 
             // Profile menu visibility
-            if (destination.id != R.id.homeFragment) {
+            if (destination.id != R.id.homeFragment && destination.id != R.id.partnerHomeFragment) {
                 optionsMenu?.findItem(R.id.menu_profile)?.isVisible = false
             } else {
                 optionsMenu?.findItem(R.id.menu_profile)?.isVisible = true
@@ -228,10 +256,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             supportFragmentManager.findFragmentById(binding.navHostFragmentActivityMain.id) as NavHostFragment
         navController = navHostFragment.navController
 
-        // App bar
-        appBarConfiguration = AppBarConfiguration(navController.graph, drawerLayout)
-        setSupportActionBar(binding.activityMainToolbar)
-        setupActionBarWithNavController(navController, appBarConfiguration)
+        setupAppBar()
 
         // Navigation view
         val navView = binding.activityMainNavigationView
@@ -425,6 +450,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 // Handle generic errors
                 Log.e(TAG, "Unexpected error: ${exception.message}")
             }
+
+            /* Update navigation tree */
+            updateNavigationTree()
         }
     }
 

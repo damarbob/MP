@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:transitionGroup="true"
+    tools:context=".ui.partnerhome.PartnerHomeFragment">
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentPartnerHomeProgressIndicator"
+        style="@style/Widget.Material3.LinearProgressIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:paddingHorizontal="4dp"
+        app:hideAnimationBehavior="outward"
+        app:layout_insetEdge="top"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="2dp"
+        app:wavelength="40dp"
+        app:wavelengthIndeterminate="20dp" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentPartnerHomeNestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always"
+        app:layout_dodgeInsetEdges="top">
+
+        <LinearLayout
+            android:id="@+id/fragmentPartnerHomeLinearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="@drawable/divider_gap_8"
+            android:orientation="vertical"
+            android:paddingVertical="16dp"
+            android:paddingHorizontal="24dp"
+            android:showDividers="middle">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentPartnerHomeRecyclerViewCarousel"
+                android:layout_width="match_parent"
+                android:layout_height="196dp"
+                android:clipChildren="false"
+                android:clipToPadding="false" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/Widget.App.H4.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/customer_order"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fragmentPartnerHomeButtonSeeAllOrderService"
+                style="@style/Widget.Material3Expressive.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/see_all"
+                app:icon="@drawable/outline_arrow_forward_ios_24"
+                app:iconGravity="textEnd" />
+
+        </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentPartnerHomeRecyclerViewOrderService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:padding="1dp" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

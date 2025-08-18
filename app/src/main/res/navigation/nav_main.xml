@@ -175,4 +175,9 @@
         android:id="@+id/action_global_serviceProcessFragment"
         app:destination="@id/serviceProcessFragment"
         app:popUpTo="@id/homeFragment" />
+    <fragment
+        android:id="@+id/partnerHomeFragment"
+        android:name="id.monpres.app.ui.partnerhome.PartnerHomeFragment"
+        android:label="@string/app_name"
+        tools:layout="@layout/fragment_partner_home" />
 </navigation>
