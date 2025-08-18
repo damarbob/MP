@@ -2,6 +2,7 @@ package id.monpres.app.ui.auth.register
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,10 @@ import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 
 class RegisterFragment : Fragment() {
+
+    companion object {
+        private val TAG = RegisterFragment::class.simpleName
+    }
 
     private lateinit var binding: FragmentRegisterBinding
 
@@ -58,6 +63,8 @@ class RegisterFragment : Fragment() {
                 activity?.finish()  // Finish the current activity so the user can't navigate back to the login screen
 
             }?.onFailure { exception ->
+                Log.e(TAG, "Error during sign-up", exception)
+
                 // Show error message
                 Toast.makeText(requireContext(), exception.message, Toast.LENGTH_SHORT).show()
             }
