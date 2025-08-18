@@ -24,6 +24,7 @@ import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
 import kotlinx.coroutines.launch
 import java.text.DateFormat
@@ -34,6 +35,7 @@ class ServiceProcessFragment : BaseFragment() {
     companion object {
         fun newInstance() = ServiceProcessFragment()
         const val TAG = "ServiceProcessFragment"
+        const val ARG_ORDER_SERVICE_ID = "orderServiceId"
     }
 
     private val viewModel: ServiceProcessViewModel by viewModels()
@@ -90,7 +92,7 @@ class ServiceProcessFragment : BaseFragment() {
                 orderService = data
                 Log.d(TAG, "OrderService: $orderService")
                 setupView()
-                showCancelButton(orderService.status == OrderStatus.PENDING)
+                showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
                 showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
             }
         }
@@ -108,7 +110,7 @@ class ServiceProcessFragment : BaseFragment() {
                     )
                 )
             )
-            fragmentServiceProcessTextViewTitle.text = orderService.status?.name ?: "-"
+            fragmentServiceProcessTextViewTitle.text = orderService.status?.getLabel(requireContext())?.capitalizeWords() ?: "-"
             fragmentServiceProcessTextViewSubtitle.text = orderService.updatedAt.toDateTimeDisplayString(dateStyle = DateFormat.FULL, timeStyle = DateFormat.LONG)
             fragmentServiceProcessOrderId.text = orderService.id ?: "-"
             fragmentServiceProcessLocation.text =

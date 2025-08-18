@@ -28,6 +28,12 @@ fun Timestamp?.toDisplayString(locale: Locale = Locale.getDefault()): String {
 fun Timestamp?.toDateTimeDisplayString(locale: Locale = Locale.getDefault(), dateStyle: Int = DateFormat.MEDIUM, timeStyle: Int = DateFormat.SHORT): String {
     return formatDateWithLocaleAndStyle(this?.toDate(), locale, dateStyle, timeStyle)
 }
+fun Timestamp?.toTimeDisplayString(locale: Locale = Locale.getDefault(), timeStyle: Int = DateFormat.SHORT): String {
+    return formatDateToTimeString(this?.toDate(), locale, timeStyle)
+}
+fun Timestamp?.toDateDisplayString(locale: Locale = Locale.getDefault(), dateStyle: Int = DateFormat.MEDIUM): String {
+    return formatDateToDateString(this?.toDate(), locale, dateStyle)
+}
 
 private fun formatDateAndroidNougat(date: Date?, locale: Locale): String {
     val formatter = SimpleDateFormat("dd MMMM yyyy", locale)
@@ -42,5 +48,15 @@ private fun formatDateWithLocalizedStyle(date: LocalDateTime?, locale: Locale): 
 
 fun formatDateWithLocaleAndStyle(date: Date?, locale: Locale, dateStyle: Int, timeStyle: Int): String {
     val formatter = DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale)
+    return if (date == null) "" else formatter.format(date)
+}
+
+fun formatDateToDateString(date: Date?, locale: Locale, dateStyle: Int): String {
+    val formatter = DateFormat.getDateInstance(dateStyle, locale)
+    return if (date == null) "" else formatter.format(date)
+}
+
+fun formatDateToTimeString(date: Date?, locale: Locale, timeStyle: Int): String {
+    val formatter = DateFormat.getTimeInstance(timeStyle, locale)
     return if (date == null) "" else formatter.format(date)
 }

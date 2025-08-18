@@ -143,4 +143,38 @@
     <string name="make_sure_your_full_name_matches_your_national_id_card">Pastikan nama lengkap Anda sesuai dengan kartu identitas nasional (KTP/SIM) Anda.</string>
     <string name="done">Selesai</string>
     <string name="customer_order">Pesanan Pelanggan</string>
+
+    <!-- Notification -->
+    <!-- In res/values/strings.xml -->
+    <string name="notification_title_order_placed">Layanan telah dipesan</string>
+    <string name="notification_text_order_placed">Kami mencari mitra…</string>
+    <string name="notification_title_order_accepted">Pesanan diterima</string>
+    <string name="notification_text_order_accepted">Mitra Anda sedang bersiap.</string>
+    <!-- ... add all other titles and texts ... -->
+    <string name="notification_title_order_cancelled">Pesanan dibatalkan</string>
+    <string name="notification_text_order_cancelled">Pesanan Anda telah dibatalkan.</string>
+    <string name="notification_title_on_the_way">Dalam perjalanan</string>
+    <string name="notification_text_on_the_way">Mitra layanan sedang dalam perjalanan</string>
+    <string name="notification_title_repairing">Memperbaiki</string>
+    <string name="notification_text_repairing">Kendaraan Anda sedang dalam proses perbaikan</string>
+    <string name="notification_title_repair_completed">Perbaikan selesai</string>
+    <string name="notification_text_repair_completed">Lihatlah kendaraan Anda</string>
+    <string name="notification_title_waiting_for_payment">Menunggu pembayaran</string>
+    <string name="notification_text_waiting_for_payment">Jangan lupa untuk membayar</string>
+    <string name="notification_title_order_completed">Pesanan selesai</string>
+    <string name="notification_text_order_completed">Terima kasih telah menggunakan layanan kami!</string>
+    <string name="order_status_order_placed">Pesanan diterima</string>
+    <string name="order_status_processing">Sedang memproses</string>
+    <string name="order_status_accepted">Diterima</string>
+    <string name="order_status_on_the_way">Dalam perjalanan</string>
+    <string name="order_status_in_progress">Dalam proses</string>
+        <string name="order_status_shipped">Sudah sampai</string>
+    <string name="order_status_repaired">Sudah diperbaiki</string>
+    <string name="order_status_waiting_for_payment">Menunggu pembayaran</string>
+    <string name="order_status_on_hold">Ditahan</string>
+    <string name="order_status_completed">Selesai</string>
+    <string name="order_status_cancelled">Dibatalkan</string>
+    <string name="order_status_returned">Dikembalikan</string>
+    <string name="order_status_failed">Gagal</string>
+    <string name="order_status_delayed">Tertunda</string>
 </resources>

@@ -1,41 +1,55 @@
 package id.monpres.app.enums
 
-enum class OrderStatus(val type: OrderStatusType) {
+import android.content.Context
+import androidx.annotation.StringRes
+import id.monpres.app.R
+
+enum class OrderStatus(val type: OrderStatusType, @param:StringRes val stringResId: Int) {
     // Initial status when the order is created but not yet confirmed/processed
-    PENDING(OrderStatusType.OPEN),
+    ORDER_PLACED(OrderStatusType.OPEN, R.string.order_status_order_placed),
 
     // Payment has been received and order is being prepared (products) or scheduled (services)
-    PROCESSING(OrderStatusType.IN_PROGRESS),
+    PROCESSING(OrderStatusType.IN_PROGRESS, R.string.order_status_processing),
 
     // Order is ready for shipment (products) or service is scheduled (services)
-    CONFIRMED(OrderStatusType.IN_PROGRESS),
-
-    // For products: Order has been shipped
-    SHIPPED(OrderStatusType.IN_PROGRESS),
+    ACCEPTED(OrderStatusType.IN_PROGRESS, R.string.order_status_accepted),
 
     // For products: Order is out for delivery
-    OUT_FOR_DELIVERY(OrderStatusType.IN_PROGRESS),
+    ON_THE_WAY(OrderStatusType.IN_PROGRESS, R.string.order_status_on_the_way),
 
     // For services: Service is currently being performed
-    IN_PROGRESS(OrderStatusType.IN_PROGRESS),
+    IN_PROGRESS(OrderStatusType.IN_PROGRESS, R.string.order_status_in_progress),
 
-    // Order has been successfully delivered (products) or completed (services)
-    COMPLETED(OrderStatusType.CLOSED),
+    // For products: Order has been shipped
+    SHIPPED(OrderStatusType.IN_PROGRESS, R.string.order_status_shipped),
 
-    // Order was canceled by the customer or business
-    CANCELLED(OrderStatusType.CLOSED),
+    // For services: Service has been completed
+    REPAIRED(OrderStatusType.IN_PROGRESS, R.string.order_status_repaired),
 
-    // Order was returned/refunded after completion
-    RETURNED(OrderStatusType.CLOSED),
-
-    // Order failed due to payment issues, stock unavailability, etc.
-    FAILED(OrderStatusType.CLOSED),
+    // For products or services: Order is awaiting payment
+    WAITING_FOR_PAYMENT(OrderStatusType.IN_PROGRESS, R.string.order_status_waiting_for_payment),
 
     // Order is on hold (e.g., awaiting payment, manual review)
-    ON_HOLD(OrderStatusType.OPEN),
+    ON_HOLD(OrderStatusType.IN_PROGRESS, R.string.order_status_on_hold),
+
+    // Order has been successfully delivered (products) or completed (services)
+    COMPLETED(OrderStatusType.CLOSED, R.string.order_status_completed),
+
+    // Order was canceled by the customer or business
+    CANCELLED(OrderStatusType.CLOSED, R.string.order_status_cancelled),
+
+    // Order was returned/refunded after completion
+    RETURNED(OrderStatusType.CLOSED, R.string.order_status_returned),
+
+    // Order failed due to payment issues, stock unavailability, etc.
+    FAILED(OrderStatusType.CLOSED, R.string.order_status_failed),
 
     // For products: Shipment was delayed
-    DELAYED(OrderStatusType.OPEN);
+    DELAYED(OrderStatusType.OPEN, R.string.order_status_delayed);
+
+    fun getLabel(context: Context): String {
+        return context.getString(this.stringResId)
+    }
 }
 
 enum class OrderStatusType {

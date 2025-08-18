@@ -43,8 +43,10 @@ data class OrderService(
 ) : IOrder, Parcelable {
     companion object {
         const val COLLECTION = "orderServices"
+        const val PARTNER_ID = "partnerId"
 
         fun List<OrderService>.filterByStatus(status: OrderStatus) = filter { it.status == status }
         fun List<OrderService>.filterByStatuses(statuses: List<OrderStatus>) = filter { statuses.contains(it.status) }
+        fun List<OrderService>.filterByPartnerId(partnerId: String) = filter { it.partnerId == partnerId }
     }
 }

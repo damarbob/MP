@@ -222,7 +222,7 @@ abstract class BaseServiceFragment : Fragment() {
             /* System */
             userId = Firebase.auth.currentUser?.uid
             serviceId = service?.id
-            status = OrderStatus.PENDING
+            status = OrderStatus.ORDER_PLACED
             createdAt = Timestamp.now()
             updatedAt = Timestamp.now()
 

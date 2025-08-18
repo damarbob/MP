@@ -146,4 +146,38 @@
     <string name="make_sure_your_full_name_matches_your_national_id_card">Make sure your full name matches your national ID card.</string>
     <string name="done">Done</string>
     <string name="customer_order">Customer Order</string>
+
+    <!-- Notification -->
+    <!-- In res/values/strings.xml -->
+    <string name="notification_title_order_placed">Order Placed</string>
+    <string name="notification_text_order_placed">We\'re finding a partner for you...</string>
+    <string name="notification_title_order_accepted">Order Accepted</string>
+    <string name="notification_text_order_accepted">Your partner is preparing the service.</string>
+    <!-- ... add all other titles and texts ... -->
+    <string name="notification_title_order_cancelled">Order Cancelled</string>
+    <string name="notification_text_order_cancelled">Your service order has been cancelled.</string>
+    <string name="notification_title_on_the_way">On the way</string>
+    <string name="notification_text_on_the_way">Your partner is on the way</string>
+    <string name="notification_title_repairing">Repairing</string>
+    <string name="notification_text_repairing">Your vehicle is being repaired</string>
+    <string name="notification_title_repair_completed">Repair Completed</string>
+    <string name="notification_text_repair_completed">Look at your vehicle</string>
+    <string name="notification_title_waiting_for_payment">Waiting For Payment</string>
+    <string name="notification_text_waiting_for_payment">Don\'t forget to pay</string>
+    <string name="notification_title_order_completed">Order Completed</string>
+    <string name="notification_text_order_completed">Thank you for using our service!</string>
+    <string name="order_status_order_placed">Order placed</string>
+    <string name="order_status_processing">Processing</string>
+    <string name="order_status_accepted">Accepted</string>
+    <string name="order_status_on_the_way">On the way</string>
+    <string name="order_status_in_progress">In progress</string>
+    <string name="order_status_shipped">Shipped</string>
+    <string name="order_status_repaired">Repaired</string>
+    <string name="order_status_waiting_for_payment">Waiting for payment</string>
+    <string name="order_status_on_hold">On hold</string>
+    <string name="order_status_completed">Completed</string>
+    <string name="order_status_cancelled">Cancelled</string>
+    <string name="order_status_returned">Returned</string>
+    <string name="order_status_failed">Failed</string>
+    <string name="order_status_delayed">Delayed</string>
 </resources>

@@ -5,9 +5,9 @@ glide = "4.16.0"
 googleid = "1.1.1"
 hiltAndroid = "2.57"
 mapbox = "11.13.1"
-firebaseBom = "33.16.0"
+firebaseBom = "34.1.0"
 kotlin = "2.2.0"
-coreKtx = "1.16.0"
+coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
@@ -31,6 +31,8 @@ roomKtx = "2.7.2"
 roomRuntime = "2.7.2"
 roomCompiler = "2.7.2"
 googleDevtoolKsp = "2.2.0-2.0.2"
+firebaseMessaging = "25.0.0"
+firebaseMessagingKtx = "24.1.2"
 
 [libraries]
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
@@ -67,6 +69,8 @@ androidx-transition-ktx = { group = "androidx.transition", name = "transition-kt
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomRuntime" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

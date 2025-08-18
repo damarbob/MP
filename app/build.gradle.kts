@@ -108,6 +108,8 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.messaging.ktx)
 
     // Credential Manager libraries
     implementation(libs.androidx.credentials)

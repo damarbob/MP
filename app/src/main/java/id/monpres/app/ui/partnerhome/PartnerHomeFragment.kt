@@ -13,10 +13,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainViewModel
 import id.monpres.app.databinding.FragmentPartnerHomeBinding
 import id.monpres.app.model.Banner
+import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
 import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class PartnerHomeFragment : BaseFragment() {
@@ -31,6 +33,10 @@ class PartnerHomeFragment : BaseFragment() {
 
     /* UI */
     private lateinit var binding: FragmentPartnerHomeBinding
+
+    /* Repositories */
+    @Inject
+    lateinit var userRepository: UserRepository
 
     private lateinit var orderServiceAdapter: OrderServiceAdapter
 
@@ -97,7 +103,7 @@ class PartnerHomeFragment : BaseFragment() {
 
     // TODO: Filter by the partner ID
     fun setupOrderServiceObservers() {
-        observeUiState(mainViewModel.userOrderServicesState) {
+        observeUiState(mainViewModel.partnerOrderServicesState) {
             orderServiceAdapter.submitList(it.take(5))
 
             binding.fragmentPartnerHomeButtonSeeAllOrderService.visibility =
