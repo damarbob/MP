@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
@@ -47,8 +48,28 @@ class GetOrCreateUserUseCase @Inject constructor(
                 // User exists
                 val existingUser = documentSnapshot.toObject(MontirPresisiUser::class.java)
                 if (existingUser != null) {
-                    userRepository.addRecord(existingUser) // Create record in local repository after successful Firestore creation
-                    Result.success(existingUser)
+                    val currentDisplayName = firebaseUser.displayName ?: "User"
+                    val currentPhoneNumber = firebaseUser.phoneNumber ?: ""
+
+                    // Check if the user's profile has changed
+                    if ((existingUser.displayName != currentDisplayName && currentDisplayName.isNotEmpty()) ||
+                        (existingUser.phoneNumber != currentPhoneNumber && currentPhoneNumber.isNotEmpty())) {
+                        Log.d(TAG, "User profile has changed for UID: ${firebaseUser.uid}")
+
+                        // Create updated user data
+                        val updatedUser = existingUser.copy(
+                            displayName = currentDisplayName,
+                            phoneNumber = currentPhoneNumber,
+                            updatedAt = Timestamp.now().toDate().time.toDouble()
+                        )
+
+                        userDocRef.set(updatedUser, SetOptions.merge()).await() // Update Firestore with the new data
+                        userRepository.addRecord(updatedUser) // Create record in local repository after successful Firestore update
+                        Result.success(updatedUser)
+                    } else {
+                        userRepository.addRecord(existingUser)
+                        Result.success(existingUser)
+                    }
                 } else {
                     Result.failure(UserDataParseException("Failed to parse existing user data from Firestore for UID: ${firebaseUser.uid}"))
                 }

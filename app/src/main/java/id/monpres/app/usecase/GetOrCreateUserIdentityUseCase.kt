@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
 import id.monpres.app.model.UserIdentity
 import id.monpres.app.repository.UserIdentityRepository
@@ -38,8 +39,25 @@ class GetOrCreateUserIdentityUseCase @Inject constructor(
                 // User exists
                 val existingIdentity = documentSnapshot.toObject(UserIdentity::class.java)
                 if (existingIdentity != null) {
-                    userIdentityRepository.addRecord(existingIdentity) // Create record in local repository after successful Firestore creation
-                    Result.success(existingIdentity)
+                    val currentEmail = firebaseUser.email
+
+                    // Check if the user's identity has changed
+                    if (existingIdentity.email != currentEmail) {
+                        Log.d(TAG, "User identity has changed for UID: ${firebaseUser.uid}")
+
+                        // Create updated user data
+                        val updatedUserIdentity = existingIdentity.copy(
+                            email = currentEmail,
+                            updatedAt = Timestamp.now().toDate().time.toDouble()
+                        )
+
+                        userDocRef.set(updatedUserIdentity, SetOptions.merge()).await() // Update Firestore with the new data
+                        userIdentityRepository.addRecord(updatedUserIdentity) // Create record in local repository after successful Firestore update
+                        Result.success(updatedUserIdentity)
+                    } else {
+                        userIdentityRepository.addRecord(existingIdentity) // Create record in local repository after successful Firestore creation
+                        Result.success(existingIdentity)
+                    }
                 } else {
                     Result.failure(Exception("Failed to parse existing user data from Firestore for UID: ${firebaseUser.uid}"))
                 }
