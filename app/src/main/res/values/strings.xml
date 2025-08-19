@@ -146,4 +146,5 @@
     <string name="make_sure_your_full_name_matches_your_national_id_card">Make sure your full name matches your national ID card.</string>
     <string name="done">Done</string>
     <string name="customer_order">Customer Order</string>
+    <string name="nearest_partners">Nearest Partners</string>
 </resources>

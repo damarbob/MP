@@ -145,6 +145,13 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
+                android:id="@+id/quickServiceButtonSelectPartner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Partner"
+                app:icon="@drawable/engineering_24px" />
+
+            <Button
                 android:id="@+id/quickServiceButtonPlaceOrder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

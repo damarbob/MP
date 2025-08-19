@@ -52,6 +52,8 @@ class QuickServiceFragment : BaseServiceFragment() {
     }
 
     override fun getBaseOrderService() = OrderService()
+
+    override fun getPartnerSelectionButton() = fragBinding.quickServiceButtonSelectPartner
     override fun getVehicleAutoCompleteTextView() = fragBinding.quickServiceAutoCompleteVehicle
     override fun getIssueAutoCompleteTextView() = fragBinding.quickServiceAutoCompleteIssue
     override fun getAddressText() = fragBinding.quickServiceInputEditLocation.text.toString()
@@ -98,7 +100,9 @@ class QuickServiceFragment : BaseServiceFragment() {
 
         // Validate common inputs and place order
         fragBinding.quickServiceButtonPlaceOrder.setOnClickListener {
-            if (validateLocation() &&
+            if (
+                validateSelectedPartner() &&
+                validateLocation() &&
                 validateLocationConsent() &&
                 validateVehicle() &&
                 validateIssue()

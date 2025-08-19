@@ -67,6 +67,7 @@ class ScheduledServiceFragment : BaseServiceFragment() {
         selectedDateMillis = this@ScheduledServiceFragment.selectedDateMillis?.toDouble()
     }
 
+    override fun getPartnerSelectionButton() = fragBinding.scheduledServiceButtonSelectPartner
     override fun getVehicleAutoCompleteTextView() = fragBinding.scheduledServiceAutoCompleteVehicle
     override fun getIssueAutoCompleteTextView() = fragBinding.scheduledServiceAutoCompleteIssue
     override fun getAddressText() = fragBinding.scheduledServiceInputEditLocation.text.toString()
@@ -122,7 +123,8 @@ class ScheduledServiceFragment : BaseServiceFragment() {
         }
 
         fragBinding.scheduledServiceButtonPlaceOrder.setOnClickListener {
-            if (validateDate() &&
+            if (
+                validateSelectedPartner() && validateDate() &&
                 validateLocation() &&
                 validateLocationConsent() &&
                 validateVehicle() &&

@@ -143,4 +143,5 @@
     <string name="make_sure_your_full_name_matches_your_national_id_card">Pastikan nama lengkap Anda sesuai dengan kartu identitas nasional (KTP/SIM) Anda.</string>
     <string name="done">Selesai</string>
     <string name="customer_order">Pesanan Pelanggan</string>
+    <string name="nearest_partners">Mitra Terdekat</string>
 </resources>

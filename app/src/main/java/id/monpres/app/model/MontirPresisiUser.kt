@@ -1,7 +1,10 @@
 package id.monpres.app.model
 
+import android.os.Parcelable
 import id.monpres.app.enums.UserRole
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class MontirPresisiUser(
     var userId: String? = null,
     var displayName: String? = null,
@@ -9,7 +12,7 @@ data class MontirPresisiUser(
     var phoneNumber: String? = null,
     var createdAt: Double? = null,
     var updatedAt: Double? = null,
-) {
+) : Parcelable {
     companion object {
         val COLLECTION = "users"
     }

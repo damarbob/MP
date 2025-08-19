@@ -12,6 +12,7 @@ import android.widget.CheckBox
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
@@ -19,6 +20,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import com.mapbox.geojson.Point
+import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainApplication
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
@@ -27,7 +29,10 @@ import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.Service
 import id.monpres.app.model.Vehicle
+import id.monpres.app.repository.PartnerRepository
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
+import id.monpres.app.ui.partnerselection.PartnerSelectionFragment
+import javax.inject.Inject
 
 /**
  * An abstract base class for fragments that handle service ordering.
@@ -51,14 +56,19 @@ import id.monpres.app.ui.baseservice.BaseServiceViewModel
  * - Provide an implementation for `getViewModel()` to return an instance of `BaseServiceViewModel` (or a subclass).
  * - Initialize the `binding` property with the appropriate ViewBinding instance.
  */
+@AndroidEntryPoint
 abstract class BaseServiceFragment : Fragment() {
     protected val TAG = this::class.java.simpleName
     protected lateinit var binding: Any
     protected var service: Service? = null
+    protected var selectedPartnerId: String? = null
     protected var myVehicles: List<Vehicle> = listOf()
     protected var chosenMyVehicle: Vehicle? = null
     protected var selectedLocationPoint: Point? = null
     protected var orderPlacedCallback: OrderPlacedCallback? = null
+
+    @Inject
+    lateinit var partnerRepository: PartnerRepository
 
     interface OrderPlacedCallback {
         fun onSuccess(orderService: OrderService)
@@ -89,6 +99,7 @@ abstract class BaseServiceFragment : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
     }
 
+    abstract fun getPartnerSelectionButton(): Button
     abstract fun getVehicleAutoCompleteTextView(): AutoCompleteTextView
     abstract fun getIssueAutoCompleteTextView(): AutoCompleteTextView
     abstract fun getAddressText(): String
@@ -99,7 +110,20 @@ abstract class BaseServiceFragment : Fragment() {
     abstract fun getVehicleInputLayout(): TextInputLayout
     abstract fun getIssueInputLayout(): TextInputLayout
     abstract fun getPlaceOrderButton(): Button
+
+    /**
+     * Abstract method to be implemented by subclasses.
+     * This method should return an instance of `OrderService` which represents
+     * the basic structure of the order being placed. Subclasses might return
+     * a specific type of `OrderService` (e.g., `RepairOrderService`, `TowingOrderService`).
+     * This base order object will then be populated with details like user information,
+     * service details, location, and user inputs before being sent to the ViewModel
+     * for processing.
+     *
+     * @return An instance of [OrderService] or its subclass.
+     */
     abstract fun getBaseOrderService(): OrderService
+
     protected fun registerOrderPlacedCallback(callback: OrderPlacedCallback) {
         orderPlacedCallback = callback
     }
@@ -120,6 +144,22 @@ abstract class BaseServiceFragment : Fragment() {
         // Setup buttons visibility
         getLocationSelectButton().visibility = View.VISIBLE
         getLocationReSelectButton().visibility = View.GONE
+
+        // Select partner observer
+        // ① Listen for the result
+        parentFragmentManager.setFragmentResultListener(
+            PartnerSelectionFragment.REQUEST_KEY_PARTNER_SELECTION,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val partnerId = bundle.getString(PartnerSelectionFragment.KEY_SELECTED_USER_ID)
+            // ② React to the chosen userId
+            partnerId?.let {
+                // Update selected partner id
+                selectedPartnerId = partnerId
+                getPartnerSelectionButton().text = partnerRepository.getRecordByUserId(partnerId)?.displayName
+            }
+        }
+
 
         // Location observer
         getViewModel().selectedLocationPoint.observe(viewLifecycleOwner) { point ->
@@ -150,6 +190,11 @@ abstract class BaseServiceFragment : Fragment() {
                 ).show()
                 orderPlacedCallback?.onFailure(getBaseOrderService(), it)
             }
+        }
+
+        // Select partner button
+        getPartnerSelectionButton().setOnClickListener {
+            findNavController().navigate(R.id.action_global_partnerSelectionFragment)
         }
 
         // Location button listeners
@@ -210,6 +255,16 @@ abstract class BaseServiceFragment : Fragment() {
         }
     }
 
+    protected fun validateSelectedPartner(): Boolean {
+        return if (selectedPartnerId == null) {
+            getPartnerSelectionButton().error = getString(R.string.this_field_is_required)
+            false
+        } else {
+            getPartnerSelectionButton().error = null
+            true
+        }
+    }
+
     protected fun openMap() {
         val intent = Intent(requireContext(), MapsActivity::class.java).apply {
             putExtra(MapsActivityExtraData.EXTRA_PICK_MODE, true)
@@ -238,6 +293,7 @@ abstract class BaseServiceFragment : Fragment() {
             selectedLocationLng = selectedLocationPoint?.longitude()
 
             /* User inputs */
+            partnerId = selectedPartnerId
             userAddress = getAddressText()
             vehicle = chosenMyVehicle
             issue = getIssueAutoCompleteTextView().text.toString()
