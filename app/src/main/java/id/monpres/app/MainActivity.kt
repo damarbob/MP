@@ -1,7 +1,12 @@
 package id.monpres.app
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -9,8 +14,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -36,8 +43,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.enums.UserRole
 import id.monpres.app.libraries.ActivityRestartable
+import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
+import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
@@ -91,6 +100,48 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private var optionsMenu: Menu? = null
     val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
 
+    /* Permissions */
+    private val permissionQueue: MutableList<String> =
+        mutableListOf() // Queue for individual permissions
+    private lateinit var currentPermission: String
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            when {
+                isGranted -> {
+                    processNextPermission()
+                }
+
+                shouldShowRequestPermissionRationale(currentPermission) -> {
+                    showPermissionRationale(currentPermission)
+                }
+
+                else -> {
+                    if (currentPermission == Manifest.permission.READ_MEDIA_IMAGES && Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
+                        showPermissionSettingsDialog(currentPermission)
+                    } else if (currentPermission != Manifest.permission.READ_MEDIA_IMAGES) {
+                        showPermissionSettingsDialog(currentPermission)
+                    } else processNextPermission()
+                }
+            }
+        }
+
+    private var launchedFromOrderId: String? = null
+
+    // Add permissions to the queue and start processing
+    private fun checkPermissions(permissions: List<String>) {
+        permissionQueue.clear()
+        permissionQueue.addAll(permissions)
+        processNextPermission()
+    }
+
+    // Process the next permission in the queue
+    private fun processNextPermission() {
+        if (permissionQueue.isNotEmpty()) {
+            currentPermission = permissionQueue.removeAt(0)
+            requestPermissionLauncher.launch(currentPermission)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -137,6 +188,16 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         /* Listeners */
         setupUIListeners()
         setupNavControllerListeners()
+
+        /* Permission */
+        if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
+
+        /* Notification */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            OrderServiceNotification.createNotificationChannel(this)
+        }
+        // Handle notification click
+        handleIntentExtras(intent)
 
         /* Testing. TODO: Remove on production */
         getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
@@ -453,6 +514,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
             /* Update navigation tree */
             updateNavigationTree()
+
+            viewModel.observeDataByRole()
         }
     }
 
@@ -512,4 +575,103 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private fun onLogoutClicked() {
         viewModel.signOut()
     }
+
+    private fun getNotificationPermissions(): Array<String> {
+        val permissions: MutableList<String> = mutableListOf()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+//            permissions.add(Manifest.permission.SCHEDULE_EXACT_ALARM)
+        }
+//        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) permissions.add(Manifest.permission.SCHEDULE_EXACT_ALARM)
+        return permissions.toTypedArray()
+    }
+
+    private fun showPermissionRationale(permission: String) {
+        val permissionName = extractPermissionName(permission)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(resources.getString(R.string.x_permission_required, permissionName))
+            .setMessage(getString(R.string.please_grant_permission))
+            .setPositiveButton(resources.getString(R.string.okay)) { _, _ ->
+                requestPermissionLauncher.launch(permission)
+            }
+            .setNegativeButton(resources.getString(R.string.cancel)) { _, _ ->
+                processNextPermission()
+            }
+            .create()
+            .show()
+    }
+
+    private fun showPermissionSettingsDialog(permission: String) {
+        val permissionName = extractPermissionName(permission)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.x_permission_is_not_granted, permissionName))
+            .setMessage(getString(R.string.this_permission_is_disabled))
+            .setPositiveButton(getString(R.string.go_to_settings)) { _, _ ->
+                openAppSettings()
+            }
+            .setNegativeButton(resources.getString(R.string.cancel)) { _, _ ->
+
+            }
+            .create()
+            .show()
+    }
+
+    private fun extractPermissionName(permission: String): String {
+        return when (permission) {
+            Manifest.permission.CAMERA -> {
+                getString(R.string.camera)
+            }
+
+            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED, Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                getString(R.string.gallery)
+            }
+
+            Manifest.permission.POST_NOTIFICATIONS -> {
+                getString(R.string.notification)
+            }
+
+            else -> {
+                ""
+            }
+        }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        val uri: Uri = Uri.fromParts("package", this.packageName, null)
+        intent.data = uri
+        startActivity(intent)
+    }
+
+    private fun hasPostNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // POST_NOTIFICATIONS is not required before Android 13
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntentExtras(intent)
+    }
+
+    private fun handleIntentExtras(intent: Intent) {
+        launchedFromOrderId = intent.getStringExtra(OrderServiceNotification.ORDER_ID_KEY)
+        if (launchedFromOrderId != null) {
+            Log.d("MainActivity", "Launched/Resumed from notification for order: $launchedFromOrderId")
+            // You might want to clear it after processing to avoid re-triggering this logic
+            // on normal app opens, or pass it to the ViewModel to handle.
+            if (launchedFromOrderId != null) {
+                viewModel.setOpenedFromNotification(launchedFromOrderId)
+                navController.navigate(R.id.action_global_serviceProcessFragment, Bundle().apply {
+                    putString(ServiceProcessFragment.ARG_ORDER_SERVICE_ID, launchedFromOrderId)
+                })
+            }
+        }
+    }
+
 }

@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import id.monpres.app.model.OrderService
 import id.monpres.app.usecase.GetDataByUserIdUseCase
+import id.monpres.app.usecase.ObserveCollectionByFieldUseCase
 import id.monpres.app.usecase.ObserveCollectionByIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByUserIdUseCase
 import id.monpres.app.utils.UiState
@@ -23,6 +24,7 @@ import javax.inject.Singleton
 class OrderServiceRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val observeCollectionByUserIdUseCase: ObserveCollectionByUserIdUseCase,
+    private val observeCollectionByFieldUseCase: ObserveCollectionByFieldUseCase,
     private val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase,
     private val getDataByUserIdUseCase: GetDataByUserIdUseCase,
 
@@ -33,6 +35,22 @@ class OrderServiceRepository @Inject constructor(
 
     fun observeOrderServicesByUserId(): Flow<UiState<List<OrderService>>> =
         observeCollectionByUserIdUseCase(
+            getCurrentUserId(),
+            OrderService.COLLECTION, OrderService::class.java
+        )
+            .distinctUntilChanged()
+            .map<List<OrderService?>?, UiState<List<OrderService>>> { orderServices ->
+                UiState.Success(orderServices?.mapNotNull { it } ?: throw NullPointerException())
+            }
+            .onStart { emit(UiState.Loading) }
+            .catch { e ->
+                emit(UiState.Error(e))
+            }
+            .flowOn(Dispatchers.IO)
+
+    fun observeOrderServicesByPartnerId(): Flow<UiState<List<OrderService>>> =
+        observeCollectionByFieldUseCase(
+            OrderService.PARTNER_ID,
             getCurrentUserId(),
             OrderService.COLLECTION, OrderService::class.java
         )
