@@ -21,6 +21,13 @@
         android:minHeight="120dp"
         android:scaleType="centerInside"
         android:contentDescription="@string/profile"/>
+    <TextView
+        style="@style/Widget.App.H4.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/profile"
+        android:layout_gravity="center_vertical"
+        android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/editProfileInputLayoutFullName"
@@ -58,6 +65,39 @@
             android:inputType="textEmailAddress" />
 
     </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/editProfileTextInputLayoutWhatsApp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="@string/whatsapp_number"
+        app:endIconMode="clear_text"
+        app:startIconContentDescription="@string/whatsapp_number"
+        app:startIconDrawable="@drawable/mobile_24px">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editProfileInputWhatsApp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        style="@style/Widget.App.H4.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/primary_location"
+        android:layout_gravity="center_vertical"
+        android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+    <Button
+        android:id="@+id/editProfileButtonSelectPrimaryLocationButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_a_location"
+        app:icon="@drawable/add_location_alt_24px" />
 
     <Button
         android:id="@+id/editProfileButton"

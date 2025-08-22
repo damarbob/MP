@@ -178,4 +178,8 @@
     <string name="order_status_returned">Dikembalikan</string>
     <string name="order_status_failed">Gagal</string>
     <string name="order_status_delayed">Tertunda</string>
+
+    <string name="whatsapp_number">Nomor WhatsApp</string>
+    <string name="primary_location">Lokasi Utama</string>
+    <string name="profile_updated_successfully">Profil berhasil diperbarui</string>
 </resources>

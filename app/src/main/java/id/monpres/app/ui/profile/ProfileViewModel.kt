@@ -4,84 +4,88 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
-import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.mapbox.geojson.Point
+import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.repository.UserRepository
+import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class ProfileViewModel : ViewModel() {
-
-    protected val _updateProfileResult = MutableLiveData<Result<Boolean>>(null)
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : ViewModel() {
+    private val _selectedPrimaryLocationPoint = MutableLiveData<Point?>(null)
+    val selectedPrimaryLocationPoint: LiveData<Point?> get() = _selectedPrimaryLocationPoint
+    private val _updateProfileResult = MutableLiveData<Result<Boolean>>(null)
     val updateProfileResult: LiveData<Result<Boolean>> get() = _updateProfileResult
 
-    fun updateProfile(fullName: String, emailAddress: String) {
+    fun setSelectedPrimaryLocationPoint(point: Point) {
+        _selectedPrimaryLocationPoint.value = point
+    }
+
+    suspend fun updateProfileNew(
+        fullName: String,
+        emailAddress: String,
+        whatsAppNumber: String? = null,
+        location: Point? = null
+    ) {
+        // Ensure user is signed in
         val user = Firebase.auth.currentUser
-        if (user == null) {
-            return
+            ?: throw Exception("User not authenticated")
+
+        val userProfile = userRepository.getRecordByUserId(user.uid)
+
+        try {
+
+            // Update display name
+            val profileRequest = UserProfileChangeRequest.Builder()
+                .setDisplayName(fullName)
+                .build()
+            user.updateProfile(profileRequest).await()
+
+            // Apply local changes
+            userProfile?.displayName = fullName
+
+            /* Push extra fields into Firestore */
+
+            if (!whatsAppNumber.isNullOrBlank()) {
+                FirebaseFirestore.getInstance()
+                    .collection(MontirPresisiUser.COLLECTION)
+                    .document(user.uid)
+                    .update(
+                        mapOf(
+                            "phoneNumber" to whatsAppNumber,
+                        )
+                    ).await()
+
+                // Apply local changes
+                userProfile?.phoneNumber = whatsAppNumber
+            }
+
+            if (location != null) {
+                FirebaseFirestore.getInstance()
+                    .collection(MontirPresisiUser.COLLECTION)
+                    .document(user.uid)
+                    .update(
+                        mapOf(
+                            "locationLat" to location.latitude().toString(),
+                            "locationLng" to location.longitude().toString(),
+                        )
+                    ).await()
+
+                // Apply local changes
+                userProfile?.locationLat = location.latitude().toString()
+                userProfile?.locationLng = location.longitude().toString()
+            }
+
+            _updateProfileResult.postValue(Result.success(true))
+        } catch (e: Exception) {
+            _updateProfileResult.postValue(Result.failure(e))
         }
 
-        // If the email address is the same, update the display name
-        if (user.email == emailAddress) {
-            user.updateProfile(
-                UserProfileChangeRequest.Builder()
-                    .setDisplayName(fullName)
-                    .build()
-            ).addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    // Handle success
-                    _updateProfileResult.postValue(Result.success(true))
-                } else {
-                    // Handle error
-                    _updateProfileResult.postValue(
-                        Result.failure(
-                            task.exception ?: Exception("Unknown error")
-                        )
-                    )
-                }
-            }
-            return
-        }
-
-        // If the email address is different, verify the current email address and update it
-        user.verifyBeforeUpdateEmail(
-            emailAddress
-        ).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                user.updateEmail(emailAddress).addOnCompleteListener { task1 ->
-                    if (task1.isSuccessful) {
-                        user.updateProfile(
-                            UserProfileChangeRequest.Builder()
-                                .setDisplayName(fullName)
-                                .build()
-                        ).addOnCompleteListener { task2 ->
-                            if (task2.isSuccessful) {
-                                // Handle success
-                                _updateProfileResult.postValue(Result.success(true))
-                            } else {
-                                // Handle error
-                                _updateProfileResult.postValue(
-                                    Result.failure(
-                                        task2.exception ?: Exception("Unknown error")
-                                    )
-                                )
-                            }
-                        }
-                    } else {
-                        // Handle error
-                        _updateProfileResult.postValue(
-                            Result.failure(
-                                task1.exception ?: Exception("Unknown error")
-                            )
-                        )
-                    }
-                }
-            } else {
-                // Handle error
-                _updateProfileResult.postValue(
-                    Result.failure(
-                        task.exception ?: Exception("Unknown error")
-                    )
-                )
-            }
-        }
     }
 }

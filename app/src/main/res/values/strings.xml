@@ -181,4 +181,8 @@
     <string name="order_status_returned">Returned</string>
     <string name="order_status_failed">Failed</string>
     <string name="order_status_delayed">Delayed</string>
+
+    <string name="whatsapp_number">WhatsApp Number</string>
+    <string name="primary_location">Primary Location</string>
+    <string name="profile_updated_successfully">Profile updated successfully</string>
 </resources>

@@ -10,6 +10,8 @@ data class MontirPresisiUser(
     var displayName: String? = null,
     var role: UserRole? = null,
     var phoneNumber: String? = null,
+    var locationLat: String? = null,
+    var locationLng: String? = null,
     var createdAt: Double? = null,
     var updatedAt: Double? = null,
 ) : Parcelable {
