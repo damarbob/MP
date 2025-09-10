@@ -12,22 +12,28 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.transition.TransitionManager
+import com.google.android.material.color.MaterialColors
+import com.google.android.material.transition.MaterialFade
 import com.google.android.material.transition.MaterialSharedAxis
+import com.google.firebase.Timestamp
+import com.ncorti.slidetoact.SlideToActView
+import com.ncorti.slidetoact.SlideToActView.OnSlideCompleteListener
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentServiceProcessBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
+import id.monpres.app.enums.UserRole
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
-import kotlinx.coroutines.launch
 import java.text.DateFormat
+
 
 @AndroidEntryPoint
 class ServiceProcessFragment : BaseFragment() {
@@ -86,40 +92,73 @@ class ServiceProcessFragment : BaseFragment() {
 
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
-        lifecycleScope.launch {
-//            observeUiState(viewModel.getOrderServiceById(args.orderServiceId)) { data ->
-            observeUiState(mainViewModel.userOrderServiceState) { data ->
-                orderService = data
-                Log.d(TAG, "OrderService: $orderService")
-                setupView()
-                showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
-                showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
-            }
+        when (mainViewModel.getCurrentUser()?.role) {
+            UserRole.CUSTOMER ->
+                observeUiState(mainViewModel.userOrderServiceState) { data ->
+                    orderService = data
+                    Log.d(TAG, "OrderService: $orderService")
+                    setupView()
+                    showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
+                    showActionButton(false)
+                    showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
+                }
+
+
+            UserRole.PARTNER ->
+                observeUiState(mainViewModel.partnerOrderServiceState) { data ->
+                    orderService = data
+                    Log.d(TAG, "OrderService: $orderService")
+                    setupView()
+                    showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
+                    showActionButton(orderService.status in OrderStatus.entries.filter { it.type != OrderStatusType.CLOSED })
+                    showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
+                }
+
+
+            else -> {}
         }
     }
 
     private fun setupView() {
-        // TODO: Set up view
         binding.apply {
             root.setProtections(
                 listOf(
                     GradientProtection(
-                        WindowInsetsCompat.Side.TOP, resources.getColor(
-                            R.color.md_theme_surfaceContainer, null
+                        WindowInsetsCompat.Side.TOP,
+                        MaterialColors.getColor(
+                            requireContext(),
+                            com.google.android.material.R.attr.colorSurfaceContainer,
+                            resources.getColor(
+                                R.color.md_theme_surfaceContainer,
+                                requireContext().theme
+                            )
                         )
                     )
                 )
             )
-            fragmentServiceProcessTextViewTitle.text = orderService.status?.getLabel(requireContext())?.capitalizeWords() ?: "-"
-            fragmentServiceProcessTextViewSubtitle.text = orderService.updatedAt.toDateTimeDisplayString(dateStyle = DateFormat.FULL, timeStyle = DateFormat.LONG)
+
+            val materialFade = MaterialFade().apply {
+                duration = 150L
+            }
+            TransitionManager.beginDelayedTransition(binding.root, materialFade)
+            fragmentServiceProcessTextViewTitle.text =
+                orderService.status?.getLabel(requireContext())?.capitalizeWords() ?: "-"
+            fragmentServiceProcessTextViewSubtitle.text =
+                orderService.updatedAt.toDateTimeDisplayString(
+                    dateStyle = DateFormat.FULL,
+                    timeStyle = DateFormat.LONG
+                )
             fragmentServiceProcessOrderId.text = orderService.id ?: "-"
             fragmentServiceProcessLocation.text =
                 "${orderService.selectedLocationLat}, ${orderService.selectedLocationLng}"
-            fragmentServiceProcessAddress.text = if (orderService.userAddress?.isNotBlank() == true) orderService.userAddress else "-"
+            fragmentServiceProcessAddress.text =
+                if (orderService.userAddress?.isNotBlank() == true) orderService.userAddress else "-"
             fragmentServiceProcessPartner.text = orderService.partnerId ?: "-"
             fragmentServiceProcessVehicle.text = orderService.vehicle?.name ?: "-"
             fragmentServiceProcessIssue.text = orderService.issue ?: "-"
-            fragmentServiceProcessIssueDescription.text = if (orderService.issueDescription?.isNotBlank() == true) orderService.issueDescription else "-"
+            fragmentServiceProcessIssueDescription.text =
+                if (orderService.issueDescription?.isNotBlank() == true) orderService.issueDescription else "-"
+
         }
     }
 
@@ -128,29 +167,74 @@ class ServiceProcessFragment : BaseFragment() {
             // TODO: Cancel service
             findNavController().popBackStack()
         }
+
+        binding.fragmentServiceProcessButtonComplete.setOnClickListener {
+            findNavController().navigate(
+                ServiceProcessFragmentDirections.actionServiceProcessFragmentToOrderServiceDetailFragment(
+                    orderService
+                )
+            )
+        }
+
+        binding.fragmentServiceProcessActButton.onSlideCompleteListener =
+            object : OnSlideCompleteListener {
+                override fun onSlideComplete(view: SlideToActView) {
+
+                    observeUiStateOneShot(
+                        viewModel.updateOrderService(
+                            orderService.copy(
+                                updatedAt = Timestamp.now(),
+                                status = orderService.status?.serviceNextProcess()
+                            )
+                        )
+                    ) {
+                        view.setCompleted(completed = false, withAnimation = true)
+                    }
+                }
+            }
     }
 
     private fun showCancelButton(show: Boolean) {
+        val materialFade = MaterialFade().apply {
+            duration = 150L
+        }
+        TransitionManager.beginDelayedTransition(binding.root, materialFade)
         binding.fragmentServiceProcessButtonCancel.visibility =
             if (show) View.VISIBLE else View.GONE
     }
 
+    private fun showActionButton(show: Boolean) {
+        val materialFade = MaterialFade().apply {
+            duration = 150L
+        }
+        TransitionManager.beginDelayedTransition(binding.root, materialFade)
+        binding.fragmentServiceProcessActButton.visibility =
+            if (show) View.VISIBLE else View.GONE
+        binding.fragmentServiceProcessActButton.text =
+            orderService.status?.serviceNextProcess()?.getLabel(requireContext())?.capitalizeWords()
+                ?: "-"
+    }
+
     private fun showCompleteStatus(show: Boolean) {
+        val materialFade = MaterialFade().apply {
+            duration = 150L
+        }
+        TransitionManager.beginDelayedTransition(binding.root, materialFade)
         binding.fragmentServiceProcessButtonComplete.visibility =
             if (show) View.VISIBLE else View.GONE
         if (show) {
+            binding.fragmentServiceProcessProgressIndicator.isIndeterminate = false
             ValueAnimator.ofInt(0, 100).apply {
                 duration = 1000
                 interpolator = AccelerateDecelerateInterpolator()
                 addUpdateListener {
                     val progress = it.animatedValue as Int
-                    binding.fragmentServiceProcessProgressIndicator.isIndeterminate = false
                     binding.fragmentServiceProcessProgressIndicator.progress = progress
                 }
                 start()
             }
-            binding.fragmentServiceProcessProgressIndicator.bottom
-        } else binding.fragmentServiceProcessProgressIndicator.isIndeterminate = true
+        }
+        else binding.fragmentServiceProcessProgressIndicator.isIndeterminate = true
     }
 
     override fun onDestroy() {

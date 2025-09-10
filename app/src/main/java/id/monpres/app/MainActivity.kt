@@ -24,7 +24,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -43,6 +45,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.enums.UserRole
 import id.monpres.app.libraries.ActivityRestartable
+import id.monpres.app.model.OrderService
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
@@ -53,6 +56,7 @@ import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
+import id.monpres.app.utils.UiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -78,6 +82,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
     /* View models */
     private val viewModel: MainViewModel by viewModels()
+//    private val orderViewModel: OrderViewModel by viewModels()
 
     /* Use cases */
     private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
@@ -109,6 +114,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             when {
                 isGranted -> {
                     processNextPermission()
+                    if (currentPermission == Manifest.permission.POST_NOTIFICATIONS) showNotification()
                 }
 
                 shouldShowRequestPermissionRationale(currentPermission) -> {
@@ -189,13 +195,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         setupUIListeners()
         setupNavControllerListeners()
 
-        /* Permission */
-        if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
-
-        /* Notification */
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            OrderServiceNotification.createNotificationChannel(this)
-        }
         // Handle notification click
         handleIntentExtras(intent)
 
@@ -516,6 +515,96 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             updateNavigationTree()
 
             viewModel.observeDataByRole()
+
+            /* Permission */
+            if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
+            else showNotification()
+        }
+    }
+
+    private fun showNotification() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                when (userRepository.getCurrentUserRecord()?.role) {
+                    UserRole.PARTNER -> {
+                        viewModel.partnerOrderServicesState.collect { state ->
+                            when (state) {
+                                is UiState.Success -> {
+                                    Log.d(TAG, "Partner order services: ${state.data}")
+                                    processNotification(state.data)
+                                }
+
+                                else -> {}
+                            }
+                        }
+                    }
+
+                    UserRole.CUSTOMER -> {
+                        viewModel.userOrderServicesState.collect { state ->
+                            when (state) {
+                                is UiState.Success -> {
+                                    Log.d(TAG, "User order services: ${state.data}")
+                                    processNotification(state.data)
+                                }
+                                else -> {}
+                            }
+                        }
+                    }
+                    else -> {
+                        Log.e(TAG, "Unexpected user role: ${userRepository.getCurrentUserRecord()?.role}")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun processNotification(currentOrders: List<OrderService>) {
+        val currentlyOpenedOrderId = viewModel.getJustOpenedFromNotificationOrderId() // Cache it for this run
+        // Clear it after use so subsequent non-notification updates are processed normally
+        viewModel.clearJustOpenedFromNotificationOrderId()
+        val notifiedOrderStatusMap = viewModel.getNotifiedOrderStatusMap()
+
+        // Identify new or updated orders
+        currentOrders.forEach { order ->
+            val lastNotifiedStatus = notifiedOrderStatusMap[order.id]
+            val currentStatus = order.status
+
+            if (order.id == currentlyOpenedOrderId && lastNotifiedStatus == currentStatus) {
+                // This specific order was just clicked to open the app,
+                // and its status hasn't changed since the notification that was clicked.
+                // Let's assume the notification for this state is already visible.
+                // We *do* want to ensure it's in our notifiedOrderStatusMap so it's tracked.
+                if (notifiedOrderStatusMap[order.id] == null) { // Ensure it's tracked even if we skip re-notifying
+                    viewModel.setNotifiedOrderStatusMap(mutableMapOf(order.id!! to currentStatus!!))
+                }
+                Log.d(TAG, "Skipping re-notification for order ${order.id} as it was just opened.")
+                return@forEach // Skip to the next order for notification processing
+            }
+
+            if (lastNotifiedStatus == null || lastNotifiedStatus != currentStatus) {
+                // New order or status has changed since last notification
+                Log.d(TAG, "Order ${order.id} needs notification. Current: $currentStatus, Last Notified: $lastNotifiedStatus")
+
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                OrderServiceNotification.showOrUpdateNotification(
+                    this,
+                    order,
+                    userRepository.getCurrentUserRecord()?.role!!
+                )
+//                }
+                notifiedOrderStatusMap[order.id!!] = currentStatus!!
+            }
+        }
+
+        // Identify orders that were completed/cancelled and remove their notifications
+        // (and remove from notifiedOrderStatusMap)
+        val currentOrderIds = currentOrders.map { it.id }.toSet()
+        val ordersToRemoveNotification = notifiedOrderStatusMap.filterKeys { !currentOrderIds.contains(it) }
+
+        ordersToRemoveNotification.forEach { (orderId, _) ->
+            Log.d(TAG, "Order $orderId no longer ongoing or status implies removal. Cancelling notification.")
+            OrderServiceNotification.cancelNotification(this, orderId)
+            viewModel.removeNotifiedOrderStatus(orderId)
         }
     }
 
@@ -656,13 +745,20 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent) // Update the activity's intent
         handleIntentExtras(intent)
+        if (launchedFromOrderId != null) {
+            viewModel.setOpenedFromNotification(launchedFromOrderId)
+        }
     }
 
     private fun handleIntentExtras(intent: Intent) {
         launchedFromOrderId = intent.getStringExtra(OrderServiceNotification.ORDER_ID_KEY)
         if (launchedFromOrderId != null) {
-            Log.d("MainActivity", "Launched/Resumed from notification for order: $launchedFromOrderId")
+            Log.d(
+                "MainActivity",
+                "Launched/Resumed from notification for order: $launchedFromOrderId"
+            )
             // You might want to clear it after processing to avoid re-triggering this logic
             // on normal app opens, or pass it to the ViewModel to handle.
             if (launchedFromOrderId != null) {

@@ -1,19 +1,14 @@
 package id.monpres.app
 
-import android.app.Application
-import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.enums.OrderStatus
-import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.OrderService
-import id.monpres.app.model.OrderService.Companion.filterByStatuses
 import id.monpres.app.model.Vehicle
-import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.repository.VehicleRepository
@@ -26,7 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,8 +31,7 @@ class MainViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val orderServiceRepository: OrderServiceRepository,
     private val vehicleRepository: VehicleRepository,
-    private val userRepository: UserRepository,
-    private val application: Application
+    private val userRepository: UserRepository
 ) : ViewModel() {
     companion object {
         private const val TAG = "MainViewModel"
@@ -84,6 +77,29 @@ class MainViewModel @Inject constructor(
     private val notifiedOrderStatusMap = mutableMapOf<String, OrderStatus>()
     private var justOpenedFromNotificationForOrderId: String? = null
 
+    fun getNotifiedOrderStatusMap() = notifiedOrderStatusMap
+    fun getJustOpenedFromNotificationOrderId() = justOpenedFromNotificationForOrderId
+    fun setJustOpenedFromNotificationOrderId(orderId: String?) {
+        justOpenedFromNotificationForOrderId = orderId
+    }
+
+    fun clearJustOpenedFromNotificationOrderId() {
+        justOpenedFromNotificationForOrderId = null
+    }
+
+    fun clearNotifiedOrderStatusMap() {
+        notifiedOrderStatusMap.clear()
+    }
+
+    fun setNotifiedOrderStatusMap(map: MutableMap<String, OrderStatus>) {
+        notifiedOrderStatusMap.clear()
+        notifiedOrderStatusMap.putAll(map)
+    }
+
+    fun removeNotifiedOrderStatus(orderId: String) {
+        notifiedOrderStatusMap.remove(orderId)
+    }
+
     init {
         Log.d(TAG, "current firebaseAuth: $auth")
     }
@@ -93,7 +109,6 @@ class MainViewModel @Inject constructor(
         if (userRepository.getCurrentUserRecord()?.role == UserRole.CUSTOMER) {
             observeUserOrderServices()
             observeUserVehicles()
-            observeOngoingOrderService()
         } else if (userRepository.getCurrentUserRecord()?.role == UserRole.PARTNER) {
             observePartnerOrderServices()
         }
@@ -139,8 +154,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // If ServiceProcessFragment needs a specific order by ID
-    fun observeOrderServiceById(orderId: String) {
+    private fun observeUserOrderServiceById(orderId: String) {
         viewModelScope.launch {
             // Assuming _userOrderServicesState is already being populated by another Flow
             // from orderServiceRepository.observeAllOrderServices() or similar.
@@ -180,87 +194,52 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // If ServiceProcessFragment needs a specific order by ID
-    fun observeOngoingOrderService() {
+    private fun observePartnerOrderServiceById(orderId: String) {
         viewModelScope.launch {
             // Assuming _userOrderServicesState is already being populated by another Flow
             // from orderServiceRepository.observeAllOrderServices() or similar.
             // We'll transform that existing Flow.
-            _userOrderServicesState
-                .takeUntilSignal(externalSignOutSignal) // Keep this if it's relevant for stopping observation
-                .map { userOrderServicesUiState -> // Transform the UiState<List<OrderService>>
-                    when (userOrderServicesUiState) {
-                        is UiState.Loading -> listOf()
-                        is UiState.Error -> listOf()
-                        is UiState.Success ->
-                            userOrderServicesUiState.data.filterByStatuses(OrderStatus.entries.filter { it.type != OrderStatusType.CLOSED })
+            _partnerOrderServicesState
+                .takeUntilSignal(stopObserveSignal) // Keep this if it's relevant for stopping observation
+                .map { partnerOrderServicesUiState -> // Transform the UiState<List<OrderService>>
+                    when (partnerOrderServicesUiState) {
+                        is UiState.Loading -> UiState.Loading
+                        is UiState.Error -> UiState.Error(partnerOrderServicesUiState.exception)
+                        is UiState.Success -> {
+                            val orderService =
+                                partnerOrderServicesUiState.data.find { it.id == orderId }
+                            if (orderService != null) {
+                                UiState.Success(orderService)
+                            } else {
+                                // Be more specific about the error if possible.
+                                // Is it truly a "not found" scenario or an unexpected null?
+                                UiState.Error(NoSuchElementException("OrderService with ID $orderId not found."))
+                            }
+                        }
                     }
                 }
                 .catch { e ->
                     if (e is CancellationException) {
-                        Log.i(TAG, "Ongoing OrderService observation cancelled.", e)
+                        Log.i(TAG, "OrderService by ID observation cancelled.", e)
                         // Optionally reset state or re-throw
-                        // _userOrderServiceState.value = UiState.Loading // Or an error specific to cancellation
+                        // _partnerOrderServiceState.value = UiState.Loading // Or an error specific to cancellation
                         throw e // Re-throw to propagate cancellation
                     }
-                    Log.e(TAG, "Error ongoing orders", e)
+                    Log.e(TAG, "Error in OrderService by ID flow collection", e)
+                    _partnerOrderServiceState.value = UiState.Error(e)
                 }
-                .collectLatest { orderServices ->
-                    _ongoingOrderServices.value = orderServices
-
-                    // Process notifications for these orders
-                    processOrderNotifications(orderServices)
+                .collect { specificOrderServiceUiState ->
+                    _partnerOrderServiceState.value = specificOrderServiceUiState
                 }
         }
     }
 
-    private fun processOrderNotifications(currentOrders: List<OrderService>) {
-        val context = application.applicationContext
-        val currentlyOpenedOrderId = justOpenedFromNotificationForOrderId // Cache it for this run
-        // Clear it after use so subsequent non-notification updates are processed normally
-        justOpenedFromNotificationForOrderId = null
-
-        // Identify new or updated orders
-        currentOrders.forEach { order ->
-            val lastNotifiedStatus = notifiedOrderStatusMap[order.id]
-            val currentStatus = order.status
-
-            if (order.id == currentlyOpenedOrderId && lastNotifiedStatus == currentStatus) {
-                // This specific order was just clicked to open the app,
-                // and its status hasn't changed since the notification that was clicked.
-                // Let's assume the notification for this state is already visible.
-                // We *do* want to ensure it's in our notifiedOrderStatusMap so it's tracked.
-                if (notifiedOrderStatusMap[order.id] == null) { // Ensure it's tracked even if we skip re-notifying
-                    notifiedOrderStatusMap[order.id!!] = currentStatus!!
-                }
-                Log.d(TAG, "Skipping re-notification for order ${order.id} as it was just opened.")
-                return@forEach // Skip to the next order for notification processing
-            }
-
-            if (lastNotifiedStatus == null || lastNotifiedStatus != currentStatus) {
-                // New order or status has changed since last notification
-                Log.d(TAG, "Order ${order.id} needs notification. Current: $currentStatus, Last Notified: $lastNotifiedStatus")
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    OrderServiceNotification.showOrUpdateNotification(
-                        context,
-                        order.id!!,
-                        currentStatus!!
-                    )
-                }
-                notifiedOrderStatusMap[order.id!!] = currentStatus as OrderStatus
-            }
-        }
-
-        // Identify orders that were completed/cancelled and remove their notifications
-        // (and remove from notifiedOrderStatusMap)
-        val currentOrderIds = currentOrders.map { it.id }.toSet()
-        val ordersToRemoveNotification = notifiedOrderStatusMap.filterKeys { !currentOrderIds.contains(it) }
-
-        ordersToRemoveNotification.forEach { (orderId, _) ->
-            Log.d(TAG, "Order $orderId no longer ongoing or status implies removal. Cancelling notification.")
-            OrderServiceNotification.cancelNotification(context, orderId)
-            notifiedOrderStatusMap.remove(orderId)
+    // If ServiceProcessFragment needs a specific order by ID
+    fun observeOrderServiceById(orderId: String) {
+        when (getCurrentUser()?.role) {
+            UserRole.CUSTOMER -> observeUserOrderServiceById(orderId)
+            UserRole.PARTNER -> observePartnerOrderServiceById(orderId)
+            else -> return
         }
     }
 
@@ -303,4 +282,6 @@ class MainViewModel @Inject constructor(
             _stopObserveSignal.emit(Unit)
         }
     }
+
+    fun getCurrentUser() = userRepository.getCurrentUserRecord()
 }

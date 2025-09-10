@@ -50,6 +50,20 @@ enum class OrderStatus(val type: OrderStatusType, @param:StringRes val stringRes
     fun getLabel(context: Context): String {
         return context.getString(this.stringResId)
     }
+
+    fun serviceNextProcess(): OrderStatus? {
+        return when (this) {
+            ORDER_PLACED -> ACCEPTED
+            ACCEPTED -> ON_THE_WAY
+            ON_THE_WAY -> IN_PROGRESS
+            IN_PROGRESS -> REPAIRED
+            REPAIRED -> WAITING_FOR_PAYMENT
+            WAITING_FOR_PAYMENT -> COMPLETED
+            COMPLETED -> COMPLETED
+            CANCELLED -> CANCELLED
+            else -> null
+        }
+    }
 }
 
 enum class OrderStatusType {

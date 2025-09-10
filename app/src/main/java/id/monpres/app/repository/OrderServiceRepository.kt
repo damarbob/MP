@@ -8,11 +8,13 @@ import id.monpres.app.usecase.GetDataByUserIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByFieldUseCase
 import id.monpres.app.usecase.ObserveCollectionByIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByUserIdUseCase
+import id.monpres.app.usecase.UpdateDataByIdUseCase
 import id.monpres.app.utils.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -27,8 +29,8 @@ class OrderServiceRepository @Inject constructor(
     private val observeCollectionByFieldUseCase: ObserveCollectionByFieldUseCase,
     private val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase,
     private val getDataByUserIdUseCase: GetDataByUserIdUseCase,
-
-    ) : Repository<OrderService>() {
+    private val updateDataByIdUseCase: UpdateDataByIdUseCase
+) : Repository<OrderService>() {
     companion object {
         const val TAG = "OrderServiceRepository"
     }
@@ -63,6 +65,22 @@ class OrderServiceRepository @Inject constructor(
                 emit(UiState.Error(e))
             }
             .flowOn(Dispatchers.IO)
+
+    fun updateOrderService(orderService: OrderService): Flow<UiState<OrderService>> =
+        flow {
+            emit(UiState.Loading)
+
+            updateDataByIdUseCase(
+                orderService.id!!,
+                OrderService.COLLECTION, orderService
+            )
+
+            emit(UiState.Success(orderService))
+        }.catch {
+            it.printStackTrace()
+            emit(UiState.Error(it))
+        }.flowOn(Dispatchers.IO)
+
 
     suspend fun observeOrderServiceById(id: String): Flow<UiState<OrderService>> {
         val orderServices = getOrderServiceByUserId()

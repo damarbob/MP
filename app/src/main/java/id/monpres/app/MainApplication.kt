@@ -1,9 +1,11 @@
 package id.monpres.app
 
 import android.app.Application
+import android.os.Build
 import dagger.hilt.android.HiltAndroidApp
 import id.monpres.app.model.Service
 import id.monpres.app.model.ServiceType
+import id.monpres.app.notification.OrderServiceNotification
 
 @HiltAndroidApp
 class MainApplication : Application() {
@@ -18,6 +20,13 @@ class MainApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        /* Notification */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            OrderServiceNotification.createNotificationChannel(this)
+        }
+
+//        DynamicColors.applyToActivitiesIfAvailable(this)
 
         serviceTypes = listOf(
             ServiceType(

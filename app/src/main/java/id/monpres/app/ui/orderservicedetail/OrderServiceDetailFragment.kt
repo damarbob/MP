@@ -28,6 +28,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import id.monpres.app.R
@@ -265,13 +266,17 @@ class OrderServiceDetailFragment : Fragment() {
 
 
     private fun setupView() {
-        // TODO: Set up view
         with(binding) {
             root.setProtections(
                 listOf(
                     GradientProtection(
-                        WindowInsetsCompat.Side.TOP, resources.getColor(
-                            R.color.md_theme_surfaceContainer, null
+                        WindowInsetsCompat.Side.TOP, MaterialColors.getColor(
+                            requireContext(),
+                            com.google.android.material.R.attr.colorSurfaceContainer,
+                            resources.getColor(
+                                R.color.md_theme_surfaceContainer,
+                                requireContext().theme
+                            )
                         )
                     )
                 )

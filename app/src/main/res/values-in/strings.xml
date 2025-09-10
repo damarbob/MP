@@ -145,14 +145,12 @@
     <string name="customer_order">Pesanan Pelanggan</string>
 
     <!-- Notification -->
-    <!-- In res/values/strings.xml -->
     <string name="notification_title_order_placed">Layanan telah dipesan</string>
     <string name="notification_text_order_placed">Kami mencari mitra…</string>
     <string name="notification_title_order_accepted">Pesanan diterima</string>
-    <string name="notification_text_order_accepted">Mitra Anda sedang bersiap.</string>
-    <!-- ... add all other titles and texts ... -->
+    <string name="notification_text_order_accepted">Mitra Anda sedang bersiap</string>
     <string name="notification_title_order_cancelled">Pesanan dibatalkan</string>
-    <string name="notification_text_order_cancelled">Pesanan Anda telah dibatalkan.</string>
+    <string name="notification_text_order_cancelled">Pesanan Anda telah dibatalkan</string>
     <string name="notification_title_on_the_way">Dalam perjalanan</string>
     <string name="notification_text_on_the_way">Mitra layanan sedang dalam perjalanan</string>
     <string name="notification_title_repairing">Memperbaiki</string>
@@ -163,7 +161,7 @@
     <string name="notification_text_waiting_for_payment">Jangan lupa untuk membayar</string>
     <string name="notification_title_order_completed">Pesanan selesai</string>
     <string name="notification_text_order_completed">Terima kasih telah menggunakan layanan kami!</string>
-    <string name="order_status_order_placed">Pesanan diterima</string>
+    <string name="order_status_order_placed">Pesanan dibuat</string>
     <string name="order_status_processing">Sedang memproses</string>
     <string name="order_status_accepted">Diterima</string>
     <string name="order_status_on_the_way">Dalam perjalanan</string>
@@ -177,4 +175,12 @@
     <string name="order_status_returned">Dikembalikan</string>
     <string name="order_status_failed">Gagal</string>
     <string name="order_status_delayed">Tertunda</string>
+    <string name="notification_text_order_placed_partner">Tolong respon secepatnya yaa</string>
+    <string name="notification_text_order_accepted_partner">Bagus! Sekarang siapkan pesanannya</string>
+    <string name="notification_text_on_the_way_partner">Hati-hati di jalan yaa</string>
+    <string name="notification_text_repairing_partner">Semangat kerjanya yaa</string>
+    <string name="notification_text_repair_completed_partner">Siapkan tagihan pembayaran</string>
+    <string name="notification_text_waiting_for_payment_partner">Harap bersabar</string>
+    <string name="notification_text_order_completed_partner">Sip! Pesanan udah selesai</string>
+    <string name="notification_text_order_cancelled_partner">Yah, pesanannya batal</string>
 </resources>

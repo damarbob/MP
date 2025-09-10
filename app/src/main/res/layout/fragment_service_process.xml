@@ -20,7 +20,6 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-
             android:gravity="center_horizontal"
             android:paddingHorizontal="16dp"
             android:paddingVertical="24dp">
@@ -33,7 +32,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="32dp"
                 android:paddingHorizontal="4dp"
-                android:progress="70"
+                android:progress="100"
                 app:hideAnimationBehavior="outward"
                 app:indicatorInset="16dp"
                 app:indicatorSize="200dp"
@@ -45,8 +44,8 @@
                 app:trackThickness="20dp"
                 app:waveAmplitude="6dp"
                 app:wavelength="60dp"
-                app:wavelengthDeterminate="60dp"
-                app:wavelengthIndeterminate="60dp" />
+
+                 />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/fragmentServiceProcessTextViewTitle"
@@ -304,32 +303,51 @@
 
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/fragmentServiceProcessButtonCancel"
-                style="@style/Widget.Material3Expressive.Button"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="?colorError"
-                android:maxWidth="60dp"
-                android:text="@string/cancel"
-                app:icon="@drawable/close_24px"
-                app:iconGravity="textStart"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:showDividers="middle"
+                android:divider="@drawable/divider_gap_16"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent" >
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/fragmentServiceProcessButtonComplete"
-                style="@style/Widget.Material3Expressive.Button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/done"
-                android:visibility="gone"
-                app:icon="@drawable/check_24px"
-                app:iconGravity="textStart"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentServiceProcessButtonCancel"
+                    style="@style/Widget.Material3Expressive.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="?colorError"
+                    android:maxWidth="60dp"
+                    android:text="@string/cancel"
+                    app:icon="@drawable/close_24px"
+                    app:iconGravity="textStart" />
+
+                <com.ncorti.slidetoact.SlideToActView
+                    android:id="@+id/fragmentServiceProcessActButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    app:outer_color="?colorPrimary"
+
+                    app:text="Accept"
+                    app:text_appearance="@style/Widget.App.H5.Bold"
+                    app:text_color="?colorOnPrimary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentServiceProcessButtonComplete"
+                    style="@style/Widget.Material3Expressive.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/done"
+                    android:visibility="gone"
+                    app:icon="@drawable/check_24px"
+                    app:iconGravity="textStart" />
+
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 

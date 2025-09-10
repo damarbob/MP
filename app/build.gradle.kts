@@ -121,4 +121,7 @@ dependencies {
 
     /* Glide */
     implementation(libs.glide)
+
+    /* Slide to act */
+    implementation(libs.slidetoact)
 }

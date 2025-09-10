@@ -6,12 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.HeroCarouselStrategy
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainViewModel
 import id.monpres.app.databinding.FragmentPartnerHomeBinding
+import id.monpres.app.enums.OrderStatus
+import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.BaseFragment
@@ -91,8 +94,23 @@ class PartnerHomeFragment : BaseFragment() {
     }
 
     fun setupOrderServiceRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter { orderService ->
+        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService ->
+            when (orderService.status) {
+                in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
+                    // The status is closed (completed, cancelled, returned, failed)
+                    findNavController().navigate(
+                        PartnerHomeFragmentDirections.actionPartnerHomeFragmentToOrderServiceDetailFragment(
+                            orderService
+                        )
+                    )
+                }
 
+                else -> findNavController().navigate(
+                    PartnerHomeFragmentDirections.actionPartnerHomeFragmentToServiceProcessFragment(
+                        orderService.id!!
+                    )
+                )
+            }
         }
         binding.fragmentPartnerHomeRecyclerViewOrderService.apply {
             addItemDecoration(SpacingItemDecoration(2))
@@ -101,7 +119,6 @@ class PartnerHomeFragment : BaseFragment() {
         }
     }
 
-    // TODO: Filter by the partner ID
     fun setupOrderServiceObservers() {
         observeUiState(mainViewModel.partnerOrderServicesState) {
             orderServiceAdapter.submitList(it.take(5))
@@ -112,6 +129,6 @@ class PartnerHomeFragment : BaseFragment() {
     }
 
     override fun showLoading(isLoading: Boolean) {
-//        TODO("Not yet implemented")
+        binding.fragmentPartnerHomeProgressIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 }

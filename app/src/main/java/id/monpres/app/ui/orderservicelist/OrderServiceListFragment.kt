@@ -76,7 +76,7 @@ class OrderServiceListFragment : BaseFragment() {
     }
 
     fun setupOrderServiceListRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter { orderService ->
+        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService ->
             when (orderService.status) {
                 in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
                     // The status is closed (completed, cancelled, returned, failed)

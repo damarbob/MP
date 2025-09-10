@@ -1,5 +1,6 @@
 package id.monpres.app.ui.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -12,6 +13,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 class OrderServiceAdapter(
+    private val context: Context,
     private val onItemClick: (OrderService) -> Unit // Regular click
 ) : ListAdapter<OrderService, OrderServiceAdapter.ViewHolder>(OrderServiceDiffCallback()) {
 
@@ -41,7 +43,7 @@ class OrderServiceAdapter(
             idrFormat.maximumFractionDigits = 0
             binding.itemTwoLineTextViewFirstLabel.text =
                 if (orderService.price != null) idrFormat.format(orderService.price) else ""
-            binding.itemTwoLineTextViewSecondLabel.text = (orderService.status?.name ?: "")
+            binding.itemTwoLineTextViewSecondLabel.text = (orderService.status?.getLabel(context) ?: "")
             binding.itemTwoLineTextViewFirstLabel.isSelected = true
             binding.itemTwoLineTextViewSecondLabel.isSelected = true
             binding.itemTwoLineTextViewSubtitle.isSelected = true
