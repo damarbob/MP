@@ -192,4 +192,10 @@
             android:id="@+id/action_partnerHomeFragment_to_orderServiceDetailFragment"
             app:destination="@id/orderServiceDetailFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/partnerSelectionFragment"
+        android:name="id.monpres.app.ui.partnerselection.PartnerSelectionFragment"
+        android:label="@string/nearest_partners"
+        tools:layout="@layout/fragment_partner_selection" />
+    <action android:id="@+id/action_global_partnerSelectionFragment" app:destination="@id/partnerSelectionFragment" />
 </navigation>

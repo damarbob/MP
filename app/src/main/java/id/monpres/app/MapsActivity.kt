@@ -44,6 +44,7 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
 
     /* Configs */
     private var pickMode = false
+    private var pointJsons: List<String?> = emptyList()
 
     /* Resources */
     private val redMarkerBitmap: Bitmap by lazy {
@@ -133,16 +134,42 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
             enableTapToSelect()
         }
 
+        val points = intent.getStringArrayListExtra("points")
+        Log.d(TAG, "Received points: $points")
+        if (points != null) {
+            pointJsons = points
+        }
+
         /* Setup UI */
 
         // Hide submit location FAB if not pick mode
         if (!pickMode) binding.fabMapsSubmitLocation.visibility = View.GONE
 
+        // Add points to map
+        pointJsons.forEach { pointJson ->
+            Log.d(TAG, "Point JSON: $pointJson")
+            if (pointJson == null) return@forEach
+            val point = Point.fromJson(pointJson)
+            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                .withPoint(point)
+                .withIconImage(redMarkerBitmap)
+                // Make the annotation draggable.
+                .withDraggable(false)
+
+            // Add the draggable pointAnnotation to the map.
+            annotation = pointAnnotationManager.create(pointAnnotationOptions)
+        }
+
         /* Listeners */
+        Log.d(TAG, "Pick mode: $pickMode")
         binding.fabMapsSubmitLocation.setOnClickListener { _ ->
+
+            Log.d(TAG, "Pick mode: $pickMode")
 
             // Return if not in pick mode
             if (!pickMode) return@setOnClickListener
+
+            Log.d(TAG, "Submitting location")
 
             submitLocation()
         }

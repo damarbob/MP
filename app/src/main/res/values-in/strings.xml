@@ -143,6 +143,7 @@
     <string name="make_sure_your_full_name_matches_your_national_id_card">Pastikan nama lengkap Anda sesuai dengan kartu identitas nasional (KTP/SIM) Anda.</string>
     <string name="done">Selesai</string>
     <string name="customer_order">Pesanan Pelanggan</string>
+    <string name="nearest_partners">Mitra Terdekat</string>
 
     <!-- Notification -->
     <string name="notification_title_order_placed">Layanan telah dipesan</string>
@@ -183,4 +184,8 @@
     <string name="notification_text_waiting_for_payment_partner">Harap bersabar</string>
     <string name="notification_text_order_completed_partner">Sip! Pesanan udah selesai</string>
     <string name="notification_text_order_cancelled_partner">Yah, pesanannya batal</string>
+
+    <string name="whatsapp_number">Nomor WhatsApp</string>
+    <string name="primary_location">Lokasi Utama</string>
+    <string name="profile_updated_successfully">Profil berhasil diperbarui</string>
 </resources>

@@ -146,6 +146,7 @@
     <string name="make_sure_your_full_name_matches_your_national_id_card">Make sure your full name matches your national ID card.</string>
     <string name="done">Done</string>
     <string name="customer_order">Customer Order</string>
+    <string name="nearest_partners">Nearest Partners</string>
 
     <!-- Notification -->
     <string name="notification_title_order_placed">Order Placed</string>
@@ -186,4 +187,8 @@
     <string name="notification_text_waiting_for_payment_partner">Please be patient</string>
     <string name="notification_text_order_completed_partner">Yes! The order is complete</string>
     <string name="notification_text_order_cancelled_partner">Well, the order is cancelled</string>
+
+    <string name="whatsapp_number">WhatsApp Number</string>
+    <string name="primary_location">Primary Location</string>
+    <string name="profile_updated_successfully">Profile updated successfully</string>
 </resources>
