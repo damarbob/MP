@@ -53,8 +53,6 @@ object OrderServiceNotification {
     // Args key
     const val ORDER_ID_KEY = "order_id"
 
-    private var userRole = UserRole.CUSTOMER
-
     /**
      * Initializes the notification channel. Call this from Application.onCreate().
      */

@@ -191,4 +191,16 @@
     <string name="whatsapp_number">WhatsApp Number</string>
     <string name="primary_location">Primary Location</string>
     <string name="profile_updated_successfully">Profile updated successfully</string>
+    <string name="location_permission_needed">Location Permission Needed</string>
+    <string name="grant_location_permission">This app needs the Location permission to display your current location. Please grant the permission</string>
+    <string name="location_services_disabled">Location Services Disabled</string>
+    <string name="enable_location_services">Please enable location services to use this feature</string>
+    <string name="enable">Enable</string>
+    <string name="process">Process</string>
+    <string name="accept">Accept</string>
+    <string name="go_to_location">Go to location</string>
+    <string name="start_repairs">Start repair</string>
+    <string name="repairs_completed">Repairs completed</string>
+    <string name="prepare_the_bills">Prepare the bills</string>
+    <string name="finish_the_order">Finish the order</string>
 </resources>

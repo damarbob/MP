@@ -124,4 +124,6 @@ dependencies {
 
     /* Slide to act */
     implementation(libs.slidetoact)
+
+    implementation(libs.play.services.location)
 }

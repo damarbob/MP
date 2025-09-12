@@ -188,4 +188,16 @@
     <string name="whatsapp_number">Nomor WhatsApp</string>
     <string name="primary_location">Lokasi Utama</string>
     <string name="profile_updated_successfully">Profil berhasil diperbarui</string>
+    <string name="location_permission_needed">Izin lokasi diperlukan</string>
+    <string name="grant_location_permission">Aplikasi ini butuh izin lokasi untuk mendapatkan lokasi Anda. Izinkan akses lokasi</string>
+    <string name="location_services_disabled">Layakan lokasi dinonaktifkan</string>
+    <string name="enable_location_services">Mohon aktifkan layanan lokasi unuk menjalankan fitur ini</string>
+    <string name="enable">Nyalakan</string>
+    <string name="process">Proses</string>
+    <string name="accept">Terima</string>
+    <string name="go_to_location">Pergi ke lokasi</string>
+    <string name="start_repairs">Mulai perbaikan</string>
+    <string name="repairs_completed">Perbaikan selesai</string>
+    <string name="prepare_the_bills">Siapkan tagihan</string>
+    <string name="finish_the_order">Selesaikan pesanan</string>
 </resources>
