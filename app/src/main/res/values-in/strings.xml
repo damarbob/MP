@@ -200,4 +200,5 @@
     <string name="repairs_completed">Perbaikan selesai</string>
     <string name="prepare_the_bills">Siapkan tagihan</string>
     <string name="finish_the_order">Selesaikan pesanan</string>
+    <string name="enter_your_full_address_you_may_also_add_an_address_note_e_g_house_color_nearby_landmarks_if_needed">Masukkan alamat lengkap Anda. Anda juga dapat menambahkan catatan alamat (misalnya, warna rumah, ancer-ancer terdekat) jika diperlukan.</string>
 </resources>

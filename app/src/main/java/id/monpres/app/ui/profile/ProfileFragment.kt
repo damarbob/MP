@@ -21,7 +21,7 @@ import com.mapbox.geojson.Point
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
-import id.monpres.app.databinding.FragmentProfileEditBinding
+import id.monpres.app.databinding.FragmentEditProfileBinding
 import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
@@ -52,7 +52,7 @@ class ProfileFragment : Fragment() {
     protected var selectedPrimaryLocationPoint: Point? = null
 
     /* UI */
-    private lateinit var binding: FragmentProfileEditBinding
+    private lateinit var binding: FragmentEditProfileBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,7 +78,7 @@ class ProfileFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentProfileEditBinding.inflate(inflater, container, false)
+        binding = FragmentEditProfileBinding.inflate(inflater, container, false)
 
         setupUI()
 
@@ -111,7 +111,8 @@ class ProfileFragment : Fragment() {
                     binding.editProfileInputEditFullName.text.toString(),
                     binding.editProfileInputEmailAddress.text.toString(),
                     binding.editProfileInputWhatsApp.text.toString(),
-                    selectedPrimaryLocationPoint
+                    selectedPrimaryLocationPoint,
+                    binding.editProfileInputEditAddress.text.toString()
                 )
             }
         }
@@ -159,6 +160,7 @@ class ProfileFragment : Fragment() {
         binding.editProfileInputEditFullName.setText(user?.displayName)
         binding.editProfileInputEmailAddress.setText(user?.email)
         binding.editProfileInputWhatsApp.setText(userProfile?.phoneNumber)
+        binding.editProfileInputEditAddress.setText(userProfile?.address)
 
         if (userProfile?.locationLat != null && userProfile?.locationLng != null) {
             binding.editProfileButtonSelectPrimaryLocationButton.setText(getString(R.string.re_select_a_location))

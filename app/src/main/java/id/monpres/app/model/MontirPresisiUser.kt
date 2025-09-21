@@ -12,6 +12,7 @@ data class MontirPresisiUser(
     var phoneNumber: String? = null,
     var locationLat: String? = null,
     var locationLng: String? = null,
+    var address: String? = null, // The complete address of the user (required)
     var createdAt: Double? = null,
     var updatedAt: Double? = null,
 ) : Parcelable {

@@ -99,6 +99,26 @@
         android:text="@string/select_a_location"
         app:icon="@drawable/add_location_alt_24px" />
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/editProfileInputLayoutAddress"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="true"
+        android:hint="@string/address"
+        app:endIconContentDescription="@string/address"
+        app:endIconDrawable="@drawable/home_24px"
+        app:endIconMode="custom"
+        app:helperText="@string/enter_your_full_address_you_may_also_add_an_address_note_e_g_house_color_nearby_landmarks_if_needed">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editProfileInputEditAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
     <Button
         android:id="@+id/editProfileButton"
         android:layout_width="match_parent"

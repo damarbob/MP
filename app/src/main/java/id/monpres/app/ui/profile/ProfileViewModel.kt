@@ -31,7 +31,8 @@ class ProfileViewModel @Inject constructor(
         fullName: String,
         emailAddress: String,
         whatsAppNumber: String? = null,
-        location: Point? = null
+        location: Point? = null,
+        address: String? = null,
     ) {
         // Ensure user is signed in
         val user = Firebase.auth.currentUser
@@ -80,6 +81,20 @@ class ProfileViewModel @Inject constructor(
                 // Apply local changes
                 userProfile?.locationLat = location.latitude().toString()
                 userProfile?.locationLng = location.longitude().toString()
+            }
+
+            if (!address.isNullOrBlank()) {
+                FirebaseFirestore.getInstance()
+                    .collection(MontirPresisiUser.COLLECTION)
+                    .document(user.uid)
+                    .update(
+                        mapOf(
+                            "address" to address,
+                        )
+                    ).await()
+
+                // Apply local changes
+                userProfile?.address = address
             }
 
             _updateProfileResult.postValue(Result.success(true))
