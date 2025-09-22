@@ -8,13 +8,13 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapLoaded
 import com.mapbox.maps.MapLoadedCallback
@@ -219,39 +219,69 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
             // Delete the previous annotation (if any)
             annotation?.let { pointAnnotationManager.delete(it) }
 
-            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
-                .withPoint(Point.fromLngLat(point.longitude(), point.latitude()))
-                .withIconImage(redMarkerBitmap)
-                // Make the annotation draggable.
-                .withDraggable(false)
-
             // Add the draggable pointAnnotation to the map.
-            annotation = pointAnnotationManager.create(pointAnnotationOptions)
+            annotation = createAnnotation(point)
 
             true
         }
     }
 
-    private fun submitLocation() {
-        // Return if user or selected location is unavailable
-        if (userLocationPoint == null || selectedLocationPoint == null) {
-            Toast.makeText(
-                this,
-                getString(R.string.please_select_a_location_and_enable_gps), Toast.LENGTH_SHORT
-            ).show()
-            Log.w(TAG, "User's location or selected location is null")
-            return
-        }
+    private fun createAnnotation(point: Point): PointAnnotation {
+        val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+            .withPoint(Point.fromLngLat(point.longitude(), point.latitude()))
+            .withIconImage(redMarkerBitmap)
+            // Make the annotation draggable.
+            .withDraggable(false)
 
-        // Package up the user’s selection
-        val data = Intent().apply {
-            putExtra(MapsActivityExtraData.SELECTED_LOCATION, selectedLocationPoint?.toJson())
-            putExtra(MapsActivityExtraData.USER_LOCATION, userLocationPoint?.toJson())
+        return pointAnnotationManager.create(pointAnnotationOptions)
+    }
+
+    private fun submitLocation() {
+
+        if (selectedLocationPoint == null && userLocationPoint != null) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.location))
+                .setMessage("You are not selecting a location. Do you want to use your current location?")
+                .setPositiveButton(getString(R.string.okay)) { _, _ ->
+
+                    // Set selected location to user location
+                    selectedLocationPoint = userLocationPoint
+
+                    // Delete the previous annotation (if any)
+                    annotation?.let { pointAnnotationManager.delete(it) }
+
+                    // Add the draggable pointAnnotation to the map.
+                    annotation = selectedLocationPoint?.let { createAnnotation(it) }
+
+                    // Package up the user’s selection
+                    val data = Intent().apply {
+                        putExtra(
+                            MapsActivityExtraData.SELECTED_LOCATION,
+                            selectedLocationPoint?.toJson()
+                        )
+                        putExtra(MapsActivityExtraData.USER_LOCATION, userLocationPoint?.toJson())
+                    }
+                    setResult(RESULT_OK, data)
+                    Log.d(TAG, "User's location: ${userLocationPoint.toString()}")
+                    Log.d(TAG, "Selected location: ${selectedLocationPoint.toString()}")
+                    finish()  // return to previous activity
+
+                }
+                .setNegativeButton(getString(R.string.cancel)) { _, _ ->
+                    return@setNegativeButton
+                }
+                .show()
+        } else if (selectedLocationPoint != null) {
+            // Package up the user’s selection
+            val data = Intent().apply {
+                putExtra(MapsActivityExtraData.SELECTED_LOCATION, selectedLocationPoint?.toJson())
+                putExtra(MapsActivityExtraData.USER_LOCATION, userLocationPoint?.toJson())
+            }
+            setResult(RESULT_OK, data)
+            Log.d(TAG, "User's location: ${userLocationPoint.toString()}")
+            Log.d(TAG, "Selected location: ${selectedLocationPoint.toString()}")
+            finish()  // return to previous activity
         }
-        setResult(RESULT_OK, data)
-        Log.d(TAG, "User's location: ${userLocationPoint.toString()}")
-        Log.d(TAG, "Selected location: ${selectedLocationPoint.toString()}")
-        finish()  // return to previous activity
     }
 
 }
