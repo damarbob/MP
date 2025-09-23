@@ -12,8 +12,12 @@ import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.mapbox.geojson.Point
 import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentPartnerSelectionBinding
+import id.monpres.app.repository.PartnerRepository
+import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.adapter.PartnerAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.GetPartnersUseCase
@@ -28,10 +32,17 @@ class PartnerSelectionFragment : Fragment() {
 
         const val REQUEST_KEY_PARTNER_SELECTION = "partnerSelectionRequestKey"
         const val KEY_SELECTED_USER_ID = "selectedPartnerUserId"
+        const val KEY_SELECTED_LOCATION_POINT = "selectedLocationPoint"
 
     }
 
     private val viewModel: PartnerSelectionViewModel by viewModels()
+
+    @Inject
+    lateinit var userRepository: UserRepository
+
+    @Inject
+    lateinit var partnerRepository: PartnerRepository
 
     /* Use cases */
     @Inject
@@ -53,6 +64,30 @@ class PartnerSelectionFragment : Fragment() {
     ): View {
         binding = FragmentPartnerSelectionBinding.inflate(inflater, container, false)
 
+        // Current user is mandatory
+        val currentUser = userRepository.getCurrentUserRecord()
+
+        if (currentUser == null) {
+            Toast.makeText(
+                requireContext(), getString(
+                    R.string.x_is_required,
+                    getString(R.string.user)
+                ), Toast.LENGTH_SHORT
+            ).show()
+            return binding.root
+        }
+
+        // Arguments
+        val selectedLocationPointArg = arguments?.getString(KEY_SELECTED_LOCATION_POINT)
+        val selectedLocationPoint = selectedLocationPointArg?.let { Point.fromJson(it) }
+
+        // Set current user location. Use selected location if available, otherwise use current user location.
+        partnerRepository.setCurrentUserLocation(
+            selectedLocationPoint?.latitude() ?: (currentUser.locationLat?.toDoubleOrNull()
+                ?: 0.0),
+            selectedLocationPoint?.longitude() ?: (currentUser.locationLng?.toDoubleOrNull() ?: 0.0)
+        )
+
         partnerAdapter = PartnerAdapter { partner ->
             // TODO: When the partner is clicked, navigate back and pass the selected partner.userId
             // ① package the selected ID
@@ -71,7 +106,7 @@ class PartnerSelectionFragment : Fragment() {
 
         getPartnersUseCase { result ->
             result.onSuccess {
-                partnerAdapter.submitList(it)
+                partnerAdapter.submitPartnersWithDistance(partnerRepository.getPartnersWithDistance())
             }
             result.onFailure {
                 Log.e(TAG, it.message, it)

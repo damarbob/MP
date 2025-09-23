@@ -11,34 +11,55 @@ import id.monpres.app.databinding.ItemTwoLineBinding
 import id.monpres.app.model.MontirPresisiUser
 
 class PartnerAdapter(
-    private val onItemClick: (MontirPresisiUser) -> Unit // Regular click
-) : ListAdapter<MontirPresisiUser, PartnerAdapter.ViewHolder>(PartnerDiffCallback()) {
+    private val onItemClick: (MontirPresisiUser) -> Unit
+) : ListAdapter<PartnerAdapter.PartnerItem, PartnerAdapter.ViewHolder>(PartnerDiffCallback()) {
 
-    class PartnerDiffCallback : DiffUtil.ItemCallback<MontirPresisiUser>() {
+    // Data class to hold both partner and distance
+    data class PartnerItem(
+        val partner: MontirPresisiUser,
+        val distance: Double? // in kilometers, null if distance not available
+    )
+
+    class PartnerDiffCallback : DiffUtil.ItemCallback<PartnerItem>() {
         override fun areItemsTheSame(
-            oldItem: MontirPresisiUser,
-            newItem: MontirPresisiUser
-        ): Boolean = oldItem.userId == newItem.userId
+            oldItem: PartnerItem,
+            newItem: PartnerItem
+        ): Boolean = oldItem.partner.userId == newItem.partner.userId
 
         override fun areContentsTheSame(
-            oldItem: MontirPresisiUser,
-            newItem: MontirPresisiUser
+            oldItem: PartnerItem,
+            newItem: PartnerItem
         ): Boolean = oldItem == newItem
     }
 
     inner class ViewHolder(val binding: ItemTwoLineBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(partner: MontirPresisiUser) {
-            binding.itemTwoLineImageViewImage.setImageDrawable(ResourcesCompat.getDrawable(binding.root.resources, R.drawable.engineering_24px, null))
+        fun bind(partnerItem: PartnerItem) {
+            val partner = partnerItem.partner
+            binding.itemTwoLineImageViewImage.setImageDrawable(
+                ResourcesCompat.getDrawable(
+                    binding.root.resources,
+                    R.drawable.engineering_24px,
+                    null
+                )
+            )
             binding.itemTwoLineTextViewTitle.text = partner.displayName
 
-            // TODO: Add estimated distance and other essential info
-            binding.itemTwoLineTextViewSubtitle.text = ""
+            // Format distance information
+            val distanceText = partnerItem.distance?.let { distance ->
+                "%.1f km away".format(distance)
+            } ?: "Distance not available"
+
+            binding.itemTwoLineTextViewSubtitle.text = distanceText
+
+            // TODO: Add other essential info (if any)
             binding.itemTwoLineTextViewFirstLabel.text = ""
             binding.itemTwoLineTextViewSecondLabel.text = ""
+
             binding.itemTwoLineTextViewFirstLabel.isSelected = true
             binding.itemTwoLineTextViewSecondLabel.isSelected = true
             binding.itemTwoLineTextViewSubtitle.isSelected = true
+
             binding.root.setOnClickListener {
                 onItemClick(partner)
             }
@@ -48,13 +69,26 @@ class PartnerAdapter(
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): ViewHolder =
-        ViewHolder(ItemTwoLineBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+    ): ViewHolder = ViewHolder(
+        ItemTwoLineBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+    )
 
     override fun onBindViewHolder(
         holder: ViewHolder,
         position: Int
     ) {
         holder.bind(getItem(position))
+    }
+
+    // Helper method to update with partners and distances
+    fun submitPartnersWithDistance(partnersWithDistance: List<Pair<MontirPresisiUser, Double?>>) {
+        val partnerItems = partnersWithDistance.map { (partner, distance) ->
+            PartnerItem(partner, distance)
+        }
+        submitList(partnerItems)
     }
 }

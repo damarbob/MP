@@ -119,6 +119,9 @@ dependencies {
     /* Mapbox */
     implementation(libs.mapbox)
 
+    // Turf module for spatial processing like distance calculation
+    implementation(libs.mapbox.sdk.turf)
+
     /* Glide */
     implementation(libs.glide)
 

@@ -194,7 +194,14 @@ abstract class BaseServiceFragment : Fragment() {
 
         // Select partner button
         getPartnerSelectionButton().setOnClickListener {
-            findNavController().navigate(R.id.action_global_partnerSelectionFragment)
+
+            // Navigate to partner selection fragment with selected location point (if any)
+            val bundle = Bundle()
+            bundle.putString(PartnerSelectionFragment.KEY_SELECTED_LOCATION_POINT,
+                selectedLocationPoint?.toJson()
+            )
+
+            findNavController().navigate(R.id.action_global_partnerSelectionFragment, bundle)
         }
 
         // Location button listeners
