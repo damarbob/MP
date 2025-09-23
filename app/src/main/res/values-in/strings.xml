@@ -116,7 +116,7 @@
     <string name="partner">Mitra</string>
     <string name="partner_location">Lokasi Mitra</string>
     <string name="service_location">Lokasi Layanan</string>
-    <string name="summary">Ringkasan</string>
+    <string name="orderItem">Item Pesanan</string>
     <string name="total">Total</string>
     <string name="share">Bagikan</string>
     <string name="invoice">Faktur</string>
@@ -201,4 +201,8 @@
     <string name="prepare_the_bills">Siapkan tagihan</string>
     <string name="finish_the_order">Selesaikan pesanan</string>
     <string name="enter_your_full_address_you_may_also_add_an_address_note_e_g_house_color_nearby_landmarks_if_needed">Masukkan alamat lengkap Anda. Anda juga dapat menambahkan catatan alamat (misalnya, warna rumah, ancer-ancer terdekat) jika diperlukan.</string>
+    <string name="add_item">Tambah item</string>
+    <string name="quantity">Kuantitas</string>
+    <string name="price">Harga</string>
+    <string name="edit">Ubah</string>
 </resources>

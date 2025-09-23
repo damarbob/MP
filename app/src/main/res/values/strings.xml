@@ -119,7 +119,7 @@
     <string name="partner">Partner</string>
     <string name="partner_location">Partner Location</string>
     <string name="service_location">Service Location</string>
-    <string name="summary">Summary</string>
+    <string name="orderItem">Order Item</string>
     <string name="total">Total</string>
     <string name="share">Share</string>
     <string name="invoice">Invoice</string>
@@ -204,4 +204,8 @@
     <string name="prepare_the_bills">Prepare the bills</string>
     <string name="finish_the_order">Finish the order</string>
     <string name="enter_your_full_address_you_may_also_add_an_address_note_e_g_house_color_nearby_landmarks_if_needed">Enter your full address. You may also add an address note (e.g., house color, nearby landmarks) if needed.</string>
+    <string name="add_item">Add item</string>
+    <string name="quantity">Quantity</string>
+    <string name="price">Price</string>
+    <string name="edit">Edit</string>
 </resources>
