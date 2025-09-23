@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/orderItemTextViewName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/plus_jakarta_sans_variable"
+            android:text="haha"
+            android:textAppearance="?attr/textAppearanceBodyMediumEmphasized"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/orderItemTextViewPrice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:fontFamily="@font/abel_regular"
+                android:text="1000000000000" />
+
+            <TextView
+                android:id="@+id/orderItemTextViewQuantity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="@font/abel_regular"
+                android:text="1000" />
+
+            <TextView
+                android:id="@+id/orderItemTextViewSubtotal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="6"
+                android:fontFamily="@font/abel_regular"
+                android:text="10000000000000000"
+                android:textAlignment="textEnd" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</LinearLayout>

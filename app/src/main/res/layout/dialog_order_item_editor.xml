@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/dialogOrderItemEditorTextInputLayoutName"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_between_input_field"
+        android:hint="@string/name">
+
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/dialogOrderItemEditorName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            tools:ignore="SpeakableTextPresentCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:showDividers="middle"
+        android:divider="@drawable/divider_gap_8"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/dialogOrderItemEditorTextInputLayoutQuantity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/quantity">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/dialogOrderItemEditorQuantity"
+                android:layout_width="match_parent"
+                android:inputType="numberDecimal"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/dialogOrderItemEditorTextInputLayoutPrice"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:hint="@string/price">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/dialogOrderItemEditorPrice"
+                android:layout_width="match_parent"
+                android:inputType="numberDecimal"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+</LinearLayout>

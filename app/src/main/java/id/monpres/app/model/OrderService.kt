@@ -1,10 +1,9 @@
 package id.monpres.app.model
 
-import id.monpres.app.enums.OrderStatus
-import id.monpres.app.interfaces.IOrder
-
 import android.os.Parcelable
 import com.google.firebase.Timestamp
+import id.monpres.app.enums.OrderStatus
+import id.monpres.app.interfaces.IOrder
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -40,6 +39,8 @@ data class OrderService(
     var issue: String? = null,
     var issueDescription: String? = null,
     var imageAttachmentUris: List<String>? = null,
+
+    var orderItems: List<OrderItem>? = null
 ) : IOrder, Parcelable {
     companion object {
         const val COLLECTION = "orderServices"
@@ -48,5 +49,14 @@ data class OrderService(
         fun List<OrderService>.filterByStatus(status: OrderStatus) = filter { it.status == status }
         fun List<OrderService>.filterByStatuses(statuses: List<OrderStatus>) = filter { statuses.contains(it.status) }
         fun List<OrderService>.filterByPartnerId(partnerId: String) = filter { it.partnerId == partnerId }
+
+        fun getPriceFromOrderItems(orderItems: List<OrderItem>?): Double {
+            var price = 0.0
+            orderItems?.forEach { item ->
+                price += item.subtotal
+            }
+            return price
+
+        }
     }
 }

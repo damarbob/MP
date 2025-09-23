@@ -175,6 +175,9 @@
             app:destination="@id/orderServiceDetailFragment"
             app:popUpTo="@id/serviceProcessFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_serviceProcessFragment_to_orderItemEditorFragment"
+            app:destination="@id/orderItemEditorFragment" />
     </fragment>
     <action
         android:id="@+id/action_global_serviceProcessFragment"
@@ -198,4 +201,18 @@
         android:label="@string/nearest_partners"
         tools:layout="@layout/fragment_partner_selection" />
     <action android:id="@+id/action_global_partnerSelectionFragment" app:destination="@id/partnerSelectionFragment" />
+    <fragment
+        android:id="@+id/orderItemEditorFragment"
+        android:name="id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment"
+        android:label="Item Editor"
+        tools:layout="@layout/fragment_order_item_editor" >
+        <argument
+            android:name="orderItems"
+            app:argType="id.monpres.app.model.OrderItem[]"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="orderService"
+            app:argType="id.monpres.app.model.OrderService" />
+    </fragment>
 </navigation>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:transitionGroup="true"
+    tools:context=".ui.orderitemeditor.OrderItemEditorFragment">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentOrderItemEditorNestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always"
+        app:layout_dodgeInsetEdges="top">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentOrderItemEditorRecyclerViewOrderItemList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                tools:targetApi="31" />
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/Widget.Material3Expressive.Button.TonalButton"
+                android:id="@+id/fragmentOrderItemEditorButtonAdd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="32dp"
+                android:layout_gravity="center"
+                app:icon="@drawable/add_24px"
+                android:text="@string/add_item"/>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_marginHorizontal="16dp"
+                android:layout_height="2dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@drawable/divider_gap_8"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:gravity="fill"
+                android:showDividers="middle">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autoSizeTextType="uniform"
+                    android:fontFamily="@font/plus_jakarta_sans_variable"
+                    android:text="@string/total"
+                    android:textAlignment="textStart"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
+                    android:textColor="?colorOnSurface"
+                    tools:targetApi="26" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/fragmentOrderItemEditorTextViewTotal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_weight="3"
+                    android:autoSizeTextType="uniform"
+                    android:fontFamily="@font/plus_jakarta_sans_variable"
+                    android:textAlignment="textEnd"
+                    android:textAppearance="?attr/textAppearanceTitleLargeEmphasized"
+                    android:textColor="?colorOnSurface"
+                    android:textStyle="bold"
+                    tools:targetApi="26" />
+
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/Widget.Material3Expressive.Button"
+                android:id="@+id/fragmentOrderItemEditorButtonSave"
+                android:text="@string/save"
+                app:icon="@drawable/save_24px"
+                app:iconGravity="textStart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="32dp"/>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

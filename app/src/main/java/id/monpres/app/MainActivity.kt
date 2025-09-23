@@ -33,10 +33,8 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import androidx.transition.TransitionManager
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.transition.MaterialFade
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
@@ -195,9 +193,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         setupUIListeners()
         setupNavControllerListeners()
 
-        // Handle notification click
-        handleIntentExtras(intent)
-
         /* Testing. TODO: Remove on production */
         getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
             result.onSuccess { orders ->
@@ -230,6 +225,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
 
         setupAppBar() // Update app bar is required to reflect navigation tree changes
+
+        // Handle notification click
+        handleIntentExtras(intent)
 
     }
 
@@ -273,22 +271,19 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private fun setupNavControllerListeners() {
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
 
-            // Action bar visibility
             when (destination.id) {
-                R.id.orderServiceDetailFragment, R.id.serviceProcessFragment -> {
-                    val materialFade = MaterialFade().apply {
-                        duration = 150L
-                    }
-                    TransitionManager.beginDelayedTransition(binding.root, materialFade)
-//                    supportActionBar?.hide()
+                R.id.orderServiceDetailFragment, R.id.serviceProcessFragment, R.id.orderItemEditorFragment -> {
+                    drawerLayout.setDrawerLockMode(
+                        DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
+                        GravityCompat.START
+                    )
                 }
 
                 else -> {
-                    val materialFade = MaterialFade().apply {
-                        duration = 150L
-                    }
-                    TransitionManager.beginDelayedTransition(binding.root, materialFade)
-//                    supportActionBar?.show()
+                    drawerLayout.setDrawerLockMode(
+                        DrawerLayout.LOCK_MODE_UNLOCKED,
+                        GravityCompat.START
+                    )
                 }
             }
 
@@ -338,7 +333,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 }
 
                 R.id.activityMainDrawerMenuProfile -> {
-                    navController.navigate(R.id.profileFragment)
+                    navController.navigate(R.id.action_global_profileFragment)
                 }
 
                 R.id.activityMainDrawerMenuOrder -> navController.navigate(R.id.action_global_orderServiceListFragment)
@@ -546,12 +541,17 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                                     Log.d(TAG, "User order services: ${state.data}")
                                     processNotification(state.data)
                                 }
+
                                 else -> {}
                             }
                         }
                     }
+
                     else -> {
-                        Log.e(TAG, "Unexpected user role: ${userRepository.getCurrentUserRecord()?.role}")
+                        Log.e(
+                            TAG,
+                            "Unexpected user role: ${userRepository.getCurrentUserRecord()?.role}"
+                        )
                     }
                 }
             }
@@ -559,7 +559,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     }
 
     private fun processNotification(currentOrders: List<OrderService>) {
-        val currentlyOpenedOrderId = viewModel.getJustOpenedFromNotificationOrderId() // Cache it for this run
+        val currentlyOpenedOrderId =
+            viewModel.getJustOpenedFromNotificationOrderId() // Cache it for this run
         // Clear it after use so subsequent non-notification updates are processed normally
         viewModel.clearJustOpenedFromNotificationOrderId()
         val notifiedOrderStatusMap = viewModel.getNotifiedOrderStatusMap()
@@ -583,7 +584,10 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
             if (lastNotifiedStatus == null || lastNotifiedStatus != currentStatus) {
                 // New order or status has changed since last notification
-                Log.d(TAG, "Order ${order.id} needs notification. Current: $currentStatus, Last Notified: $lastNotifiedStatus")
+                Log.d(
+                    TAG,
+                    "Order ${order.id} needs notification. Current: $currentStatus, Last Notified: $lastNotifiedStatus"
+                )
 
 //                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 OrderServiceNotification.showOrUpdateNotification(
@@ -599,10 +603,14 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         // Identify orders that were completed/cancelled and remove their notifications
         // (and remove from notifiedOrderStatusMap)
         val currentOrderIds = currentOrders.map { it.id }.toSet()
-        val ordersToRemoveNotification = notifiedOrderStatusMap.filterKeys { !currentOrderIds.contains(it) }
+        val ordersToRemoveNotification =
+            notifiedOrderStatusMap.filterKeys { !currentOrderIds.contains(it) }
 
         ordersToRemoveNotification.forEach { (orderId, _) ->
-            Log.d(TAG, "Order $orderId no longer ongoing or status implies removal. Cancelling notification.")
+            Log.d(
+                TAG,
+                "Order $orderId no longer ongoing or status implies removal. Cancelling notification."
+            )
             OrderServiceNotification.cancelNotification(this, orderId)
             viewModel.removeNotifiedOrderStatus(orderId)
         }

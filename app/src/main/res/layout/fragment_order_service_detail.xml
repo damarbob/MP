@@ -363,7 +363,7 @@
 
                 </LinearLayout>
 
-                <!-- Summary detail -->
+                <!-- OrderItem detail -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -377,7 +377,7 @@
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/summary"
+                        android:text="@string/orderItem"
                         android:textAppearance="?attr/textAppearanceLabelSmall"
                         android:textColor="?colorOnSurface" />
 

@@ -45,7 +45,7 @@
                 app:waveAmplitude="6dp"
                 app:wavelength="60dp"
 
-                 />
+                />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/fragmentServiceProcessTextViewTitle"
@@ -73,16 +73,17 @@
                 android:id="@+id/fragmentServiceProcessLinearLayoutDetailContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="96dp"
+                android:layout_marginBottom="16dp"
                 android:background="@drawable/rounded_large_rectangle_background"
                 android:divider="@drawable/divider_gap_8"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:padding="16dp"
                 android:showDividers="middle"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/fragmentServiceProcessLinearLayoutOrderItemContainer"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_goneMarginBottom="96dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -303,16 +304,98 @@
 
             </LinearLayout>
 
+            <!-- OrderItem detail -->
+            <LinearLayout
+                android:id="@+id/fragmentServiceProcessLinearLayoutOrderItemContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="96dp"
+                android:background="@drawable/rounded_large_rectangle_background"
+                android:divider="@drawable/divider_gap_8"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:showDividers="middle"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/orderItem"
+                        android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                        android:textColor="?colorOnSurface" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fragmentServiceProcessButtonEditOrderItem"
+                        style="@style/Widget.Material3Expressive.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/edit" />
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/fragment_service_process_recycler_view_order_item"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false" />
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:divider="@drawable/divider_gap_8"
+                    android:gravity="fill"
+                    android:showDividers="middle">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:autoSizeTextType="uniform"
+                        android:fontFamily="@font/plus_jakarta_sans_variable"
+                        android:text="@string/total"
+                        android:textAlignment="textStart"
+                        android:textAppearance="?attr/textAppearanceTitleLarge"
+                        android:textColor="?colorOnSurface"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragment_service_process_order_items_total_price"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_weight="3"
+                        android:autoSizeTextType="uniform"
+                        android:fontFamily="@font/plus_jakarta_sans_variable"
+                        android:textAlignment="textEnd"
+                        android:textAppearance="?attr/textAppearanceTitleLargeEmphasized"
+                        android:textColor="?colorOnSurface"
+                        android:textStyle="bold"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+            </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:showDividers="middle"
                 android:divider="@drawable/divider_gap_16"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:showDividers="middle"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" >
+                app:layout_constraintStart_toStartOf="parent">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/fragmentServiceProcessButtonCancel"
@@ -321,6 +404,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:backgroundTint="?colorError"
+                    android:foregroundTint="?colorOnError"
                     android:maxWidth="60dp"
                     android:text="@string/cancel"
                     app:icon="@drawable/close_24px"
@@ -332,7 +416,6 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
                     app:outer_color="?colorPrimary"
-
                     app:text="Accept"
                     app:text_appearance="@style/Widget.App.H5.Bold"
                     app:text_color="?colorOnPrimary" />

@@ -26,6 +26,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionManager
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -53,8 +54,14 @@ import id.monpres.app.databinding.FragmentServiceProcessBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.UserRole
+import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.ui.adapter.OrderItemAdapter
+import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
+import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
+import id.monpres.app.usecase.CalculateAerialDistanceUseCase
+import id.monpres.app.usecase.CurrencyFormatterUseCase
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
 import java.text.DateFormat
@@ -79,6 +86,12 @@ class ServiceProcessFragment : BaseFragment() {
     private lateinit var binding: FragmentServiceProcessBinding
 
     private lateinit var orderService: OrderService
+    private var orderItems: ArrayList<OrderItem>? = null
+    private var price: Double? = null
+    private lateinit var orderItemAdapter: OrderItemAdapter
+
+    private val calculateAerialDistance = CalculateAerialDistanceUseCase()
+    private val currencyFormatterUseCase = CurrencyFormatterUseCase()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
@@ -144,8 +157,29 @@ class ServiceProcessFragment : BaseFragment() {
             windowInsets
         }
 
+        parentFragmentManager.setFragmentResultListener(
+            OrderItemEditorFragment.REQUEST_KEY_ORDER_ITEM_EDITOR,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            orderItems =
+                bundle.getParcelableArrayList(OrderItemEditorFragment.KEY_ORDER_ITEMS)
+            price = OrderService.getPriceFromOrderItems(orderItems)
+            Log.d(TAG, "OrderItems: $orderItems")
+            observeUiStateOneShot(
+                viewModel.updateOrderService(
+                    orderService.copy(
+                        updatedAt = Timestamp.now(),
+                        orderItems = orderItems,
+                        price = price
+                    )
+                )
+            ) {
+            }
+        }
+
         mainViewModel.observeOrderServiceById(args.orderServiceId)
 
+        setupRecyclerView()
         setupObservers()
         setupListeners()
 
@@ -155,6 +189,15 @@ class ServiceProcessFragment : BaseFragment() {
         createLocationCallback()
 
         return binding.root
+    }
+
+    private fun setupRecyclerView() {
+        orderItemAdapter = OrderItemAdapter()
+        binding.fragmentServiceProcessRecyclerViewOrderItem.apply {
+            adapter = orderItemAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+            addItemDecoration(SpacingItemDecoration(8))
+        }
     }
 
     private fun setupObservers() {
@@ -174,6 +217,7 @@ class ServiceProcessFragment : BaseFragment() {
             UserRole.PARTNER ->
                 observeUiState(mainViewModel.partnerOrderServiceState) { data ->
                     orderService = data
+                    orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>
                     Log.d(TAG, "OrderService: $orderService")
                     setupView()
                     showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
@@ -214,7 +258,12 @@ class ServiceProcessFragment : BaseFragment() {
             val materialFade = MaterialFade().apply {
                 duration = 150L
             }
-            TransitionManager.beginDelayedTransition(binding.root, materialFade)
+            TransitionManager.beginDelayedTransition(root, materialFade)
+
+            fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
+                if (orderService.orderItems.isNullOrEmpty()) View.GONE else View.VISIBLE
+            fragmentServiceProcessButtonEditOrderItem.visibility = if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER) View.VISIBLE else View.GONE
+
             fragmentServiceProcessTextViewTitle.text =
                 orderService.status?.getLabel(requireContext())?.capitalizeWords() ?: "-"
             fragmentServiceProcessTextViewSubtitle.text =
@@ -233,13 +282,26 @@ class ServiceProcessFragment : BaseFragment() {
             fragmentServiceProcessIssueDescription.text =
                 if (orderService.issueDescription?.isNotBlank() == true) orderService.issueDescription else "-"
 
+            // Show total price with currency format
+            price = orderService.price ?: OrderService.getPriceFromOrderItems(orderItems)
+            fragmentServiceProcessOrderItemsTotalPrice.text = currencyFormatterUseCase(price!!)
+
+            // Set order items list
+            orderItemAdapter.submitList(orderItems?.toList())
         }
     }
 
     private fun setupListeners() {
         binding.fragmentServiceProcessButtonCancel.setOnClickListener {
-            // TODO: Cancel service
-            findNavController().popBackStack()
+            observeUiStateOneShot(
+                viewModel.updateOrderService(
+                    orderService.copy(
+                        updatedAt = Timestamp.now(),
+                        status = OrderStatus.CANCELLED
+                    )
+                )
+            ) {
+            }
         }
 
         binding.fragmentServiceProcessButtonComplete.setOnClickListener {
@@ -250,21 +312,43 @@ class ServiceProcessFragment : BaseFragment() {
             )
         }
 
+        binding.fragmentServiceProcessButtonEditOrderItem.setOnClickListener {
+            findNavController().navigate(
+                ServiceProcessFragmentDirections.actionServiceProcessFragmentToOrderItemEditorFragment(
+                    orderItems = orderItems?.toTypedArray(), orderService = orderService
+                )
+            )
+        }
+
         binding.fragmentServiceProcessActButton.onSlideCompleteListener =
             object : OnSlideCompleteListener {
                 override fun onSlideComplete(view: SlideToActView) {
 
                     if (orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && currentDistance > MINIMUM_DISTANCE_TO_START_SERVICE) {
-                        Toast.makeText(requireContext(), "You haven't arrived at the location yet, still about $currentDistance m to go.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "You haven't arrived at the location yet, still about $currentDistance m to go.",
+                            Toast.LENGTH_LONG
+                        ).show()
                         view.setCompleted(completed = false, withAnimation = true)
                         return
+                    }
+
+                    if (orderService.status?.serviceNextProcess() == OrderStatus.WAITING_FOR_PAYMENT) {
+                        findNavController().navigate(
+                            ServiceProcessFragmentDirections.actionServiceProcessFragmentToOrderItemEditorFragment(
+                                orderItems = orderItems?.toTypedArray(), orderService = orderService
+                            )
+                        )
                     }
 
                     observeUiStateOneShot(
                         viewModel.updateOrderService(
                             orderService.copy(
                                 updatedAt = Timestamp.now(),
-                                status = orderService.status?.serviceNextProcess()
+                                status = orderService.status?.serviceNextProcess(),
+                                orderItems = orderItems,
+                                price = price
                             )
                         )
                     ) {
@@ -288,13 +372,15 @@ class ServiceProcessFragment : BaseFragment() {
             duration = 150L
         }
         TransitionManager.beginDelayedTransition(binding.root, materialFade)
-        val isButtonLocked = orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && currentDistance > MINIMUM_DISTANCE_TO_START_SERVICE
+        val isButtonLocked =
+            orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && currentDistance > MINIMUM_DISTANCE_TO_START_SERVICE
         Log.d(TAG, "Is button locked: $isButtonLocked")
         binding.fragmentServiceProcessActButton.apply {
             visibility =
                 if (show) View.VISIBLE else View.GONE
             text =
-                orderService.status?.serviceNextProcess()?.getServiceActionLabel(requireContext())?.capitalizeWords()
+                orderService.status?.serviceNextProcess()?.getServiceActionLabel(requireContext())
+                    ?.capitalizeWords()
                     ?: "Next"
 
             // Lock button if next status is in progress (repairing) and distance is greater than MINIMUM_DISTANCE_TO_START_SERVICE
@@ -408,7 +494,12 @@ class ServiceProcessFragment : BaseFragment() {
         if (!hasLocationPermission() && !shouldShowRequestPermissionRationale()) {
             // Permission permanently denied, guide user to app settings
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle(getString(R.string.x_permission_is_not_granted, getString(R.string.location)))
+                .setTitle(
+                    getString(
+                        R.string.x_permission_is_not_granted,
+                        getString(R.string.location)
+                    )
+                )
                 .setMessage(getString(R.string.this_permission_is_disabled))
                 .setPositiveButton(getString(R.string.go_to_settings)) { _, _ ->
                     openAppSettings()
@@ -432,11 +523,13 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private fun createLocationRequest() {
-        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, TimeUnit.SECONDS.toMillis(10)).apply {
-            setMinUpdateDistanceMeters(100f)
-            setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
-            setWaitForAccurateLocation(true)
-        }.build()
+        locationRequest =
+            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, TimeUnit.SECONDS.toMillis(10))
+                .apply {
+                    setMinUpdateDistanceMeters(100f)
+                    setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
+                    setWaitForAccurateLocation(true)
+                }.build()
     }
 
     private fun createLocationCallback() {
@@ -451,6 +544,9 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private fun checkLocationSettings() {
+        if (!hasLocationPermission() || orderService.status != OrderStatus.ON_THE_WAY) {
+            return
+        }
         val builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
 
@@ -480,7 +576,7 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private fun startLocationUpdates() {
-        if (!hasLocationPermission()) {
+        if (!hasLocationPermission() || orderService.status != OrderStatus.ON_THE_WAY) {
             return
         }
 
@@ -503,7 +599,12 @@ class ServiceProcessFragment : BaseFragment() {
         currentLatitude = location.latitude
         currentLongitude = location.longitude
         currentAccuracy = location.accuracy
-        currentDistance = calculateAerialDistance(currentLatitude, currentLongitude, orderService.selectedLocationLat!!, orderService.selectedLocationLng!!)
+        currentDistance = calculateAerialDistance(
+            currentLatitude,
+            currentLongitude,
+            orderService.selectedLocationLat!!,
+            orderService.selectedLocationLng!!
+        )
 
         Log.d(
             "Location",
@@ -532,11 +633,5 @@ class ServiceProcessFragment : BaseFragment() {
     private fun openLocationSettings() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
         startActivity(intent)
-    }
-
-    private fun calculateAerialDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
-        val results = FloatArray(1)
-        Location.distanceBetween(lat1, lon1, lat2, lon2, results)
-        return results[0]
     }
 }

@@ -48,7 +48,16 @@ class VehicleAdapter(
     inner class ViewHolder(val binding: ItemTwoLineBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        init {
+        fun bind(vehicle: Vehicle, isSelected: Boolean) {
+            binding.itemTwoLineTextViewTitle.text = vehicle.name
+            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
+
+            // Visual indication for selection
+            binding.root.apply {
+                isCheckable = true
+                isChecked = isSelected // Use state_checked
+            }
+
             binding.root.setOnClickListener {
                 val position = absoluteAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
@@ -72,17 +81,6 @@ class VehicleAdapter(
                 } else {
                     false
                 }
-            }
-        }
-
-        fun bind(vehicle: Vehicle, isSelected: Boolean) {
-            binding.itemTwoLineTextViewTitle.text = vehicle.name
-            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
-
-            // Visual indication for selection
-            binding.root.apply {
-                isCheckable = true
-                isChecked = isSelected // Use state_checked
             }
 
             // Or change background color directly (less ideal than state_checked with a selector drawable)

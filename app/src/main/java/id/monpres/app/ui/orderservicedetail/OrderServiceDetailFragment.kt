@@ -34,16 +34,14 @@ import com.google.android.material.transition.MaterialSharedAxis
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
 import id.monpres.app.model.OrderService
-import id.monpres.app.model.Summary
-import id.monpres.app.ui.adapter.SummaryAdapter
+import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
+import id.monpres.app.usecase.CurrencyFormatterUseCase
 import id.monpres.app.utils.toDateTimeDisplayString
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.text.DateFormat
-import java.text.NumberFormat
-import java.util.Locale
 
 class OrderServiceDetailFragment : Fragment() {
 
@@ -59,6 +57,8 @@ class OrderServiceDetailFragment : Fragment() {
     private lateinit var binding: FragmentOrderServiceDetailBinding
 
     private lateinit var orderService: OrderService
+
+    private val currencyFormatterUseCase = CurrencyFormatterUseCase()
 
     private val permissionQueue: MutableList<String> =
         mutableListOf() // Queue for individual permissions
@@ -254,14 +254,22 @@ class OrderServiceDetailFragment : Fragment() {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
         }
 
-        val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.provider", file)
+        val uri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.provider",
+            file
+        )
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "image/jpeg"
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        requireContext().startActivity(Intent.createChooser(shareIntent,
-            getString(R.string.share_image)))
+        requireContext().startActivity(
+            Intent.createChooser(
+                shareIntent,
+                getString(R.string.share_image)
+            )
+        )
     }
 
 
@@ -285,13 +293,13 @@ class OrderServiceDetailFragment : Fragment() {
             fragmentOrderServiceDetailTitle.text =
                 getString(R.string.x_x, orderService.name, orderService.status?.name)
             fragmentOrderServiceDetailDate.text =
-                orderService.updatedAt.toDateTimeDisplayString(dateStyle = DateFormat.FULL, timeStyle = DateFormat.LONG)
-            val idrFormat = NumberFormat.getCurrencyInstance(
-                Locale.Builder().setRegion("ID").setLanguage("id").build()
-            )
-            idrFormat.maximumFractionDigits = 0
+                orderService.updatedAt.toDateTimeDisplayString(
+                    dateStyle = DateFormat.FULL,
+                    timeStyle = DateFormat.LONG
+                )
+
             fragmentOrderServiceDetailPrice.text =
-                if (orderService.price != null) idrFormat.format(orderService.price) else ""
+                if (orderService.price != null) currencyFormatterUseCase(orderService.price!!) else ""
 
             // General info
             fragmentOrderServiceDetailInvoiceNumber.text = orderService.id ?: ""
@@ -307,20 +315,16 @@ class OrderServiceDetailFragment : Fragment() {
                 orderService.selectedLocationLat.toString()
             fragmentOrderServiceDetailDistance.text = orderService.selectedLocationLat.toString()
 
-            // Summary
+            // OrderItem
             fragmentOrderServiceDetailRecyclerViewSummaryDetail.apply {
-                adapter =
-                    SummaryAdapter(
-                        listOf(
-                            Summary("Wheel change", 1000000.toDouble()),
-                            Summary("Oil change", 1000000.toDouble())
-                        )
-                    )
+                adapter = OrderItemAdapter().apply {
+                    submitList(orderService.orderItems)
+                }
                 layoutManager = LinearLayoutManager(requireContext())
-                addItemDecoration(SpacingItemDecoration(4))
+                addItemDecoration(SpacingItemDecoration(8))
             }
             fragmentOrderServiceDetailSummaryTotal.text =
-                if (orderService.price != null) idrFormat.format(orderService.price) else ""
+                if (orderService.price != null) currencyFormatterUseCase(orderService.price!!) else ""
         }
     }
 
