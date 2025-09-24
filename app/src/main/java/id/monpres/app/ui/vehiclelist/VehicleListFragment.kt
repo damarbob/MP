@@ -64,7 +64,7 @@ class VehicleListFragment : BaseFragment() {
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentListVehicleNestedScrollView) { v, windowInsets ->
             val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(
                 insets.left,
                 0,

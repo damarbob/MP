@@ -1,130 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:divider="@drawable/divider_gap_8"
-    android:orientation="vertical"
-    android:paddingHorizontal="32dp"
-    android:paddingVertical="16dp"
-    android:showDividers="middle"
     tools:context=".ui.profile.ProfileFragment">
 
-    <ImageView
-        android:id="@+id/editProfileAvatar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="16dp"
-        android:minWidth="120dp"
-        android:minHeight="120dp"
-        android:scaleType="centerInside"
-        android:contentDescription="@string/profile"/>
-    <TextView
-        style="@style/Widget.App.H4.Bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/profile"
-        android:layout_gravity="center_vertical"
-        android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/editProfileInputLayoutFullName"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/editProfileNestedScrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/full_name"
-        app:endIconMode="clear_text"
-        app:helperText="@string/make_sure_your_full_name_matches_your_national_id_card"
-        app:startIconContentDescription="@string/full_name"
-        app:startIconDrawable="@drawable/baseline_person_outline_24">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editProfileInputEditFullName"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text" />
+            android:divider="@drawable/divider_gap_8"
+            android:orientation="vertical"
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="16dp"
+            android:showDividers="middle">
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <ImageView
+                android:id="@+id/editProfileAvatar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"
+                android:contentDescription="@string/profile"
+                android:minWidth="120dp"
+                android:minHeight="120dp"
+                android:scaleType="centerInside" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/editProfileTextInputLayoutEmail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="@string/email"
-        app:endIconMode="clear_text"
-        app:startIconContentDescription="@string/email"
-        app:startIconDrawable="@drawable/outline_alternate_email_24">
+            <TextView
+                style="@style/Widget.App.H4.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/profile"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editProfileInputEmailAddress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textEmailAddress" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editProfileInputLayoutFullName"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/full_name"
+                app:endIconMode="clear_text"
+                app:helperText="@string/make_sure_your_full_name_matches_your_national_id_card"
+                app:startIconContentDescription="@string/full_name"
+                app:startIconDrawable="@drawable/baseline_person_outline_24">
 
-    </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editProfileInputEditFullName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/editProfileTextInputLayoutWhatsApp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="@string/whatsapp_number"
-        app:endIconMode="clear_text"
-        app:startIconContentDescription="@string/whatsapp_number"
-        app:startIconDrawable="@drawable/mobile_24px">
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editProfileInputWhatsApp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editProfileTextInputLayoutEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/email"
+                app:endIconMode="clear_text"
+                app:startIconContentDescription="@string/email"
+                app:startIconDrawable="@drawable/outline_alternate_email_24">
 
-    </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editProfileInputEmailAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress" />
 
-    <TextView
-        style="@style/Widget.App.H4.Bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/primary_location"
-        android:layout_gravity="center_vertical"
-        android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    <Button
-        android:id="@+id/editProfileButtonSelectPrimaryLocationButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/select_a_location"
-        app:icon="@drawable/add_location_alt_24px" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editProfileTextInputLayoutWhatsApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/whatsapp_number"
+                app:endIconMode="clear_text"
+                app:startIconContentDescription="@string/whatsapp_number"
+                app:startIconDrawable="@drawable/mobile_24px">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/editProfileInputLayoutAddress"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:enabled="true"
-        android:hint="@string/address"
-        app:endIconContentDescription="@string/address"
-        app:endIconDrawable="@drawable/home_24px"
-        app:endIconMode="custom"
-        app:helperText="@string/enter_your_full_address_you_may_also_add_an_address_note_e_g_house_color_nearby_landmarks_if_needed">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editProfileInputWhatsApp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editProfileInputEditAddress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    </com.google.android.material.textfield.TextInputLayout>
+            <TextView
+                style="@style/Widget.App.H4.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/primary_location"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
 
-    <Button
-        android:id="@+id/editProfileButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/save"
-        app:icon="@drawable/check_24px" />
+            <Button
+                android:id="@+id/editProfileButtonSelectPrimaryLocationButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_a_location"
+                app:icon="@drawable/add_location_alt_24px" />
 
-</LinearLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editProfileInputLayoutAddress"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="true"
+                android:hint="@string/address"
+                app:endIconContentDescription="@string/address"
+                app:endIconDrawable="@drawable/home_24px"
+                app:endIconMode="custom"
+                app:helperText="@string/enter_your_full_address_you_may_also_add_an_address_note_e_g_house_color_nearby_landmarks_if_needed">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editProfileInputEditAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/editProfileButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/save"
+                app:icon="@drawable/check_24px" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -62,11 +62,9 @@ class OrderServiceListFragment : BaseFragment() {
             binding.root.background
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceListNestedScrollView) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-//            val isAppbarShowing = (requireActivity() as MainActivity).supportActionBar?.isShowing ?: false
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(
                 insets.left,
-//                if (isAppbarShowing) 0 else insets.top,
                 0,
                 insets.right,
                 insets.bottom

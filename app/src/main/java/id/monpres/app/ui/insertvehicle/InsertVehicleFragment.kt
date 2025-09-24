@@ -63,7 +63,7 @@ class InsertVehicleFragment : BaseFragment() {
 
         // Set the window insets listener (so the keyboard can be detected and views not hide by keyboard)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
             windowInsets
         }

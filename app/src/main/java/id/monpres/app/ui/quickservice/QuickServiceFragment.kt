@@ -37,7 +37,7 @@ class QuickServiceFragment : BaseServiceFragment() {
         // Set insets with keyboard
         ViewCompat.setOnApplyWindowInsetsListener(fragBinding.root) { v, windowInsets ->
             val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
             windowInsets
         }

@@ -5,6 +5,7 @@ import android.animation.ValueAnimator
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
@@ -12,6 +13,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -19,6 +21,7 @@ import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.scale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
@@ -45,6 +48,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialFade
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.firebase.Timestamp
+import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.ncorti.slidetoact.SlideToActView
 import com.ncorti.slidetoact.SlideToActView.OnSlideCompleteListener
 import dagger.hilt.android.AndroidEntryPoint
@@ -147,7 +155,7 @@ class ServiceProcessFragment : BaseFragment() {
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentServiceProcessNestedScrollView) { v, windowInsets ->
             val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(
                 insets.left,
                 0,
@@ -262,7 +270,8 @@ class ServiceProcessFragment : BaseFragment() {
 
             fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
                 if (orderService.orderItems.isNullOrEmpty()) View.GONE else View.VISIBLE
-            fragmentServiceProcessButtonEditOrderItem.visibility = if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER) View.VISIBLE else View.GONE
+            fragmentServiceProcessButtonEditOrderItem.visibility =
+                if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER) View.VISIBLE else View.GONE
 
             fragmentServiceProcessTextViewTitle.text =
                 orderService.status?.getLabel(requireContext())?.capitalizeWords() ?: "-"
@@ -288,6 +297,55 @@ class ServiceProcessFragment : BaseFragment() {
 
             // Set order items list
             orderItemAdapter.submitList(orderItems?.toList())
+
+            // Mapbox
+            fragmentServiceProcessMapView.mapboxMap.setCamera(
+                CameraOptions.Builder()
+                    .center(
+                        Point.fromLngLat(
+                            orderService.selectedLocationLng ?: 0.0,
+                            orderService.selectedLocationLat ?: 0.0
+                        )
+                    )
+                    .pitch(0.0)
+                    .zoom(12.0)
+                    .bearing(0.0)
+                    .build()
+            )
+            val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.red_marker)
+            val desiredWidth = 60 // in pixels
+            val desiredHeight = 96 // in pixels
+
+            val resizedBitmap = originalBitmap.scale(desiredWidth, desiredHeight, false)
+
+            // Create an instance of the Annotation API and get the PointAnnotationManager.
+            val annotationApi = fragmentServiceProcessMapView.annotations
+            val pointAnnotationManager = annotationApi.createPointAnnotationManager()
+
+            // Set options for the resulting symbol layer.
+            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                // Define a geographic coordinate.
+                .withPoint(Point.fromLngLat(orderService.selectedLocationLng ?: 0.0,
+                    orderService.selectedLocationLat ?: 0.0))
+                // Specify the bitmap you assigned to the point annotation
+                // The bitmap will be added to map style automatically.
+                .withIconImage(resizedBitmap)
+            // Add the resulting pointAnnotation to the map.
+            pointAnnotationManager.create(pointAnnotationOptions)
+
+            fragmentServiceProcessMapView.setOnTouchListener { view, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                        // Disable parent scroll when touching map
+                        fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(true)
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        // Re-enable parent scroll when touch ends
+                        fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(false)
+                    }
+                }
+                false // Return false to allow MapView to handle the touch
+            }
         }
     }
 

@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.os.bundleOf
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -52,6 +54,13 @@ class PartnerSelectionFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentPartnerSelectionBinding.inflate(inflater, container, false)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.quickServiceScrollView) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
 
         partnerAdapter = PartnerAdapter { partner ->
             // TODO: When the partner is clicked, navigate back and pass the selected partner.userId

@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -157,27 +158,30 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             v.setPadding(insets.left, 0, insets.right, 0)
             windowInsets
         }
-//        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainAppBarLayout) { v, windowInsets ->
-//            val insets =
-//                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-//            lifecycleScope.launch {
-//                delay(150L)
-//                v.setPadding(
-//                    insets.left,
-//                    if (supportActionBar?.isShowing == true) insets.top else 0,
-//                    insets.right,
-//                    0
-//                )
-//            }
-//            windowInsets
-//        }
-        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainNavigationView) { v, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainAppBarLayout) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(
+                insets.left,
+                insets.top,
+                insets.right,
+                0
+            )
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.navHostFragmentActivityMain) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
             v.setPadding(insets.left, 0, insets.right, 0)
             windowInsets
         }
-//        WindowCompat.setDecorFitsSystemWindows(window, false)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainNavigationView) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            windowInsets
+        }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         /* Auth */
         runAuthentication()

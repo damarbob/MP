@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?colorSurfaceContainer"
+    android:clipToPadding="false"
     tools:context=".MainActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -17,8 +18,7 @@
             android:id="@+id/activityMainAppBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:fitsSystemWindows="true">
+            android:clipToPadding="false">
 
             <!-- Toolbar button (for menu) -->
             <com.google.android.material.appbar.MaterialToolbar

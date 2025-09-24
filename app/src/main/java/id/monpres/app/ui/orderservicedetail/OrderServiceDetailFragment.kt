@@ -123,7 +123,7 @@ class OrderServiceDetailFragment : Fragment() {
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceDetailNestedScrollView) { v, windowInsets ->
             val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(
                 insets.left,
                 0,

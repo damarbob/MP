@@ -50,28 +50,48 @@
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/fragmentServiceProcessTextViewTitle"
                 style="@style/Widget.App.H1.Bold"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium.Emphasized"
                 app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessTextViewSubtitle"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width"/>
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/fragmentServiceProcessTextViewSubtitle"
                 style="@style/Widget.App.P"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 android:textAlignment="center"
+                app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessCardView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/fragmentServiceProcessCardView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
                 app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessLinearLayoutDetailContainer"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width">
+
+                <com.mapbox.maps.MapView
+                    android:id="@+id/fragmentServiceProcessMapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="240dp"
+                    android:background="@android:color/transparent" />
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:id="@+id/fragmentServiceProcessLinearLayoutDetailContainer"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/rounded_large_rectangle_background"
@@ -83,6 +103,7 @@
                 app:layout_constraintBottom_toTopOf="@id/fragmentServiceProcessLinearLayoutOrderItemContainer"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width"
                 app:layout_goneMarginBottom="96dp">
 
                 <LinearLayout
@@ -307,7 +328,7 @@
             <!-- OrderItem detail -->
             <LinearLayout
                 android:id="@+id/fragmentServiceProcessLinearLayoutOrderItemContainer"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="96dp"
                 android:background="@drawable/rounded_large_rectangle_background"
@@ -318,7 +339,8 @@
                 android:showDividers="middle"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -387,7 +409,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:divider="@drawable/divider_gap_16"
                 android:gravity="center_vertical"
@@ -395,7 +417,8 @@
                 android:showDividers="middle"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/fragmentServiceProcessButtonCancel"
