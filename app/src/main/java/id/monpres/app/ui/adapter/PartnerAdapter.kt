@@ -47,8 +47,8 @@ class PartnerAdapter(
 
             // Format distance information
             val distanceText = partnerItem.distance?.let { distance ->
-                "%.1f km away".format(distance)
-            } ?: "Distance not available"
+                binding.root.context.getString(R.string.x_km).format(distance)
+            } ?: binding.root.context.getString(R.string.distance_not_available)
 
             binding.itemTwoLineTextViewSubtitle.text = distanceText
 
