@@ -204,6 +204,10 @@
     <string name="prepare_the_bills">Prepare the bills</string>
     <string name="finish_the_order">Finish the order</string>
     <string name="enter_your_full_address_you_may_also_add_an_address_note_e_g_house_color_nearby_landmarks_if_needed">Enter your full address. You may also add an address note (e.g., house color, nearby landmarks) if needed.</string>
+    <string name="user">User</string>
+    <string name="distance_not_available">Distance not available</string>
+    <string name="x_km" translatable="false">%.1f km</string>
+    <string name="select_partner">Select Partner</string>
     <string name="add_item">Add item</string>
     <string name="quantity">Quantity</string>
     <string name="price">Price</string>

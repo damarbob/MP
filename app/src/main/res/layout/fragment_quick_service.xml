@@ -148,7 +148,7 @@
                 android:id="@+id/quickServiceButtonSelectPartner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Select Partner"
+                android:text="@string/select_partner"
                 app:icon="@drawable/engineering_24px" />
 
             <Button
