@@ -114,7 +114,7 @@ class OrderItemEditorFragment : Fragment() {
         items.apply {
             if (items.none { it.id == OrderItem.PLATFORM_FEE_ID })
                 add(
-                    items.size - 1,
+                    if (items.isEmpty()) 0 else items.size - 1,
                     OrderItem(
                         id = OrderItem.PLATFORM_FEE_ID,
                         name = OrderItem.PLATFORM_FEE_NAME,
@@ -126,7 +126,7 @@ class OrderItemEditorFragment : Fragment() {
 
             if (items.none { it.id == OrderItem.DISTANCE_FEE_ID })
                 add(
-                    items.size - 1,
+                    if (items.isEmpty()) 0 else items.size - 1,
                     OrderItem(
                         id = OrderItem.DISTANCE_FEE_ID,
                         name = OrderItem.DISTANCE_FEE_NAME,

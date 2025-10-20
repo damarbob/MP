@@ -77,6 +77,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp"
                 app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessLinearLayoutDetailContainer"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -87,6 +88,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="240dp"
                     android:background="@android:color/transparent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentServiceProcessButtonNavigation"
+                    style="@style/Widget.Material3Expressive.Button.TonalButton"
+                    app:icon="@drawable/navigation_24px"
+                    android:text="@string/open_maps"
+                    android:layout_margin="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|bottom"/>
             </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout

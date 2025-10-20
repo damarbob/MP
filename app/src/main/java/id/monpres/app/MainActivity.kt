@@ -104,6 +104,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private var optionsMenu: Menu? = null
     val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
 
+    /* Variables */
+    private lateinit var serviceOrders: List<OrderService>
+
     /* Permissions */
     private val permissionQueue: MutableList<String> =
         mutableListOf() // Queue for individual permissions
@@ -530,7 +533,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                             when (state) {
                                 is UiState.Success -> {
                                     Log.d(TAG, "Partner order services: ${state.data}")
-                                    processNotification(state.data)
+                                    serviceOrders = state.data
+                                    processNotification(serviceOrders)
                                 }
 
                                 else -> {}
@@ -543,7 +547,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                             when (state) {
                                 is UiState.Success -> {
                                     Log.d(TAG, "User order services: ${state.data}")
-                                    processNotification(state.data)
+                                    serviceOrders = state.data
+                                    processNotification(serviceOrders)
                                 }
 
                                 else -> {}
@@ -662,6 +667,11 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         lifecycleScope.launch(Dispatchers.IO) {
             cm.clearCredentialState(ClearCredentialStateRequest())
         }
+
+        serviceOrders.forEach {
+            OrderServiceNotification.cancelNotification(this, it.id!!)
+        }
+        serviceOrders = listOf()
 
         // 2. Navigate immediately (don't wait for credential clearing)
         navigateToLogin()

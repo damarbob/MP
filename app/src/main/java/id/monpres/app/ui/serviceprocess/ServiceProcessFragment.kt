@@ -13,7 +13,6 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -70,6 +69,7 @@ import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
 import id.monpres.app.usecase.CalculateAerialDistanceUseCase
 import id.monpres.app.usecase.CurrencyFormatterUseCase
+import id.monpres.app.usecase.GoogleMapsIntentUseCase
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
 import java.text.DateFormat
@@ -100,6 +100,7 @@ class ServiceProcessFragment : BaseFragment() {
 
     private val calculateAerialDistance = CalculateAerialDistanceUseCase()
     private val currencyFormatterUseCase = CurrencyFormatterUseCase()
+    private val googleMapsIntentUseCase = GoogleMapsIntentUseCase()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
@@ -214,6 +215,7 @@ class ServiceProcessFragment : BaseFragment() {
             UserRole.CUSTOMER ->
                 observeUiState(mainViewModel.userOrderServiceState) { data ->
                     orderService = data
+                    orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
                     Log.d(TAG, "OrderService: $orderService")
                     setupView()
                     showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
@@ -225,7 +227,7 @@ class ServiceProcessFragment : BaseFragment() {
             UserRole.PARTNER ->
                 observeUiState(mainViewModel.partnerOrderServiceState) { data ->
                     orderService = data
-                    orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>
+                    orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
                     Log.d(TAG, "OrderService: $orderService")
                     setupView()
                     showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
@@ -334,15 +336,19 @@ class ServiceProcessFragment : BaseFragment() {
             pointAnnotationManager.create(pointAnnotationOptions)
 
             fragmentServiceProcessMapView.setOnTouchListener { view, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                        // Disable parent scroll when touching map
-                        fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(true)
+                view.performClick()
+                if (event.pointerCount >= 2) {
+                    // Two-finger touch - let MapView handle it
+                    fragmentServiceProcessMapView.mapboxMap.gesturesPlugin {
+                        scrollEnabled = true
                     }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        // Re-enable parent scroll when touch ends
-                        fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(false)
+                    fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(true)
+                } else {
+                    // One-finger touch - let NestedScrollView handle it
+                    fragmentServiceProcessMapView.mapboxMap.gesturesPlugin {
+                        scrollEnabled = false
                     }
+                    fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(false)
                 }
                 false // Return false to allow MapView to handle the touch
             }
@@ -414,6 +420,14 @@ class ServiceProcessFragment : BaseFragment() {
                     }
                 }
             }
+
+        binding.fragmentServiceProcessButtonNavigation.setOnClickListener {
+            if (orderService.selectedLocationLat != null && orderService.selectedLocationLng != null) {
+                googleMapsIntentUseCase(requireContext(),
+                    orderService.selectedLocationLat!!, orderService.selectedLocationLng!!
+                )
+            }
+        }
     }
 
     private fun showCancelButton(show: Boolean) {

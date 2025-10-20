@@ -108,6 +108,7 @@ object OrderServiceNotification {
 
         val notification = buildNotification(context, orderState, orderService, userRole, notificationId)
         NotificationManagerCompat.from(context).notify(notificationId, notification)
+        updateGroupSummary(context)
     }
 
     private fun shouldRemoveClosedOrder(orderService: OrderService): Boolean {
@@ -135,7 +136,7 @@ object OrderServiceNotification {
         NotificationManagerCompat.from(context)
             .cancel(getNotificationId(orderId))
         Log.d(TAG, "Notification cancelled for order: $orderId (ID: $orderId)")
-//            updateGroupSummary(context)
+            updateGroupSummary(context)
     }
 
     private fun buildNotification(
@@ -180,14 +181,14 @@ object OrderServiceNotification {
 
         if (activeNotifications > 1) {
             val summaryNotification = NotificationCompat.Builder(context, ORDER_UPDATES_CHANNEL_ID)
-                .setContentTitle("Multiple Order Updates") // Customize as needed
-                .setContentText("$activeNotifications active orders")
+                .setContentTitle(context.getString(R.string.multiple_order_updates)) // Customize as needed
+                .setContentText("$activeNotifications orders")
                 .setSmallIcon(R.drawable.ic_mp_notification) // Replace with your app icon
                 .setGroup(ORDER_NOTIFICATION_GROUP_KEY)
                 .setGroupSummary(true) // This makes it the summary for the group
                 .setStyle(
                     NotificationCompat.InboxStyle()
-                        .setSummaryText("$activeNotifications active orders")
+                        .setSummaryText("$activeNotifications orders")
                     // You could add lines for each active order here if you fetch their details
                 )
                 .setAutoCancel(true)

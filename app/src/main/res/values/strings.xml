@@ -212,4 +212,6 @@
     <string name="quantity">Quantity</string>
     <string name="price">Price</string>
     <string name="edit">Edit</string>
+    <string name="multiple_order_updates">Multiple Order Updates</string>
+    <string name="order_location">Order Location</string>
 </resources>

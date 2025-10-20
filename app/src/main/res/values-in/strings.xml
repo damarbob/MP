@@ -208,4 +208,6 @@
     <string name="quantity">Kuantitas</string>
     <string name="price">Harga</string>
     <string name="edit">Ubah</string>
+    <string name="multiple_order_updates">Update Order</string>
+    <string name="order_location">Lokasi Order</string>
 </resources>
