@@ -86,16 +86,16 @@ class PartnerHomeFragment : BaseFragment() {
         carousel.adapter = BannerAdapter(
             listOf(
                 Banner(
-                    "https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.13.jpeg",
-                    2
-                ),
-                Banner(
-                    "https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.11-1-1536x1025.jpeg",
+                    "https://simsinfotekno.com/MontirPresisi/mp-1.jpg",
                     0
                 ),
                 Banner(
-                    "https://monpres.id/wp-content/uploads/2023/09/WhatsApp-Image-2023-09-27-at-14.10.12.jpeg",
+                    "https://simsinfotekno.com/MontirPresisi/mp-2.jpg",
                     1
+                ),
+                Banner(
+                    "https://simsinfotekno.com/MontirPresisi/mp-3.jpg",
+                    2
                 ),
             )
         )
