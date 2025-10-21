@@ -210,4 +210,7 @@
     <string name="edit">Ubah</string>
     <string name="multiple_order_updates">Update Order</string>
     <string name="order_location">Lokasi Order</string>
+
+    <string name="as_a_partner_you_must_set_a_primary_location">Sebagai mitra, Anda harus menyetel lokasi utama.</string>
+    <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">Anda harus mengatur nomor telepon agar kami dapat menghubungi Anda.</string>
 </resources>

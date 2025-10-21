@@ -214,4 +214,7 @@
     <string name="edit">Edit</string>
     <string name="multiple_order_updates">Multiple Order Updates</string>
     <string name="order_location">Order Location</string>
+
+    <string name="as_a_partner_you_must_set_a_primary_location">As a partner, you must set a primary location.</string>
+    <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">You have to set a phone number so we can contact you.</string>
 </resources>

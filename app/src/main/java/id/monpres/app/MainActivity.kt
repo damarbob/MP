@@ -188,7 +188,24 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
         /* Auth */
         runAuthentication()
-        getUserData()
+
+        lifecycleScope.launch {
+            getUserData()
+
+            /* Update navigation tree */
+            // Important to do this after getting user data
+            // to make sure the rest of the app is accessing the correct nav graph
+            // in case of nav graph modification
+            updateNavigationTree()
+
+            checkUserEligibility()
+
+            viewModel.observeDataByRole()
+
+            /* Permission */
+            if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
+            else showNotification()
+        }
 
         /* UI */
         setupUIComponents()
@@ -211,6 +228,34 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 .onFailure { t ->
                     Log.e(TAG, t.localizedMessage ?: t.message ?: "Unknown error")
                 }
+        }
+    }
+
+    private fun checkUserEligibility() {
+        val user = userRepository.getCurrentUserRecord()
+        Log.d(TAG, user.toString())
+
+        if (user?.role == UserRole.PARTNER && (user.locationLat.isNullOrBlank() || user.locationLng.isNullOrBlank())) {
+            // Prompt the partner to set location
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.location)
+                .setMessage(getString(R.string.as_a_partner_you_must_set_a_primary_location))
+                .setPositiveButton(R.string.profile) { _, _ ->
+                    navController.navigate(R.id.action_global_profileFragment)
+                }
+                .setCancelable(false)
+                .show()
+        }
+        else if (user?.role == UserRole.CUSTOMER && user.phoneNumber.isNullOrBlank()) {
+            // Prompt the customer to set phone number
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.whatsapp_number)
+                .setMessage(getString(R.string.you_have_to_set_a_phone_number_so_we_can_contact_you))
+                .setPositiveButton(R.string.profile) { _, _ ->
+                    navController.navigate(R.id.action_global_profileFragment)
+                }
+                .setCancelable(false)
+                .show()
         }
     }
 
@@ -464,63 +509,52 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         )
     }
 
-    private fun getUserData() {
-        lifecycleScope.launch {
-            /* Get user profile */
-            getOrCreateUserUseCase(UserRole.CUSTOMER).onSuccess { user ->
-                Log.d(TAG, "User: ${user.userId}")
-                user.userId?.let {
-                    Log.d(
-                        TAG,
-                        "UserRepository record: ${userRepository.getRecordByUserId(it)}"
-                    )
+    private suspend fun getUserData() {
+        /* Get user profile */
+        getOrCreateUserUseCase(UserRole.CUSTOMER).onSuccess { user ->
+            Log.d(TAG, "User: ${user.userId}")
+            user.userId?.let {
+                Log.d(
+                    TAG,
+                    "UserRepository record: ${userRepository.getRecordByUserId(it)}"
+                )
+            }
+        }.onFailure { exception ->
+            when (exception) {
+                is GetOrCreateUserUseCase.UserNotAuthenticatedException -> {
+                    // Handle unauthenticated user
+                    Log.e(TAG, "User not authenticated")
                 }
-            }.onFailure { exception ->
-                when (exception) {
-                    is GetOrCreateUserUseCase.UserNotAuthenticatedException -> {
-                        // Handle unauthenticated user
-                        Log.e(TAG, "User not authenticated")
-                    }
 
-                    is GetOrCreateUserUseCase.UserDataParseException,
-                    is GetOrCreateUserUseCase.FirestoreOperationException -> {
-                        // Handle specific exceptions
-                        Log.e(TAG, "Error: ${exception.message}")
-                    }
+                is GetOrCreateUserUseCase.UserDataParseException,
+                is GetOrCreateUserUseCase.FirestoreOperationException -> {
+                    // Handle specific exceptions
+                    Log.e(TAG, "Error: ${exception.message}")
+                }
 
-                    else -> {
-                        // Handle generic errors
-                        Log.e(TAG, "Unexpected error: ${exception.message}")
-                    }
+                else -> {
+                    // Handle generic errors
+                    Log.e(TAG, "Unexpected error: ${exception.message}")
                 }
             }
+        }
 
-            /* Get user identity */
-            getOrCreateUserIdentityUseCase().onSuccess { userIdentity ->
-                Log.d(TAG, "User: ${userIdentity.userId}")
-                userIdentity.userId?.let {
-                    Log.d(
-                        TAG,
-                        "UserIdentityRepository record: ${
-                            userIdentityRepository.getRecordByUserId(
-                                it
-                            )
-                        }"
-                    )
-                }
-            }.onFailure { exception ->
-                // Handle generic errors
-                Log.e(TAG, "Unexpected error: ${exception.message}")
+        /* Get user identity */
+        getOrCreateUserIdentityUseCase().onSuccess { userIdentity ->
+            Log.d(TAG, "User: ${userIdentity.userId}")
+            userIdentity.userId?.let {
+                Log.d(
+                    TAG,
+                    "UserIdentityRepository record: ${
+                        userIdentityRepository.getRecordByUserId(
+                            it
+                        )
+                    }"
+                )
             }
-
-            /* Update navigation tree */
-            updateNavigationTree()
-
-            viewModel.observeDataByRole()
-
-            /* Permission */
-            if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
-            else showNotification()
+        }.onFailure { exception ->
+            // Handle generic errors
+            Log.e(TAG, "Unexpected error: ${exception.message}")
         }
     }
 
