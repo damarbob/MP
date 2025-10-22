@@ -231,31 +231,39 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
     }
 
+    private val a by lazy {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.location)
+            .setMessage(getString(R.string.as_a_partner_you_must_set_a_primary_location))
+            .setPositiveButton(R.string.profile) { _, _ ->
+                navController.navigate(R.id.action_global_profileFragment)
+            }
+            .setCancelable(false)
+            .create()
+    }
+
+    private val b by lazy {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.whatsapp_number)
+            .setMessage(getString(R.string.you_have_to_set_a_phone_number_so_we_can_contact_you))
+            .setPositiveButton(R.string.profile) { _, _ ->
+                navController.navigate(R.id.action_global_profileFragment)
+            }
+            .setCancelable(false)
+            .create()
+    }
+
     private fun checkUserEligibility() {
         val user = userRepository.getCurrentUserRecord()
         Log.d(TAG, user.toString())
 
         if (user?.role == UserRole.PARTNER && (user.locationLat.isNullOrBlank() || user.locationLng.isNullOrBlank())) {
             // Prompt the partner to set location
-            MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.location)
-                .setMessage(getString(R.string.as_a_partner_you_must_set_a_primary_location))
-                .setPositiveButton(R.string.profile) { _, _ ->
-                    navController.navigate(R.id.action_global_profileFragment)
-                }
-                .setCancelable(false)
-                .show()
+            if (!a.isShowing && !b.isShowing) a.show()
         }
         else if (user?.role == UserRole.CUSTOMER && user.phoneNumber.isNullOrBlank()) {
             // Prompt the customer to set phone number
-            MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.whatsapp_number)
-                .setMessage(getString(R.string.you_have_to_set_a_phone_number_so_we_can_contact_you))
-                .setPositiveButton(R.string.profile) { _, _ ->
-                    navController.navigate(R.id.action_global_profileFragment)
-                }
-                .setCancelable(false)
-                .show()
+            if (!a.isShowing && !b.isShowing) b.show()
         }
     }
 
@@ -330,13 +338,17 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         GravityCompat.START
                     )
                 }
-
                 else -> {
                     drawerLayout.setDrawerLockMode(
                         DrawerLayout.LOCK_MODE_UNLOCKED,
                         GravityCompat.START
                     )
                 }
+            }
+
+            // Check user eligibility anywhere except profile fragment
+            if (destination.id != R.id.profileFragment) {
+                checkUserEligibility()
             }
 
             // Profile menu visibility
