@@ -94,7 +94,10 @@ class ProfileFragment : Fragment() {
         /* Observers */
         // Location observer
         viewModel.selectedPrimaryLocationPoint.observe(viewLifecycleOwner) { point ->
-            point?.let {  selectedPrimaryLocationPoint = it }
+            point?.let {
+                selectedPrimaryLocationPoint = it
+                binding.editProfileButtonSelectPrimaryLocationButton.setText(getString(R.string.re_select_a_location))
+            }
             if (point == null) return@observe
         }
         viewModel.updateProfileResult.observe(viewLifecycleOwner) { result ->
