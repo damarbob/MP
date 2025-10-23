@@ -241,7 +241,7 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
         if (selectedLocationPoint == null && userLocationPoint != null) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.location))
-                .setMessage("You are not selecting a location. Do you want to use your current location?")
+                .setMessage(getString(R.string.you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead))
                 .setPositiveButton(getString(R.string.okay)) { _, _ ->
 
                     // Set selected location to user location

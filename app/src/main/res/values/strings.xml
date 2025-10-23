@@ -217,4 +217,6 @@
 
     <string name="as_a_partner_you_must_set_a_primary_location">As a partner, you must set a primary location.</string>
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">You have to set a phone number so we can contact you.</string>
+    <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">You have not selected a location. Would you like to use your current location instead?</string>
+    <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Unable to get your location. Please try again with location permission enabled.</string>
 </resources>

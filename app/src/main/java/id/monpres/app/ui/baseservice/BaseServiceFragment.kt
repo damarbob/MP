@@ -83,10 +83,23 @@ abstract class BaseServiceFragment : Fragment() {
                 val selectedLocation =
                     data.getStringExtra(MapsActivityExtraData.SELECTED_LOCATION) ?: ""
                 val userLocation = data.getStringExtra(MapsActivityExtraData.USER_LOCATION) ?: ""
-                Log.d(TAG, "User's location $userLocation")
-                Log.d(TAG, "Selected location $selectedLocation")
-                getViewModel().setSelectedLocationPoint(Point.fromJson(selectedLocation))
-                getViewModel().setUserLocationPoint(Point.fromJson(userLocation))
+
+                if (selectedLocation.isBlank() || userLocation.isBlank()) {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(getString(R.string.location))
+                        .setMessage(getString(R.string.unable_to_get_your_location_please_try_again_with_location_permission_enabled))
+                        .setPositiveButton(getString(R.string.close)) { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .show()
+                    return@let
+                }
+                else {
+                    Log.d(TAG, "User's location $userLocation")
+                    Log.d(TAG, "Selected location $selectedLocation")
+                    getViewModel().setSelectedLocationPoint(Point.fromJson(selectedLocation))
+                    getViewModel().setUserLocationPoint(Point.fromJson(userLocation))
+                }
             }
         }
     }
