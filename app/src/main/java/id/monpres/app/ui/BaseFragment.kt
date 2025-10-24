@@ -1,10 +1,14 @@
 package id.monpres.app.ui
 
+import android.animation.ObjectAnimator
+import android.view.View
 import android.widget.Toast
+import androidx.core.animation.doOnEnd
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import id.monpres.app.R
 import id.monpres.app.utils.UiState
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +19,8 @@ abstract class BaseFragment : Fragment() {
 
     // Counter for active loading operations
     private val activeLoaders = AtomicInteger(0)
+
+    abstract val progressIndicator: LinearProgressIndicator
 
     /**
      * Shows or hides the loading indicator based on the activeLoaders count.
@@ -189,6 +195,32 @@ abstract class BaseFragment : Fragment() {
         }
     }
 
-    abstract fun showLoading(isLoading: Boolean)
+    private fun showLoading(isLoading: Boolean) {
+        if (isLoading) {
+//            progressIndicator.show()
+            slideDown(progressIndicator)
+        } else {
+//            progressIndicator.hide()
+            slideUp(progressIndicator)
+        }
+    }
+
+    private fun slideUp(view: View) {
+        ObjectAnimator.ofFloat(view, "translationY", view.height.toFloat(), 0f).apply {
+            duration = 150
+            start()
+            doOnEnd {
+                view.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun slideDown(view: View) {
+        view.visibility = View.VISIBLE
+        ObjectAnimator.ofFloat(view, "translationY", 0f, view.height.toFloat()).apply {
+            duration = 150
+            start()
+        }
+    }
 }
 

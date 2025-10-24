@@ -82,11 +82,17 @@ class ProfileFragment : Fragment() {
     ): View {
         binding = FragmentEditProfileBinding.inflate(inflater, container, false)
 
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
         ViewCompat.setOnApplyWindowInsetsListener(binding.editProfileNestedScrollView) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
-            windowInsets
+            WindowInsetsCompat.CONSUMED
         }
 
         setupUI()
@@ -101,6 +107,9 @@ class ProfileFragment : Fragment() {
             if (point == null) return@observe
         }
         viewModel.updateProfileResult.observe(viewLifecycleOwner) { result ->
+            // Hide loading indicator
+            binding.editProfileProgressIndicator.visibility = View.GONE
+
             result?.onSuccess {
                 Toast.makeText(
                     requireContext(),
@@ -118,6 +127,9 @@ class ProfileFragment : Fragment() {
 
         /* Listeners */
         binding.editProfileButton.setOnClickListener {
+            // show loading indicator
+            binding.editProfileProgressIndicator.visibility = View.VISIBLE
+
             lifecycleScope.launch {
                 viewModel.updateProfileNew(
                     binding.editProfileInputEditFullName.text.toString(),
@@ -177,6 +189,9 @@ class ProfileFragment : Fragment() {
         if (userProfile?.locationLat != null && userProfile?.locationLng != null) {
             binding.editProfileButtonSelectPrimaryLocationButton.setText(getString(R.string.re_select_a_location))
         }
+
+        // Hide loading indicator
+        binding.editProfileProgressIndicator.visibility = View.GONE
 
         // Load initial avatar
         Glide

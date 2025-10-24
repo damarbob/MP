@@ -15,8 +15,7 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:isScrollContainer="true"
-        android:overScrollMode="always"
-        app:layout_dodgeInsetEdges="top">
+        android:overScrollMode="always">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

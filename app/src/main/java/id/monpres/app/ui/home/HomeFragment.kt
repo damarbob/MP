@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.HeroCarouselStrategy
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
@@ -130,11 +131,6 @@ class HomeFragment : BaseFragment() {
         }
     }
 
-    override fun showLoading(isLoading: Boolean) {
-        binding.fragmentHomeProgressIndicator.visibility =
-            if (isLoading) View.VISIBLE else View.GONE
-    }
-
     private fun setupServiceRecyclerView() {
         // Create adapter with current state
         serviceAdapter = ServiceAdapter(MainApplication.services)
@@ -240,4 +236,7 @@ class HomeFragment : BaseFragment() {
                 if (it.isEmpty()) View.GONE else View.VISIBLE
         }
     }
+
+    override val progressIndicator: LinearProgressIndicator
+        get() = binding.fragmentHomeProgressIndicator
 }

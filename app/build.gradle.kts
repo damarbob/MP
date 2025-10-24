@@ -110,6 +110,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.messaging.directboot)
 
     // Credential Manager libraries
     implementation(libs.androidx.credentials)

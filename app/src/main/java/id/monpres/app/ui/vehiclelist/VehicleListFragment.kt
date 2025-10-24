@@ -16,6 +16,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
@@ -165,11 +166,6 @@ class VehicleListFragment : BaseFragment() {
         }
     }
 
-    override fun showLoading(isLoading: Boolean) {
-        binding.fragmentListVehicleProgressIndicator.visibility =
-            if (isLoading) View.VISIBLE else View.GONE
-    }
-
     private val actionModeCallback: ActionMode.Callback =
         object : ActionMode.Callback {
             override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
@@ -298,4 +294,7 @@ class VehicleListFragment : BaseFragment() {
         super.onDestroyView()
         actionMode?.finish() // Clean up CAB
     }
+
+    override val progressIndicator: LinearProgressIndicator
+        get() = binding.fragmentListVehicleProgressIndicator
 }

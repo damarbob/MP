@@ -14,8 +14,7 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:isScrollContainer="true"
-        android:overScrollMode="always"
-        app:layout_dodgeInsetEdges="top">
+        android:overScrollMode="always">
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -8,21 +8,28 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.HeroCarouselStrategy
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainViewModel
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentPartnerHomeBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
+import id.monpres.app.model.OrderService
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
 import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -45,11 +52,10 @@ class PartnerHomeFragment : BaseFragment() {
 
     private lateinit var orderServiceAdapter: OrderServiceAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private var orderServices: List<OrderService> = emptyList()
+    private var ongoingOrders: List<OrderService> = emptyList()
+    private var completedOrders: List<OrderService> = emptyList()
 
-        // TODO: Use the ViewModel
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,7 +76,7 @@ class PartnerHomeFragment : BaseFragment() {
         setupOrderServiceRecyclerView()
 
         /* Observers */
-        setupOrderServiceObservers()
+        setupObservers()
 
         return binding.root
     }
@@ -78,6 +84,17 @@ class PartnerHomeFragment : BaseFragment() {
     private fun setupUI() {
         /* Initialize UI */
         binding.fragmentPartnerHomeProgressIndicator.visibility = View.GONE
+
+        binding.fragmentPartnerHomeChipGroupOrderStatus.isSingleSelection = true
+
+        // This listener now only has one job: update the state in the ViewModel.
+        binding.fragmentPartnerHomeChipGroupOrderStatus.setOnCheckedStateChangeListener { group, _ ->
+            viewModel.setSelectedChipId(group.checkedChipId)
+        }
+
+        binding.fragmentPartnerHomeButtonSeeAllOrderService.setOnClickListener {
+            findNavController().navigate(PartnerHomeFragmentDirections.actionPartnerHomeFragmentToOrderServiceListFragment())
+        }
     }
 
     private fun setupHeroCarousel() {
@@ -102,7 +119,7 @@ class PartnerHomeFragment : BaseFragment() {
         carousel.layoutManager = CarouselLayoutManager(HeroCarouselStrategy())
     }
 
-    fun setupOrderServiceRecyclerView() {
+    private fun setupOrderServiceRecyclerView() {
         orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService ->
             when (orderService.status) {
                 in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
@@ -128,16 +145,66 @@ class PartnerHomeFragment : BaseFragment() {
         }
     }
 
-    fun setupOrderServiceObservers() {
-        observeUiState(mainViewModel.partnerOrderServicesState) {
-            orderServiceAdapter.submitList(it.take(5))
+    private fun setupObservers() {
+        // This observer reacts to the list of orders changing
+        observeUiState(mainViewModel.partnerOrderServicesState) { serviceOrders ->
+            this.orderServices = serviceOrders
+            // Re-group the orders whenever the main list changes
+            ongoingOrders =
+                serviceOrders.filter { it.status?.type == OrderStatusType.OPEN || it.status?.type == OrderStatusType.IN_PROGRESS }
+            completedOrders = serviceOrders.filter { it.status == OrderStatus.COMPLETED }
+
+            // Set the default filter, but only if one isn't already set (e.g. from screen rotation)
+            if (viewModel.selectedChipId.value == null) {
+                val defaultChipId = if (ongoingOrders.isNotEmpty()) {
+                    R.id.fragmentPartnerHomeChipOrderStatusOngoing
+                } else {
+                    View.NO_ID // Special value for no chip checked
+                }
+                viewModel.setSelectedChipId(defaultChipId)
+            }
 
             binding.fragmentPartnerHomeButtonSeeAllOrderService.visibility =
-                if (it.isEmpty()) View.GONE else View.VISIBLE
+                if (serviceOrders.isEmpty()) View.GONE else View.VISIBLE
+        }
+
+        // This observer reacts to the selected chip changing and updates the UI accordingly.
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedChipId.collect { chipId ->
+                    // Programmatically check the chip. This won't re-trigger the listener.
+                    binding.fragmentPartnerHomeChipGroupOrderStatus.check(chipId ?: View.NO_ID)
+
+                    // Submit the correct list to the adapter based on the selected chip
+                    val listToSubmit = when (chipId) {
+                        R.id.fragmentPartnerHomeChipOrderStatusOngoing ->
+                            ongoingOrders.sortedByDescending { it.createdAt }
+                        R.id.fragmentPartnerHomeChipOrderStatusCompleted ->
+                            completedOrders.take(5).sortedByDescending { it.updatedAt }
+                        else ->
+                            orderServices.take(5).sortedByDescending { it.updatedAt }
+                    }
+                    orderServiceAdapter.submitList(listToSubmit)
+                    toggleEmptyState(listToSubmit.isEmpty())
+                }
+            }
         }
     }
 
-    override fun showLoading(isLoading: Boolean) {
-        binding.fragmentPartnerHomeProgressIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+    private fun toggleEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            binding.apply {
+                fragmentPartnerHomeLinearLayoutEmptyState.visibility = View.VISIBLE
+                fragmentPartnerHomeRecyclerViewOrderService.visibility = View.GONE
+            }
+        } else {
+            binding.apply {
+                fragmentPartnerHomeLinearLayoutEmptyState.visibility = View.GONE
+                fragmentPartnerHomeRecyclerViewOrderService.visibility = View.VISIBLE
+            }
+        }
     }
+
+    override val progressIndicator: LinearProgressIndicator
+        get() = binding.fragmentPartnerHomeProgressIndicator
 }

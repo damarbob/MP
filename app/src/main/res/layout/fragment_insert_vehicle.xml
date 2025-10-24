@@ -56,6 +56,7 @@
 
                 <!-- Name -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -65,11 +66,13 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/input_field_min_height" />
+                        android:minHeight="@dimen/input_field_min_height"
+                        android:inputType="text"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Registration Number -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -79,11 +82,13 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/input_field_min_height" />
+                        android:minHeight="@dimen/input_field_min_height"
+                        android:inputType="textCapCharacters"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- License Plate Number -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -93,7 +98,8 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/input_field_min_height" />
+                        android:minHeight="@dimen/input_field_min_height"
+                        android:inputType="textCapCharacters"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Type -->
@@ -115,6 +121,7 @@
 
                 <!-- Production Year -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleYear"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -124,11 +131,13 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/input_field_min_height" />
+                        android:minHeight="@dimen/input_field_min_height"
+                        android:inputType="number"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Engine Capacity -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleEngineCapacity"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -138,7 +147,8 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/input_field_min_height" />
+                        android:minHeight="@dimen/input_field_min_height"
+                        android:inputType="number"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Transmission -->
@@ -160,6 +170,7 @@
 
                 <!-- Seat -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleSeat"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -169,11 +180,13 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/input_field_min_height" />
+                        android:minHeight="@dimen/input_field_min_height"
+                        android:inputType="number"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Power Output -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:id="@+id/fragmentInsertVehicleTextInputLayoutVehiclePowerOutput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -183,7 +196,8 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/input_field_min_height" />
+                        android:minHeight="@dimen/input_field_min_height"
+                        android:inputType="number"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Wheel Drive -->

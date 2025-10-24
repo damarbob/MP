@@ -84,7 +84,6 @@ object OrderServiceNotification {
      * @param context Context
      * @param orderService The current order.
      */
-//    @RequiresApi(Build.VERSION_CODES.O)
     fun showOrUpdateNotification(
         context: Context,
         orderService: OrderService,
@@ -236,9 +235,9 @@ object OrderServiceNotification {
         ),
         ACCEPTED(
             OrderStatus.ACCEPTED,
-            R.string.notification_title_order_accepted,
-            R.string.notification_text_order_accepted,
-            R.string.notification_text_order_accepted_partner,
+            R.string.notification_title_accepted,
+            R.string.notification_text_accepted,
+            R.string.notification_text_accepted_partner,
             isProgressIndeterminate = true
         ),
         ON_THE_WAY(
@@ -252,16 +251,16 @@ object OrderServiceNotification {
         ),
         REPAIRING(
             OrderStatus.IN_PROGRESS,
-            R.string.notification_title_repairing,
-            R.string.notification_text_repairing,
-            R.string.notification_text_repairing_partner,
+            R.string.notification_title_in_progress,
+            R.string.notification_text_in_progress,
+            R.string.notification_text_in_progress_partner,
             isProgressIndeterminate = true,
         ),
         REPAIR_COMPLETED( // This might be a temporary state before final completion or payment
             OrderStatus.REPAIRED,
-            R.string.notification_title_repair_completed,
-            R.string.notification_text_repair_completed,
-            R.string.notification_text_repair_completed_partner,
+            R.string.notification_title_repaired,
+            R.string.notification_text_repaired,
+            R.string.notification_text_repaired_partner,
             progressValue = 100,
             progressTrackerIconResId = R.drawable.check_24px,
             largeIconResId = R.drawable.check_24px
@@ -275,17 +274,17 @@ object OrderServiceNotification {
         ),
         ORDER_COMPLETED(
             OrderStatus.COMPLETED,
-            R.string.notification_title_order_completed,
-            R.string.notification_text_order_completed,
-            R.string.notification_text_order_completed_partner,
+            R.string.notification_title_completed,
+            R.string.notification_text_completed,
+            R.string.notification_text_completed_partner,
             ongoing = false, // Consider making final notification not ongoing
             autoCancel = true  // Consider making it auto-cancel when clicked
         ),
         ORDER_CANCELLED( // Added a cancelled state
             OrderStatus.CANCELLED,
-            R.string.notification_title_order_cancelled,
-            R.string.notification_text_order_cancelled,
-            R.string.notification_text_order_cancelled_partner,
+            R.string.notification_title_cancelled,
+            R.string.notification_text_cancelled,
+            R.string.notification_text_cancelled_partner,
             ongoing = false,
             autoCancel = true
         );

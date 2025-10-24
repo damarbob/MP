@@ -12,6 +12,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
@@ -379,7 +380,6 @@ class EditVehicleFragment : BaseFragment() {
         }
     }
 
-    override fun showLoading(isLoading: Boolean) {
-        binding.fragmentEditVehicleProgressIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
-    }
+    override val progressIndicator: LinearProgressIndicator
+        get() = binding.fragmentEditVehicleProgressIndicator
 }

@@ -49,7 +49,7 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
     /* Resources */
     private val redMarkerBitmap: Bitmap by lazy {
         return@lazy BitmapFactory
-            .decodeResource(resources, R.drawable.red_marker)
+            .decodeResource(resources, R.drawable.mp_marker)
     }
 
     /* Variables */

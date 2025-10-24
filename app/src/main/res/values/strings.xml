@@ -151,20 +151,20 @@
     <!-- Notification -->
     <string name="notification_title_order_placed">Order Placed</string>
     <string name="notification_text_order_placed">Waiting partner…</string>
-    <string name="notification_title_order_accepted">Order Accepted</string>
-    <string name="notification_text_order_accepted">The partner is preparing the service</string>
-    <string name="notification_title_order_cancelled">Order Cancelled</string>
-    <string name="notification_text_order_cancelled">Your service order has been cancelled</string>
+    <string name="notification_title_accepted">Order Accepted</string>
+    <string name="notification_text_accepted">The partner is preparing the service</string>
+    <string name="notification_title_cancelled">Order Cancelled</string>
+    <string name="notification_text_cancelled">Your service order has been cancelled</string>
     <string name="notification_title_on_the_way">On the way</string>
     <string name="notification_text_on_the_way">The partner is on the way</string>
-    <string name="notification_title_repairing">Repairing</string>
-    <string name="notification_text_repairing">Your vehicle is being repaired</string>
-    <string name="notification_title_repair_completed">Repair Completed</string>
-    <string name="notification_text_repair_completed">Look at your vehicle</string>
+    <string name="notification_title_in_progress">Repairing</string>
+    <string name="notification_text_in_progress">Your vehicle is being repaired</string>
+    <string name="notification_title_repaired">Repair Completed</string>
+    <string name="notification_text_repaired">Look at your vehicle</string>
     <string name="notification_title_waiting_for_payment">Waiting For Payment</string>
     <string name="notification_text_waiting_for_payment">Don\'t forget to pay</string>
-    <string name="notification_title_order_completed">Order Completed</string>
-    <string name="notification_text_order_completed">Thank you for using our service!</string>
+    <string name="notification_title_completed">Order Completed</string>
+    <string name="notification_text_completed">Thank you for using our service!</string>
     <string name="order_status_order_placed">Order placed</string>
     <string name="order_status_processing">Processing</string>
     <string name="order_status_accepted">Accepted</string>
@@ -179,14 +179,15 @@
     <string name="order_status_returned">Returned</string>
     <string name="order_status_failed">Failed</string>
     <string name="order_status_delayed">Delayed</string>
+    <string name="notification_title_order_placed_partner">New Order!</string>
     <string name="notification_text_order_placed_partner">Please respond it immediately!</string>
-    <string name="notification_text_order_accepted_partner">Great! Now prepare the order</string>
+    <string name="notification_text_accepted_partner">Great! Now prepare the order</string>
     <string name="notification_text_on_the_way_partner">Be careful on the way</string>
-    <string name="notification_text_repairing_partner">Keep up the good work</string>
-    <string name="notification_text_repair_completed_partner">Prepare the payment bill</string>
+    <string name="notification_text_in_progress_partner">Keep up the good work</string>
+    <string name="notification_text_repaired_partner">Prepare the payment bill</string>
     <string name="notification_text_waiting_for_payment_partner">Please be patient</string>
-    <string name="notification_text_order_completed_partner">Yes! The order is complete</string>
-    <string name="notification_text_order_cancelled_partner">Well, the order is cancelled</string>
+    <string name="notification_text_completed_partner">Yes! The order is complete</string>
+    <string name="notification_text_cancelled_partner">Well, the order is cancelled</string>
 
     <string name="whatsapp_number">WhatsApp Number</string>
     <string name="primary_location">Primary Location</string>
@@ -219,4 +220,9 @@
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">You have to set a phone number so we can contact you.</string>
     <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">You have not selected a location. Would you like to use your current location instead?</string>
     <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Unable to get your location. Please try again with location permission enabled.</string>
+    <string name="haven_t_arrived_at_the_location_yet">You haven\'t arrived at the location yet, still about %1$s m to go</string>
+    <string name="ongoing">Ongoing</string>
+    <string name="filter_ongoing">Filter ongoing</string>
+    <string name="filter_completed">Filter completed</string>
+    <string name="filter_cancelled">Filter cancelled</string>
 </resources>

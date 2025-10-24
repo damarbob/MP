@@ -8,10 +8,10 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
@@ -379,7 +379,6 @@ class InsertVehicleFragment : BaseFragment() {
         }
     }
 
-    override fun showLoading(isLoading: Boolean) {
-        binding.fragmentInsertVehicleProgressIndicator.isVisible = isLoading
-    }
+    override val progressIndicator: LinearProgressIndicator
+        get() = binding.fragmentInsertVehicleProgressIndicator
 }

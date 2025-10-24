@@ -6,11 +6,12 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.qualifiers.ApplicationContext
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
-import kotlinx.coroutines.tasks.await // Make sure to add 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services' dependency
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class GetOrCreateUserUseCase @Inject constructor(
@@ -42,6 +43,20 @@ class GetOrCreateUserUseCase @Inject constructor(
             val userDocRef = usersCollection.document(firebaseUser.uid)
             val documentSnapshot = userDocRef.get().await()
 
+            lateinit var token: String
+
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    // Handle the error
+                    Log.e(TAG, "Fetching FCM registration token failed: ${task.exception}")
+                    return@addOnCompleteListener
+                }
+
+                // Get the FCM token
+                token = task.result
+                Log.d(TAG, "FCM Token: $token")
+            }.await()
+
             if (documentSnapshot.exists()) {
                 Log.d(TAG, "User exists in Firestore for UID: ${firebaseUser.uid}")
 
@@ -50,20 +65,26 @@ class GetOrCreateUserUseCase @Inject constructor(
                 if (existingUser != null) {
                     val currentDisplayName = firebaseUser.displayName ?: "User"
                     val currentPhoneNumber = firebaseUser.phoneNumber ?: ""
+                    val currentFcmToken = existingUser.fcmTokens
 
                     // Check if the user's profile has changed
                     if ((existingUser.displayName != currentDisplayName && currentDisplayName.isNotEmpty()) ||
-                        (existingUser.phoneNumber != currentPhoneNumber && currentPhoneNumber.isNotEmpty())) {
+                        (existingUser.phoneNumber != currentPhoneNumber && currentPhoneNumber.isNotEmpty()) ||
+                        (currentFcmToken?.isNotEmpty() == true && !currentFcmToken.contains(token)) ||
+                        (currentFcmToken == null) || (currentFcmToken.isEmpty())
+                    ) {
                         Log.d(TAG, "User profile has changed for UID: ${firebaseUser.uid}")
 
                         // Create updated user data
                         val updatedUser = existingUser.copy(
                             displayName = currentDisplayName,
                             phoneNumber = currentPhoneNumber,
-                            updatedAt = Timestamp.now().toDate().time.toDouble()
+                            updatedAt = Timestamp.now().toDate().time.toDouble(),
+                            fcmTokens = currentFcmToken?.plus(token) ?: listOf(token)
                         )
 
-                        userDocRef.set(updatedUser, SetOptions.merge()).await() // Update Firestore with the new data
+                        userDocRef.set(updatedUser, SetOptions.merge())
+                            .await() // Update Firestore with the new data
                         userRepository.addRecord(updatedUser) // Create record in local repository after successful Firestore update
                         Result.success(updatedUser)
                     } else {
@@ -84,7 +105,8 @@ class GetOrCreateUserUseCase @Inject constructor(
                     role = role,
                     phoneNumber = firebaseUser.phoneNumber ?: "",
                     createdAt = Timestamp.now().toDate().time.toDouble(),
-                    updatedAt = Timestamp.now().toDate().time.toDouble()
+                    updatedAt = Timestamp.now().toDate().time.toDouble(),
+                    fcmTokens = listOf(token)
                 )
                 usersCollection.document(firebaseUser.uid).set(newUser).await()
                 userRepository.addRecord(newUser) // Create record in local repository after successful Firestore creation

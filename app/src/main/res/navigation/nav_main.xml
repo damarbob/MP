@@ -194,6 +194,9 @@
         <action
             android:id="@+id/action_partnerHomeFragment_to_orderServiceDetailFragment"
             app:destination="@id/orderServiceDetailFragment" />
+        <action
+            android:id="@+id/action_partnerHomeFragment_to_orderServiceListFragment"
+            app:destination="@id/orderServiceListFragment" />
     </fragment>
     <fragment
         android:id="@+id/partnerSelectionFragment"

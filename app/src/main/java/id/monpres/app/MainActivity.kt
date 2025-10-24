@@ -217,6 +217,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         setupUIListeners()
         setupNavControllerListeners()
 
+        // Handle notification click from a cold start
+        handleNotificationIntent(intent)
+
         /* Testing. TODO: Remove on production */
         getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
             result.onSuccess { orders ->
@@ -260,8 +263,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         if (user?.role == UserRole.PARTNER && (user.locationLat.isNullOrBlank() || user.locationLng.isNullOrBlank())) {
             // Prompt the partner to set location
             if (!a.isShowing && !b.isShowing) a.show()
-        }
-        else if (user?.role == UserRole.CUSTOMER && user.phoneNumber.isNullOrBlank()) {
+        } else if (user?.role == UserRole.CUSTOMER && user.phoneNumber.isNullOrBlank()) {
             // Prompt the customer to set phone number
             if (!a.isShowing && !b.isShowing) b.show()
         }
@@ -285,10 +287,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
 
         setupAppBar() // Update app bar is required to reflect navigation tree changes
-
-        // Handle notification click
-        handleIntentExtras(intent)
-
     }
 
     private fun setupAppBar() {
@@ -338,6 +336,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         GravityCompat.START
                     )
                 }
+
                 else -> {
                     drawerLayout.setDrawerLockMode(
                         DrawerLayout.LOCK_MODE_UNLOCKED,
@@ -363,8 +362,11 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private fun setupObservers() {
         // Observe sign-out event
         lifecycleScope.launch {
-            viewModel.signOutEvent.collect {
-                clearCredentialsAndNavigate()
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.signOutEvent
+                    .collect {
+                        clearCredentialsAndNavigate()
+                    }
             }
         }
     }
@@ -580,7 +582,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                                 is UiState.Success -> {
                                     Log.d(TAG, "Partner order services: ${state.data}")
                                     serviceOrders = state.data
-                                    processNotification(serviceOrders)
+//                                    processNotification(serviceOrders)
                                 }
 
                                 else -> {}
@@ -594,7 +596,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                                 is UiState.Success -> {
                                     Log.d(TAG, "User order services: ${state.data}")
                                     serviceOrders = state.data
-                                    processNotification(serviceOrders)
+//                                    processNotification(serviceOrders)
                                 }
 
                                 else -> {}
@@ -714,10 +716,12 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             cm.clearCredentialState(ClearCredentialStateRequest())
         }
 
-        serviceOrders.forEach {
-            OrderServiceNotification.cancelNotification(this, it.id!!)
+        if (::serviceOrders.isInitialized) {
+            serviceOrders.forEach {
+                OrderServiceNotification.cancelNotification(this, it.id!!)
+            }
+            serviceOrders = listOf()
         }
-        serviceOrders = listOf()
 
         // 2. Navigate immediately (don't wait for credential clearing)
         navigateToLogin()
@@ -814,13 +818,13 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent) // Update the activity's intent
-        handleIntentExtras(intent)
+        handleNotificationIntent(intent)
         if (launchedFromOrderId != null) {
             viewModel.setOpenedFromNotification(launchedFromOrderId)
         }
     }
 
-    private fun handleIntentExtras(intent: Intent) {
+    fun handleNotificationIntent(intent: Intent) {
         launchedFromOrderId = intent.getStringExtra(OrderServiceNotification.ORDER_ID_KEY)
         if (launchedFromOrderId != null) {
             Log.d(

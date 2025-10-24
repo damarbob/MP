@@ -44,6 +44,7 @@ import com.google.android.gms.location.SettingsClient
 import com.google.android.gms.tasks.Task
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialFade
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.firebase.Timestamp
@@ -73,6 +74,7 @@ import id.monpres.app.usecase.GoogleMapsIntentUseCase
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
 import java.text.DateFormat
+import java.text.NumberFormat
 import java.util.concurrent.TimeUnit
 
 
@@ -108,7 +110,7 @@ class ServiceProcessFragment : BaseFragment() {
     private var currentLatitude: Double = 0.0
     private var currentLongitude: Double = 0.0
     private var currentAccuracy: Float = 0f
-    private var currentDistance: Float = 0f
+    private var aerialDistanceToTargetInMeters: Float = 40000000f
 
     // Permission request launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -177,6 +179,7 @@ class ServiceProcessFragment : BaseFragment() {
             observeUiStateOneShot(
                 viewModel.updateOrderService(
                     orderService.copy(
+                        status = if (orderService.status?.serviceNextProcess() == OrderStatus.WAITING_FOR_PAYMENT) OrderStatus.WAITING_FOR_PAYMENT else orderService.status,
                         updatedAt = Timestamp.now(),
                         orderItems = orderItems,
                         price = price
@@ -234,7 +237,7 @@ class ServiceProcessFragment : BaseFragment() {
                     showActionButton(orderService.status in OrderStatus.entries.filter { it.type != OrderStatusType.CLOSED })
                     showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
 
-                    if (orderService.status == OrderStatus.ON_THE_WAY) {
+                    if (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED) {
                         // Check and request permissions, then get location
                         checkLocationPermission()
                     } else {
@@ -270,11 +273,13 @@ class ServiceProcessFragment : BaseFragment() {
             }
             TransitionManager.beginDelayedTransition(root, materialFade)
 
+            // Order Item
             fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
                 if (orderService.orderItems.isNullOrEmpty()) View.GONE else View.VISIBLE
             fragmentServiceProcessButtonEditOrderItem.visibility =
                 if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER) View.VISIBLE else View.GONE
 
+            // Title and contents
             fragmentServiceProcessTextViewTitle.text =
                 orderService.status?.getLabel(requireContext())?.capitalizeWords() ?: "-"
             fragmentServiceProcessTextViewSubtitle.text =
@@ -300,6 +305,9 @@ class ServiceProcessFragment : BaseFragment() {
             // Set order items list
             orderItemAdapter.submitList(orderItems?.toList())
 
+            // Current distance
+            fragmentServiceProcessTextViewCurrentDistance.visibility = if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
+
             // Mapbox
             fragmentServiceProcessMapView.mapboxMap.setCamera(
                 CameraOptions.Builder()
@@ -314,7 +322,7 @@ class ServiceProcessFragment : BaseFragment() {
                     .bearing(0.0)
                     .build()
             )
-            val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.red_marker)
+            val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.mp_marker)
             val desiredWidth = 60 // in pixels
             val desiredHeight = 96 // in pixels
 
@@ -327,8 +335,12 @@ class ServiceProcessFragment : BaseFragment() {
             // Set options for the resulting symbol layer.
             val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
                 // Define a geographic coordinate.
-                .withPoint(Point.fromLngLat(orderService.selectedLocationLng ?: 0.0,
-                    orderService.selectedLocationLat ?: 0.0))
+                .withPoint(
+                    Point.fromLngLat(
+                        orderService.selectedLocationLng ?: 0.0,
+                        orderService.selectedLocationLat ?: 0.0
+                    )
+                )
                 // Specify the bitmap you assigned to the point annotation
                 // The bitmap will be added to map style automatically.
                 .withIconImage(resizedBitmap)
@@ -388,13 +400,21 @@ class ServiceProcessFragment : BaseFragment() {
             object : OnSlideCompleteListener {
                 override fun onSlideComplete(view: SlideToActView) {
 
-                    if (orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && currentDistance > MINIMUM_DISTANCE_TO_START_SERVICE) {
-                        Toast.makeText(
-                            requireContext(),
-                            "You haven't arrived at the location yet, still about $currentDistance m to go.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        view.setCompleted(completed = false, withAnimation = true)
+                    if (orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE) {
+                        if (hasLocationPermission()) {
+                            val currentDistance = NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)
+                            Toast.makeText(
+                                requireContext(),
+                                getString(
+                                    R.string.haven_t_arrived_at_the_location_yet,
+                                    currentDistance
+                                ),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            view.setCompleted(completed = false, withAnimation = true)
+                        } else {
+                            requestLocationPermission()
+                        }
                         return
                     }
 
@@ -404,6 +424,7 @@ class ServiceProcessFragment : BaseFragment() {
                                 orderItems = orderItems?.toTypedArray(), orderService = orderService
                             )
                         )
+                        return
                     }
 
                     observeUiStateOneShot(
@@ -423,7 +444,8 @@ class ServiceProcessFragment : BaseFragment() {
 
         binding.fragmentServiceProcessButtonNavigation.setOnClickListener {
             if (orderService.selectedLocationLat != null && orderService.selectedLocationLng != null) {
-                googleMapsIntentUseCase(requireContext(),
+                googleMapsIntentUseCase(
+                    requireContext(),
                     orderService.selectedLocationLat!!, orderService.selectedLocationLng!!
                 )
             }
@@ -445,7 +467,7 @@ class ServiceProcessFragment : BaseFragment() {
         }
         TransitionManager.beginDelayedTransition(binding.root, materialFade)
         val isButtonLocked =
-            orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && currentDistance > MINIMUM_DISTANCE_TO_START_SERVICE
+            orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE
         Log.d(TAG, "Is button locked: $isButtonLocked")
         binding.fragmentServiceProcessActButton.apply {
             visibility =
@@ -488,9 +510,9 @@ class ServiceProcessFragment : BaseFragment() {
         stopLocationUpdates()
     }
 
-    override fun showLoading(isLoading: Boolean) {
-        // Already handled by showCompleteStatus()
-    }
+//    override fun showLoading(isLoading: Boolean) {
+//        // Already handled by showCompleteStatus()
+//    }
 
     override fun onResume() {
         super.onResume()
@@ -616,7 +638,7 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private fun checkLocationSettings() {
-        if (!hasLocationPermission() || orderService.status != OrderStatus.ON_THE_WAY) {
+        if (!hasLocationPermission() || orderService.status != OrderStatus.ON_THE_WAY || orderService.status != OrderStatus.ORDER_PLACED) {
             return
         }
         val builder = LocationSettingsRequest.Builder()
@@ -671,7 +693,7 @@ class ServiceProcessFragment : BaseFragment() {
         currentLatitude = location.latitude
         currentLongitude = location.longitude
         currentAccuracy = location.accuracy
-        currentDistance = calculateAerialDistance(
+        aerialDistanceToTargetInMeters = calculateAerialDistance(
             currentLatitude,
             currentLongitude,
             orderService.selectedLocationLat!!,
@@ -680,12 +702,13 @@ class ServiceProcessFragment : BaseFragment() {
 
         Log.d(
             "Location",
-            "Latitude: $currentLatitude, Longitude: $currentLongitude, Accuracy: $currentAccuracy, Distance: $currentDistance"
+            "Latitude: $currentLatitude, Longitude: $currentLongitude, Accuracy: $currentAccuracy, Distance: $aerialDistanceToTargetInMeters"
         )
 
 
         // Update your UI with the new location here
         // For example: updateTextView("Lat: $latitude, Long: $longitude")
+        binding.fragmentServiceProcessTextViewCurrentDistance.text = "± ${NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)} m"
     }
 
     private fun handleLocationServicesDisabled() {
@@ -706,4 +729,7 @@ class ServiceProcessFragment : BaseFragment() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
         startActivity(intent)
     }
+
+    override val progressIndicator: LinearProgressIndicator
+        get() = binding.fragmentServiceProcessLinearProgressIndicator
 }

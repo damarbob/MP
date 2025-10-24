@@ -15,6 +15,7 @@ data class MontirPresisiUser(
     var address: String? = null, // The complete address of the user (required)
     var createdAt: Double? = null,
     var updatedAt: Double? = null,
+    var fcmTokens: List<String>? = null,
 ) : Parcelable {
     companion object {
         val COLLECTION = "users"

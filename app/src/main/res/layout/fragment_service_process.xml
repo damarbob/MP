@@ -8,6 +8,21 @@
     android:transitionGroup="true"
     tools:context=".ui.serviceprocess.ServiceProcessFragment">
 
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentServiceProcessLinearProgressIndicator"
+        style="@style/Widget.Material3.LinearProgressIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:paddingHorizontal="4dp"
+        app:hideAnimationBehavior="outward"
+        app:layout_insetEdge="top"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="2dp"
+        app:wavelength="40dp"
+        app:wavelengthIndeterminate="20dp" />
+
     <androidx.core.widget.NestedScrollView
         android:id="@+id/fragmentServiceProcessNestedScrollView"
         android:layout_width="match_parent"
@@ -15,7 +30,8 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:isScrollContainer="true"
-        android:overScrollMode="always">
+        android:overScrollMode="always"
+        app:layout_dodgeInsetEdges="top">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -57,7 +73,7 @@
                 app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessTextViewSubtitle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintWidth_max="@dimen/input_field_max_width"/>
+                app:layout_constraintWidth_max="@dimen/input_field_max_width" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/fragmentServiceProcessTextViewSubtitle"
@@ -69,7 +85,7 @@
                 app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessCardView"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintWidth_max="@dimen/input_field_max_width"/>
+                app:layout_constraintWidth_max="@dimen/input_field_max_width" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/fragmentServiceProcessCardView"
@@ -77,11 +93,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="16dp"
-                app:strokeWidth="0dp"
                 app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessLinearLayoutDetailContainer"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintWidth_max="@dimen/input_field_max_width">
+                app:layout_constraintWidth_max="@dimen/input_field_max_width"
+                app:strokeWidth="0dp">
 
                 <com.mapbox.maps.MapView
                     android:id="@+id/fragmentServiceProcessMapView"
@@ -89,15 +105,34 @@
                     android:layout_height="240dp"
                     android:background="@android:color/transparent" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/fragmentServiceProcessButtonNavigation"
-                    style="@style/Widget.Material3Expressive.Button.TonalButton"
-                    app:icon="@drawable/navigation_24px"
-                    android:text="@string/open_maps"
-                    android:layout_margin="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end|bottom"/>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fragmentServiceProcessButtonNavigation"
+                        style="@style/Widget.Material3Expressive.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentBottom="true"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/open_maps"
+                        app:icon="@drawable/navigation_24px" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/fragmentServiceProcessTextViewCurrentDistance"
+                        style="@style/Widget.App.Heading"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_above="@id/fragmentServiceProcessButtonNavigation"
+                        android:layout_alignParentEnd="true"
+                        android:layout_margin="8dp"
+                        android:background="@drawable/rounded_large_rectangle_background"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="6dp" />
+                </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout

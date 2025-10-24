@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.UserRole
@@ -65,9 +66,6 @@ class MainViewModel @Inject constructor(
     private val _partnerOrderServiceState = MutableStateFlow<UiState<OrderService>>(UiState.Loading)
     val partnerOrderServiceState: StateFlow<UiState<OrderService>> =
         _partnerOrderServiceState.asStateFlow()
-
-    private val _ongoingOrderServices = MutableStateFlow<List<OrderService>>(emptyList())
-    val ongoingOrderServices: StateFlow<List<OrderService>> = _ongoingOrderServices
 
     private val _userVehiclesState = MutableStateFlow<UiState<List<Vehicle>>>(UiState.Loading)
     val userVehiclesState: StateFlow<UiState<List<Vehicle>>> = _userVehiclesState.asStateFlow()
@@ -270,11 +268,39 @@ class MainViewModel @Inject constructor(
     }
 
     fun signOut() {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            performSignOut() // If no user, just sign out
+            return
+        }
+
+        // Get the current FCM token
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d(TAG, "Removing FCM token: $token for user: $userId")
+                userRepository.removeFcmToken(token, {
+                    performSignOut()
+                }, {
+                    performSignOut() // If error, just sign out
+                })
+            } else {
+                Log.w(
+                    TAG,
+                    "Could not get FCM token for removal, signing out anyway.",
+                    task.exception
+                )
+                performSignOut()
+            }
+        }
+    }
+
+    private fun performSignOut() {
         viewModelScope.launch {
             _externalSignOutSignal.emit(Unit)
-            auth.signOut()  // Firebase sign-out (no context needed)
             _signOutEvent.emit(Unit)  // Signal to UI
         }
+        auth.signOut()  // Firebase sign-out (no context needed)
     }
 
     fun stopObserve() {
