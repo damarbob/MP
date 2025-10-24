@@ -25,6 +25,7 @@ import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
+import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
 import id.monpres.app.ui.adapter.OrderServiceAdapter
@@ -50,6 +51,10 @@ class HomeFragment : BaseFragment() {
     private lateinit var serviceAdapter: ServiceAdapter
     private lateinit var vehicleAdapter: VehicleAdapter
     private lateinit var orderServiceAdapter: OrderServiceAdapter
+
+    private var orderServices: List<OrderService> = emptyList()
+    private var ongoingOrders: List<OrderService> = emptyList()
+    private var completedOrders: List<OrderService> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,6 +132,10 @@ class HomeFragment : BaseFragment() {
 
             fragmentHomeButtonSeeAllHistory.setOnClickListener {
                 findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToOrderServiceListFragment())
+            }
+
+            fragmentHomeChipGroupOrderStatus.setOnCheckedStateChangeListener { group, checkedIds ->
+                viewModel.setSelectedChipId(group.checkedChipId)
             }
         }
     }
@@ -230,10 +239,63 @@ class HomeFragment : BaseFragment() {
 
     fun setupOrderServiceObservers() {
         observeUiState(mainViewModel.userOrderServicesState) {
-            orderServiceAdapter.submitList(it.take(5))
+            setupOrdersList(it)
 
             binding.fragmentHomeButtonSeeAllHistory.visibility =
                 if (it.isEmpty()) View.GONE else View.VISIBLE
+        }
+
+        // This observer reacts to the selected chip changing and updates the UI accordingly.
+        viewModel.selectedChipId.observe(viewLifecycleOwner) { chipId ->
+            // Programmatically check the chip. This won't re-trigger the listener.
+            binding.fragmentHomeChipGroupOrderStatus.check(chipId ?: View.NO_ID)
+
+            // Submit the correct list to the adapter based on the selected chip
+            val listToSubmit = when (chipId) {
+                R.id.fragmentHomeChipOrderStatusOngoing ->
+                    ongoingOrders.sortedByDescending { it.createdAt }
+
+                R.id.fragmentHomeChipOrderStatusCompleted ->
+                    completedOrders.sortedByDescending { it.updatedAt }
+
+                else ->
+                    orderServices.sortedByDescending { it.updatedAt }
+            }
+            orderServiceAdapter.submitList(listToSubmit.take(5))
+            toggleEmptyState(listToSubmit.isEmpty())
+        }
+    }
+
+    private fun setupOrdersList(serviceOrders: List<OrderService>) {
+        this.orderServices = serviceOrders
+        // Re-group the orders whenever the main list changes
+        ongoingOrders =
+            serviceOrders.filter { it.status?.type == OrderStatusType.OPEN || it.status?.type == OrderStatusType.IN_PROGRESS }
+        completedOrders = serviceOrders.filter { it.status == OrderStatus.COMPLETED }
+
+
+        // Set the default filter, but only if one isn't already set (e.g. from screen rotation)
+        if (viewModel.selectedChipId.value == null) {
+            val defaultChipId = if (ongoingOrders.isNotEmpty()) {
+                R.id.fragmentHomeChipOrderStatusOngoing
+            } else {
+                View.NO_ID // Special value for no chip checked
+            }
+            viewModel.setSelectedChipId(defaultChipId)
+        }
+    }
+
+    private fun toggleEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            binding.apply {
+                fragmentHomeLinearLayoutEmptyState.visibility = View.VISIBLE
+                fragmentHomeRecyclerViewHistory.visibility = View.GONE
+            }
+        } else {
+            binding.apply {
+                fragmentHomeLinearLayoutEmptyState.visibility = View.GONE
+                fragmentHomeRecyclerViewHistory.visibility = View.VISIBLE
+            }
         }
     }
 

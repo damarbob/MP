@@ -132,6 +132,34 @@
                     app:iconGravity="textEnd" />
             </LinearLayout>
 
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/fragmentHomeChipGroupOrderStatus"
+                style="@style/Widget.Material3.ChipGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:singleLine="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/fragmentHomeChipOrderStatusOngoing"
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/filter_ongoing"
+                    android:text="@string/ongoing"
+                    app:ensureMinTouchTargetSize="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/fragmentHomeChipOrderStatusCompleted"
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/filter_completed"
+                    android:text="@string/order_status_completed"
+                    app:ensureMinTouchTargetSize="false" />
+
+            </com.google.android.material.chip.ChipGroup>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/fragmentHomeRecyclerViewHistory"
                 android:layout_width="match_parent"
@@ -139,6 +167,22 @@
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
                 android:padding="1dp" />
+
+            <LinearLayout
+                android:id="@+id/fragmentHomeLinearLayoutEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_rectangle_background_clip"
+                android:paddingVertical="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.App.H5"
+                    android:text="@string/no_order"/>
+            </LinearLayout>
 
         </LinearLayout>
 

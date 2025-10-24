@@ -221,4 +221,5 @@
     <string name="filter_ongoing">Filter pesanan dalam proses</string>
     <string name="filter_completed">Filter pesanan selesai</string>
     <string name="filter_cancelled">Filter pesanan batal</string>
+    <string name="no_order">Tidak ada pesanan</string>
 </resources>
