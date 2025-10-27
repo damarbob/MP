@@ -1,13 +1,11 @@
 package id.monpres.app.usecase
 
-import android.content.Context
 import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.messaging.FirebaseMessaging
-import dagger.hilt.android.qualifiers.ApplicationContext
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
@@ -18,7 +16,6 @@ class GetOrCreateUserUseCase @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val userRepository: UserRepository,
-    @param:ApplicationContext private val context: Context
 ) {
     companion object {
         private val TAG: String = GetOrCreateUserUseCase::class.java.simpleName
@@ -66,31 +63,35 @@ class GetOrCreateUserUseCase @Inject constructor(
                     val currentDisplayName = firebaseUser.displayName ?: "User"
                     val currentPhoneNumber = firebaseUser.phoneNumber ?: ""
                     val currentFcmToken = existingUser.fcmTokens
+                    var updatedUser = existingUser
 
                     // Check if the user's profile has changed
                     if ((existingUser.displayName != currentDisplayName && currentDisplayName.isNotEmpty()) ||
-                        (existingUser.phoneNumber != currentPhoneNumber && currentPhoneNumber.isNotEmpty()) ||
-                        (currentFcmToken?.isNotEmpty() == true && !currentFcmToken.contains(token)) ||
-                        (currentFcmToken == null) || (currentFcmToken.isEmpty())
+                        (existingUser.phoneNumber != currentPhoneNumber && currentPhoneNumber.isNotEmpty())
                     ) {
                         Log.d(TAG, "User profile has changed for UID: ${firebaseUser.uid}")
 
-                        // Create updated user data
-                        val updatedUser = existingUser.copy(
+                        updatedUser = updatedUser.copy(
                             displayName = currentDisplayName,
                             phoneNumber = currentPhoneNumber,
                             updatedAt = Timestamp.now().toDate().time.toDouble(),
-                            fcmTokens = currentFcmToken?.plus(token) ?: listOf(token)
                         )
 
-                        userDocRef.set(updatedUser, SetOptions.merge())
-                            .await() // Update Firestore with the new data
-                        userRepository.addRecord(updatedUser) // Create record in local repository after successful Firestore update
-                        Result.success(updatedUser)
-                    } else {
-                        userRepository.addRecord(existingUser)
-                        Result.success(existingUser)
                     }
+
+                    if ((currentFcmToken?.isNotEmpty() == true && !currentFcmToken.contains(token)) ||
+                        (currentFcmToken == null) || (currentFcmToken.isEmpty())) {
+                        Log.d(TAG, "FCM token has changed for UID: ${firebaseUser.uid}")
+
+                        updatedUser = updatedUser.copy(
+                            updatedAt = Timestamp.now().toDate().time.toDouble(),
+                            fcmTokens = currentFcmToken?.plus(token) ?: listOf(token))
+                    }
+
+                    userDocRef.set(updatedUser, SetOptions.merge())
+                        .await() // Update Firestore with the new data
+                    userRepository.addRecord(updatedUser) // Create record in local repository after successful Firestore update
+                    Result.success(updatedUser)
                 } else {
                     Result.failure(UserDataParseException("Failed to parse existing user data from Firestore for UID: ${firebaseUser.uid}"))
                 }
