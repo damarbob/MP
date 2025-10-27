@@ -31,6 +31,7 @@ class ProfileViewModel @Inject constructor(
         fullName: String,
         emailAddress: String,
         whatsAppNumber: String? = null,
+        active: Boolean = false,
         location: Point? = null,
         address: String? = null,
     ) {
@@ -82,6 +83,19 @@ class ProfileViewModel @Inject constructor(
                 userProfile?.locationLat = location.latitude().toString()
                 userProfile?.locationLng = location.longitude().toString()
             }
+
+            // Update active status
+            FirebaseFirestore.getInstance()
+                .collection(MontirPresisiUser.COLLECTION)
+                .document(user.uid)
+                .update(
+                    mapOf(
+                        "active" to active,
+                    )
+                ).await()
+
+            // Apply local changes
+            userProfile?.active = active
 
             if (!address.isNullOrBlank()) {
                 FirebaseFirestore.getInstance()

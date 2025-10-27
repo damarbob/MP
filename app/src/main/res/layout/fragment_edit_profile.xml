@@ -113,6 +113,13 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Active status -->
+            <CheckBox
+                android:id="@+id/editProfileCheckBoxHoliday"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/i_am_on_holiday" />
+
             <TextView
                 style="@style/Widget.App.H4.Bold"
                 android:layout_width="wrap_content"

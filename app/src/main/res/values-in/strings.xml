@@ -216,6 +216,8 @@
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">Anda harus mengatur nomor telepon agar kami dapat menghubungi Anda.</string>
     <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">Anda belum memilih lokasi. Apakah Anda ingin menggunakan lokasi Anda saat ini sebagai gantinya?</string>
     <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Tidak dapat mengambil lokasi Anda. Coba lagi dengan izin lokasi diaktifkan.</string>
+    <string name="i_am_on_holiday">Saya sedang libur</string>
+
     <string name="haven_t_arrived_at_the_location_yet">Anda belum sampai di titik lokasi, masih sekitar %1$s m lagi</string>
     <string name="ongoing">Dalam proses</string>
     <string name="filter_ongoing">Filter pesanan dalam proses</string>

@@ -24,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentEditProfileBinding
+import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
@@ -135,6 +136,7 @@ class ProfileFragment : Fragment() {
                     binding.editProfileInputEditFullName.text.toString(),
                     binding.editProfileInputEmailAddress.text.toString(),
                     binding.editProfileInputWhatsApp.text.toString(),
+                    !binding.editProfileCheckBoxHoliday.isChecked,
                     selectedPrimaryLocationPoint,
                     binding.editProfileInputEditAddress.text.toString()
                 )
@@ -164,7 +166,10 @@ class ProfileFragment : Fragment() {
 
     protected fun openMap() {
         val points = arrayListOf(selectedPrimaryLocationPoint?.toJson())
-        Log.d(TAG, "Points: $points from ${arrayListOf(selectedPrimaryLocationPoint)} from $selectedPrimaryLocationPoint")
+        Log.d(
+            TAG,
+            "Points: $points from ${arrayListOf(selectedPrimaryLocationPoint)} from $selectedPrimaryLocationPoint"
+        )
 
         val intent = Intent(requireContext(), MapsActivity::class.java).apply {
             putExtra(MapsActivityExtraData.EXTRA_PICK_MODE, true)
@@ -180,10 +185,21 @@ class ProfileFragment : Fragment() {
         // Hide unfinished features
         binding.editProfileTextInputLayoutEmail.visibility = View.GONE
 
+        // Show for specific roles
+        binding.editProfileCheckBoxHoliday.visibility =
+            if (userProfile?.role === UserRole.PARTNER) View.VISIBLE else View.GONE
+
         // Fill input fields
         binding.editProfileInputEditFullName.setText(user?.displayName)
         binding.editProfileInputEmailAddress.setText(user?.email)
         binding.editProfileInputWhatsApp.setText(userProfile?.phoneNumber)
+        binding.editProfileCheckBoxHoliday.isChecked =
+            if (userProfile?.role === UserRole.PARTNER)
+            // If partner and inactive, check
+                userProfile?.active == false
+            else
+            // else, always uncheck
+                false
         binding.editProfileInputEditAddress.setText(userProfile?.address)
 
         if (userProfile?.locationLat != null && userProfile?.locationLng != null) {

@@ -13,6 +13,7 @@ data class MontirPresisiUser(
     var locationLat: String? = null,
     var locationLng: String? = null,
     var address: String? = null, // The complete address of the user (required)
+    var active: Boolean? = null,
     var createdAt: Double? = null,
     var updatedAt: Double? = null,
     var fcmTokens: List<String>? = null,

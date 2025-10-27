@@ -220,6 +220,8 @@
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">You have to set a phone number so we can contact you.</string>
     <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">You have not selected a location. Would you like to use your current location instead?</string>
     <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Unable to get your location. Please try again with location permission enabled.</string>
+    <string name="i_am_on_holiday">I am on holiday</string>
+
     <string name="haven_t_arrived_at_the_location_yet">You haven\'t arrived at the location yet, still about %1$s m to go</string>
     <string name="ongoing">Ongoing</string>
     <string name="filter_ongoing">Filter ongoing</string>
