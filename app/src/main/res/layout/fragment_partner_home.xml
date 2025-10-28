@@ -7,21 +7,6 @@
     android:transitionGroup="true"
     tools:context=".ui.partnerhome.PartnerHomeFragment">
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/fragmentPartnerHomeProgressIndicator"
-        style="@style/Widget.Material3.LinearProgressIndicator"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        android:paddingHorizontal="4dp"
-        app:hideAnimationBehavior="outward"
-        app:layout_insetEdge="top"
-        app:showAnimationBehavior="inward"
-        app:trackThickness="6dp"
-        app:waveAmplitude="2dp"
-        app:wavelength="40dp"
-        app:wavelengthIndeterminate="20dp" />
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/fragmentPartnerHomeNestedScrollView"
         android:layout_width="match_parent"
@@ -29,8 +14,7 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:isScrollContainer="true"
-        android:overScrollMode="always"
-        app:layout_dodgeInsetEdges="top">
+        android:overScrollMode="always">
 
         <LinearLayout
             android:id="@+id/fragmentPartnerHomeLinearLayout"
@@ -40,7 +24,8 @@
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
             android:paddingVertical="16dp"
-            android:showDividers="middle">
+            android:showDividers="middle"
+            android:layout_marginTop="16dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/fragmentPartnerHomeRecyclerViewCarousel"
@@ -131,5 +116,20 @@
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentPartnerHomeProgressIndicator"
+        style="@style/Widget.Material3.LinearProgressIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:paddingHorizontal="4dp"
+        app:hideAnimationBehavior="outward"
+        app:layout_insetEdge="top"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="2dp"
+        app:wavelength="40dp"
+        app:wavelengthIndeterminate="20dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

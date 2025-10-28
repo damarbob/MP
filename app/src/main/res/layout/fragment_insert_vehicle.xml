@@ -8,22 +8,6 @@
     android:transitionGroup="true"
     tools:context=".ui.insertvehicle.InsertVehicleFragment">
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/fragmentInsertVehicleProgressIndicator"
-        style="@style/Widget.Material3.LinearProgressIndicator"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        android:paddingHorizontal="4dp"
-        android:visibility="gone"
-        app:hideAnimationBehavior="outward"
-        app:layout_insetEdge="top"
-        app:showAnimationBehavior="inward"
-        app:trackThickness="6dp"
-        app:waveAmplitude="2dp"
-        app:wavelength="40dp"
-        app:wavelengthIndeterminate="20dp" />
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/fragmentInsertVehicleNestedScrollView"
         android:layout_width="match_parent"
@@ -31,13 +15,13 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:isScrollContainer="true"
-        android:overScrollMode="always"
-        app:layout_dodgeInsetEdges="top">
+        android:overScrollMode="always">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/fragmentInsertVehicleConstraintLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
 
             <LinearLayout
                 android:id="@+id/fragmentInsertVehicleLinearLayout"
@@ -119,6 +103,58 @@
                         tools:ignore="SpeakableTextPresentCheck" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Power Source -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehiclePowerSource"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_between_input_field"
+                    android:hint="@string/power_source">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/fragmentInsertVehicleDropdownVehiclePowerSource"
+                        style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        tools:ignore="SpeakableTextPresentCheck" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Transmission -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleTransmission"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_between_input_field"
+                    android:hint="@string/transmission">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/fragmentInsertVehicleDropdownVehicleTransmission"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        tools:ignore="SpeakableTextPresentCheck" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Wheel Drive -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleWheelDrive"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_between_input_field"
+                    android:hint="@string/wheel_drive">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/fragmentInsertVehicleDropdownVehicleWheelDrive"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        tools:ignore="SpeakableTextPresentCheck" />
+                </com.google.android.material.textfield.TextInputLayout>
+
                 <!-- Production Year -->
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -149,23 +185,6 @@
                         android:layout_height="wrap_content"
                         android:minHeight="@dimen/input_field_min_height"
                         android:inputType="number"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Transmission -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleTransmission"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_between_input_field"
-                    android:hint="@string/transmission">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/fragmentInsertVehicleDropdownVehicleTransmission"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        tools:ignore="SpeakableTextPresentCheck" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Seat -->
@@ -200,46 +219,12 @@
                         android:inputType="number"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Wheel Drive -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehicleWheelDrive"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_between_input_field"
-                    android:hint="@string/wheel_drive">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/fragmentInsertVehicleDropdownVehicleWheelDrive"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        tools:ignore="SpeakableTextPresentCheck" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Power Source -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentInsertVehicleTextInputLayoutVehiclePowerSource"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_between_input_field"
-                    android:hint="@string/power_source">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/fragmentInsertVehicleDropdownVehiclePowerSource"
-                        style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        tools:ignore="SpeakableTextPresentCheck" />
-                </com.google.android.material.textfield.TextInputLayout>
-
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentInsertVehicleButtonSave"
-                android:layout_width="wrap_content"
+                style="@style/Widget.Material3Expressive.Button"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="@dimen/space_between_input_field"
                 android:layout_marginStart="16dp"
@@ -247,6 +232,7 @@
                 android:layout_marginBottom="16dp"
                 android:text="@string/save"
                 app:icon="@drawable/save_24px"
+                app:iconGravity="textStart"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
@@ -268,4 +254,21 @@
                 app:layout_constraintStart_toStartOf="parent" />-->
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentInsertVehicleProgressIndicator"
+        style="@style/Widget.Material3.LinearProgressIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:paddingHorizontal="4dp"
+        android:visibility="gone"
+        app:hideAnimationBehavior="outward"
+        app:layout_insetEdge="top"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="2dp"
+        app:wavelength="40dp"
+        app:wavelengthIndeterminate="20dp" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -8,21 +8,6 @@
     android:transitionGroup="true"
     tools:context=".ui.serviceprocess.ServiceProcessFragment">
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/fragmentServiceProcessLinearProgressIndicator"
-        style="@style/Widget.Material3.LinearProgressIndicator"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        android:paddingHorizontal="4dp"
-        app:hideAnimationBehavior="outward"
-        app:layout_insetEdge="top"
-        app:showAnimationBehavior="inward"
-        app:trackThickness="6dp"
-        app:waveAmplitude="2dp"
-        app:wavelength="40dp"
-        app:wavelengthIndeterminate="20dp" />
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/fragmentServiceProcessNestedScrollView"
         android:layout_width="match_parent"
@@ -30,15 +15,15 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:isScrollContainer="true"
-        android:overScrollMode="always"
-        app:layout_dodgeInsetEdges="top">
+        android:overScrollMode="always">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center_horizontal"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="24dp">
+            android:paddingVertical="24dp"
+            android:layout_marginTop="16dp">
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/fragmentServiceProcessProgressIndicator"
@@ -502,5 +487,20 @@
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentServiceProcessLinearProgressIndicator"
+        style="@style/Widget.Material3.LinearProgressIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:paddingHorizontal="4dp"
+        app:hideAnimationBehavior="outward"
+        app:layout_insetEdge="top"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="0dp"
+        app:wavelength="40dp"
+        app:wavelengthIndeterminate="20dp" />
 
 </androidx.core.view.insets.ProtectionLayout>

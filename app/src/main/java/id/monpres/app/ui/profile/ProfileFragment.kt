@@ -29,6 +29,7 @@ import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.usecase.GetColorFromAttrUseCase
+import id.monpres.app.utils.markRequiredInRed
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -111,13 +112,20 @@ class ProfileFragment : Fragment() {
             // Hide loading indicator
             binding.editProfileProgressIndicator.visibility = View.GONE
 
+
             result?.onSuccess {
+                // Enable save button
+                binding.editProfileButton.isEnabled = true
+
                 Toast.makeText(
                     requireContext(),
                     getString(R.string.profile_updated_successfully),
                     Toast.LENGTH_SHORT
                 ).show()
             }?.onFailure { exception ->
+                // Enable save button
+                binding.editProfileButton.isEnabled = true
+
                 Toast.makeText(
                     requireContext(),
                     exception.message,
@@ -130,6 +138,9 @@ class ProfileFragment : Fragment() {
         binding.editProfileButton.setOnClickListener {
             // show loading indicator
             binding.editProfileProgressIndicator.visibility = View.VISIBLE
+
+            // Make button disabled
+            it.isEnabled = false
 
             lifecycleScope.launch {
                 viewModel.updateProfileNew(
@@ -234,5 +245,16 @@ class ProfileFragment : Fragment() {
             )
             .into(binding.editProfileAvatar)
             .clearOnDetach()
+
+        // Set form marks
+        binding.apply {
+            editProfileInputLayoutFullName.markRequiredInRed()
+
+            if (userProfile?.role == UserRole.CUSTOMER) {
+                editProfileTextInputLayoutWhatsApp.markRequiredInRed()
+            } else if (userProfile?.role == UserRole.PARTNER) {
+                editProfileButtonSelectPrimaryLocationButton.markRequiredInRed()
+            }
+        }
     }
 }

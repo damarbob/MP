@@ -23,6 +23,7 @@ import id.monpres.app.enums.VehicleWheelDrive
 import id.monpres.app.model.Vehicle
 import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.utils.markRequiredInRed
 
 @AndroidEntryPoint
 class InsertVehicleFragment : BaseFragment() {
@@ -81,6 +82,7 @@ class InsertVehicleFragment : BaseFragment() {
         }
 
         setupListeners()
+        setFormMarks()
 
         return binding.root
     }
@@ -113,6 +115,7 @@ class InsertVehicleFragment : BaseFragment() {
 
         binding.fragmentInsertVehicleButtonSave.setOnClickListener {
             if (isFormValid()) {
+                it.isEnabled = false
                 val newVehicle = Vehicle()
                 with(binding) {
                     newVehicle.apply {
@@ -144,10 +147,14 @@ class InsertVehicleFragment : BaseFragment() {
                     }
                 }
 
-                observeUiStateOneShot(viewModel.insertVehicle(newVehicle)) {
+                observeUiStateOneShot(viewModel.insertVehicle(newVehicle), { message ->
+                    it.isEnabled = true
+                }) {
                     Toast.makeText(requireContext(), "Vehicle added", Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
+            } else {
+                it.isEnabled = true
             }
         }
     }
@@ -221,6 +228,18 @@ class InsertVehicleFragment : BaseFragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun setFormMarks() {
+        binding.apply {
+            fragmentInsertVehicleTextInputLayoutVehicleName.markRequiredInRed()
+            fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber.markRequiredInRed()
+            fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber.markRequiredInRed()
+            fragmentInsertVehicleTextInputLayoutVehicleType.markRequiredInRed()
+            fragmentInsertVehicleTextInputLayoutVehiclePowerSource.markRequiredInRed()
+            fragmentInsertVehicleTextInputLayoutVehicleTransmission.markRequiredInRed()
+            fragmentInsertVehicleTextInputLayoutVehicleWheelDrive.markRequiredInRed()
         }
     }
 

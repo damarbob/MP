@@ -8,6 +8,38 @@
     android:transitionGroup="true"
     tools:context=".ui.vehiclelist.VehicleListFragment">
 
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentListVehicleNestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentListVehicleRecyclerViewListVehicle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:clipToPadding="false"
+                android:paddingHorizontal="1dp"
+                android:paddingBottom="1dp"
+                android:paddingTop="16dp"
+                android:nestedScrollingEnabled="false" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/fragmentListVehicleProgressIndicator"
         style="@style/Widget.Material3.LinearProgressIndicator"
@@ -21,37 +53,6 @@
         app:wavelength="40dp"
         app:wavelengthIndeterminate="20dp"
         app:layout_insetEdge="top"/>
-
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/fragmentListVehicleNestedScrollView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:isScrollContainer="true"
-        android:overScrollMode="always"
-        app:layout_dodgeInsetEdges="top">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/fragmentListVehicleRecyclerViewListVehicle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:clipToPadding="false"
-                android:padding="1dp"
-                android:nestedScrollingEnabled="false" />
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fragmentListVehicleFloatingActionButtonAddVehicle"

@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.view.View
 import android.widget.Toast
 import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -26,13 +27,21 @@ abstract class BaseFragment : Fragment() {
      * Shows or hides the loading indicator based on the activeLoaders count.
      * This should be the ONLY place that directly calls your actual showLoading(Boolean) implementation.
      */
-    private fun updateGlobalLoadingState() {
-        if (activeLoaders.get() > 0) {
-            // If you have a specific showLoading function in BaseFragment that subclasses override:
+    private fun updateGlobalLoadingState(show: Boolean) {
+        if (show) {
             showLoading(true)
         } else {
-            showLoading(false)
+            // Only hide if there are absolutely no loaders active.
+            if (activeLoaders.get() == 0) {
+                showLoading(false)
+            }
         }
+//        if (activeLoaders.get() > 0) {
+//            // If you have a specific showLoading function in BaseFragment that subclasses override:
+//            showLoading(true)
+//        } else {
+//            showLoading(false)
+//        }
     }
 
     /**
@@ -74,12 +83,13 @@ abstract class BaseFragment : Fragment() {
             repeatOnLifecycle(lifecycleState) {
                 flow.collect { state ->
                     // --- Handle Finish for the PREVIOUS state of THIS flow ---
-                    if (thisFlowIsLoading) {
-                        if (state !is UiState.Loading) {
-                            activeLoaders.decrementAndGet()
-                            thisFlowIsLoading = false
-                        }
-                    }
+//                    if (thisFlowIsLoading) {
+//                        if (state !is UiState.Loading) {
+//                            activeLoaders.decrementAndGet()
+//                            thisFlowIsLoading = false
+//                        }
+//                    }
+//                    updateGlobalLoadingState()
                     // --- Current State Processing ---
                     when (state) {
                         is UiState.Loading -> {
@@ -87,15 +97,26 @@ abstract class BaseFragment : Fragment() {
                                 activeLoaders.incrementAndGet()
                                 thisFlowIsLoading = true
                             }
+                                updateGlobalLoadingState(true)
                         }
 
                         is UiState.Success -> {
                             // Decrement was handled above if it was previously loading
+                            if (thisFlowIsLoading) {
+                                activeLoaders.decrementAndGet()
+                                thisFlowIsLoading = false
+                            }
+                                updateGlobalLoadingState(false)
                             onSuccess(state.data)
                         }
 
                         is UiState.Error -> {
                             // Decrement was handled above if it was previously loading
+                            if (thisFlowIsLoading) {
+                                activeLoaders.decrementAndGet()
+                                thisFlowIsLoading = false
+                            }
+                                updateGlobalLoadingState(false)
                             val message = when (state.exception) {
                                 is NullPointerException -> getString(
                                     R.string.x_not_found, "Data"
@@ -111,7 +132,7 @@ abstract class BaseFragment : Fragment() {
                         }
                     }
                     // Update the global loading UI based on the overall count
-                    updateGlobalLoadingState()
+//                    updateGlobalLoadingState()
                 }
             }
         }
@@ -147,33 +168,46 @@ abstract class BaseFragment : Fragment() {
             // Alternative: Increment when UiState.Loading is first received.
             // Decrement when UiState.Success or UiState.Error is received for THIS flow.
 
-            var thisFlowIsLoading =
-                false // Track if this specific flow instance caused a loading increment
+//            var thisFlowIsLoading =
+//                false // Track if this specific flow instance caused a loading increment
+            activeLoaders.incrementAndGet()
+            updateGlobalLoadingState(true)
 
             flow.collect { state ->
                 // --- Handle Finish for the PREVIOUS state of THIS flow ---
-                if (thisFlowIsLoading) {
-                    if (state !is UiState.Loading) {
-                        activeLoaders.decrementAndGet()
-                        thisFlowIsLoading = false
-                    }
-                }
+//                if (thisFlowIsLoading) {
+//                    if (state !is UiState.Loading) {
+//                        activeLoaders.decrementAndGet()
+//                        thisFlowIsLoading = false
+//                    }
+//                }
+//                updateGlobalLoadingState()
                 // --- Current State Processing ---
                 when (state) {
                     is UiState.Loading -> {
-                        if (!thisFlowIsLoading) { // Only increment if it wasn't already loading
-                            activeLoaders.incrementAndGet()
-                            thisFlowIsLoading = true
-                        }
+//                        if (!thisFlowIsLoading) { // Only increment if it wasn't already loading
+//                            activeLoaders.incrementAndGet()
+//                            thisFlowIsLoading = true
+//                        }
+//                        updateGlobalLoadingState()
                     }
 
                     is UiState.Success -> {
                         // Decrement was handled above if it was previously loading
-                        onSuccess(state.data)
+//                        onSuccess(state.data)
+                        activeLoaders.decrementAndGet()
+                        updateGlobalLoadingState(false)
+                        // Delay the success action to let the animation finish
+                        view?.postDelayed({ onSuccess(state.data) }, 300) // 300ms is a safe delay
+                        // Cancel collection after the first result
+                        return@collect
                     }
 
                     is UiState.Error -> {
                         // Decrement was handled above if it was previously loading
+                        activeLoaders.decrementAndGet()
+                        updateGlobalLoadingState(false)
+
                         val message = when (state.exception) {
                             is NullPointerException -> getString(
                                 R.string.x_not_found, "Data"
@@ -185,11 +219,15 @@ abstract class BaseFragment : Fragment() {
                             else -> state.exception?.localizedMessage
                                 ?: getString(R.string.unknown_error)
                         }
-                        onError(message)
+//                        onError(message)
+                        // Delay the error action to let the animation finish
+                        view?.postDelayed({ onError(message) }, 300)
+                        // Cancel collection after the first result
+                        return@collect
                     }
                 }
                 // Update the global loading UI based on the overall count
-                updateGlobalLoadingState()
+//                updateGlobalLoadingState()
             }
 
         }
@@ -197,17 +235,19 @@ abstract class BaseFragment : Fragment() {
 
     private fun showLoading(isLoading: Boolean) {
         if (isLoading) {
-//            progressIndicator.show()
-            slideDown(progressIndicator)
+//            progressIndicator.visibility = View.VISIBLE
+//            slideDown(progressIndicator)
+            progressIndicator.show()
         } else {
-//            progressIndicator.hide()
-            slideUp(progressIndicator)
+//            progressIndicator.visibility = View.GONE
+//            slideUp(progressIndicator)
+            progressIndicator.hide()
         }
     }
 
     private fun slideUp(view: View) {
-        ObjectAnimator.ofFloat(view, "translationY", view.height.toFloat(), 0f).apply {
-            duration = 150
+        ObjectAnimator.ofFloat(view, "translationY", 0f, 0f - view.height.toFloat()).apply {
+            duration = 300
             start()
             doOnEnd {
                 view.visibility = View.GONE
@@ -216,9 +256,11 @@ abstract class BaseFragment : Fragment() {
     }
 
     private fun slideDown(view: View) {
-        view.visibility = View.VISIBLE
-        ObjectAnimator.ofFloat(view, "translationY", 0f, view.height.toFloat()).apply {
-            duration = 150
+        ObjectAnimator.ofFloat(view, "translationY", 0f - view.height.toFloat(), 0f).apply {
+            duration = 300
+            doOnStart {
+                view.visibility = View.VISIBLE
+            }
             start()
         }
     }

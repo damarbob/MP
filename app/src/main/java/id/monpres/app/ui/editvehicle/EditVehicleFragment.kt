@@ -24,6 +24,7 @@ import id.monpres.app.enums.VehicleWheelDrive
 import id.monpres.app.model.Vehicle
 import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.utils.markRequiredInRed
 
 @AndroidEntryPoint
 class EditVehicleFragment : BaseFragment() {
@@ -90,6 +91,7 @@ class EditVehicleFragment : BaseFragment() {
             setupListeners()
         }
 
+        setFormMarks()
 
         return binding.root
     }
@@ -115,6 +117,7 @@ class EditVehicleFragment : BaseFragment() {
         binding.fragmentEditVehicleButtonSave.setOnClickListener {
             // Check if form is valid
             if (isFormValid()) {
+                it.isEnabled = false
                 val editedVehicle = Vehicle(id = vehicle?.id ?: "")
                 with(binding) {
                     editedVehicle.apply {
@@ -146,13 +149,17 @@ class EditVehicleFragment : BaseFragment() {
                 }
 
                 // Update vehicle
-                observeUiStateOneShot(viewModel.updateVehicle(editedVehicle)) {
+                observeUiStateOneShot(viewModel.updateVehicle(editedVehicle), { message ->
+                    it.isEnabled = true
+                }) {
                     Toast.makeText(
                         requireContext(),
                         getString(R.string.vehicle_updated), Toast.LENGTH_SHORT
                     ).show()
                     findNavController().popBackStack()
                 }
+            } else {
+                it.isEnabled = true
             }
         }
     }
@@ -229,6 +236,18 @@ class EditVehicleFragment : BaseFragment() {
         binding.fragmentEditVehicleDropdownVehiclePowerSource.addTextChangedListener { validateVehiclePowerSource() }
         binding.fragmentEditVehicleDropdownVehicleTransmission.addTextChangedListener { validateVehicleTransmission() }
         binding.fragmentEditVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
+    }
+
+    private fun setFormMarks() {
+        binding.apply {
+            fragmentEditVehicleTextInputLayoutVehicleName.markRequiredInRed()
+            fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.markRequiredInRed()
+            fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.markRequiredInRed()
+            fragmentEditVehicleTextInputLayoutVehicleType.markRequiredInRed()
+            fragmentEditVehicleTextInputLayoutVehiclePowerSource.markRequiredInRed()
+            fragmentEditVehicleTextInputLayoutVehicleTransmission.markRequiredInRed()
+            fragmentEditVehicleTextInputLayoutVehicleWheelDrive.markRequiredInRed()
+        }
     }
 
     private fun isFormValid(): Boolean {
