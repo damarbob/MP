@@ -32,6 +32,7 @@ import id.monpres.app.model.Vehicle
 import id.monpres.app.repository.PartnerRepository
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
 import id.monpres.app.ui.partnerselection.PartnerSelectionFragment
+import id.monpres.app.utils.markRequiredInRed
 import javax.inject.Inject
 
 /**
@@ -223,6 +224,13 @@ abstract class BaseServiceFragment : Fragment() {
 
         // Place order listener
         getPlaceOrderButton().setOnClickListener { placeOrder() }
+
+        // Set form marks
+        getLocationSelectButton().markRequiredInRed()
+        getVehicleInputLayout().markRequiredInRed()
+        getIssueInputLayout().markRequiredInRed()
+        getPartnerSelectionButton().markRequiredInRed()
+        getLocationConsentCheckBox().markRequiredInRed()
     }
 
     protected fun validateLocation(): Boolean {

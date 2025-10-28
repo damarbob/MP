@@ -21,6 +21,7 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseServiceFragment
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
 import id.monpres.app.utils.UiState
+import id.monpres.app.utils.markRequiredInRed
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -121,6 +122,7 @@ class ScheduledServiceFragment : BaseServiceFragment() {
         fragBinding.scheduledServiceButtonSelectDate.setOnClickListener {
             datePicker.show(parentFragmentManager, TAG)
         }
+        fragBinding.scheduledServiceButtonSelectDate.markRequiredInRed()
 
         fragBinding.scheduledServiceButtonPlaceOrder.setOnClickListener {
             if (
