@@ -224,4 +224,5 @@
     <string name="filter_completed">Filter pesanan selesai</string>
     <string name="filter_cancelled">Filter pesanan batal</string>
     <string name="no_order">Tidak ada pesanan</string>
+    <string name="or">atau</string>
 </resources>

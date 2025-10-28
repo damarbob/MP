@@ -228,4 +228,5 @@
     <string name="filter_completed">Filter completed</string>
     <string name="filter_cancelled">Filter cancelled</string>
     <string name="no_order">No Order</string>
+    <string name="or">or</string>
 </resources>

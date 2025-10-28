@@ -64,6 +64,17 @@ android {
         viewBinding = true
         buildConfig = true
     }
+
+    packaging {
+        jniLibs {
+            pickFirsts.addAll(listOf(
+                "lib/arm64-v8a/libc++_shared.so",
+                "lib/armeabi-v7a/libc++_shared.so",
+                "lib/x86/libc++_shared.so",
+                "lib/x86_64/libc++_shared.so"
+            ))
+        }
+    }
 }
 
 dependencies {
@@ -128,6 +139,9 @@ dependencies {
 
     /* Slide to act */
     implementation(libs.slidetoact)
+
+    /* Lottie */
+    implementation(libs.dotlottie.android)
 
     implementation(libs.play.services.location)
 }

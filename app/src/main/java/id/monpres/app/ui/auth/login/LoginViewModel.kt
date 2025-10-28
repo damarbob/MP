@@ -20,6 +20,9 @@ class LoginViewModel : ViewModel() {
     private val _progressVisibility = MutableLiveData(false)
     val progressVisibility: LiveData<Boolean> get() = _progressVisibility
 
+    private val _loginFormVisibilityState = MutableLiveData(false)
+    val loginFormVisibilityState: LiveData<Boolean> get() = _loginFormVisibilityState
+
     fun loginWithEmailPassword(
         email: String,
         password: String,
@@ -65,5 +68,9 @@ class LoginViewModel : ViewModel() {
                     onResult(false, errorMessage)
                 }
             }
+    }
+
+    fun toggleFormLayoutState() {
+        _loginFormVisibilityState.value = !_loginFormVisibilityState.value!!
     }
 }

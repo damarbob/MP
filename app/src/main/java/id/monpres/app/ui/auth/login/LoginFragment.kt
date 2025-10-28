@@ -2,21 +2,23 @@ package id.monpres.app.ui.auth.login
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.ViewCompat
-import androidx.navigation.fragment.findNavController
-import id.monpres.app.R
-import id.monpres.app.databinding.FragmentLoginBinding
-import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
+import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.transition.AutoTransition
+import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.transition.MaterialSharedAxis
 import id.monpres.app.LoginActivity
 import id.monpres.app.MainActivity
+import id.monpres.app.R
+import id.monpres.app.databinding.FragmentLoginBinding
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 class LoginFragment : Fragment() {
@@ -27,6 +29,12 @@ class LoginFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Set the transition for this fragment
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ false)
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ true)
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ false)
     }
 
     override fun onCreateView(
@@ -64,14 +72,19 @@ class LoginFragment : Fragment() {
                 Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
             }
         }
+        // Form Layout State
+        viewModel.loginFormVisibilityState.observe(viewLifecycleOwner) {
+            TransitionManager.beginDelayedTransition(binding.root, AutoTransition())
+            val form = binding.loginLayoutForm
+            form.visibility = if (it) View.VISIBLE else View.GONE
+            binding.loginEmailButton.visibility = if (it) View.GONE else View.VISIBLE
+        }
         // Loading indicator visibility
         viewModel.progressVisibility.observe(viewLifecycleOwner) { isVisible ->
             binding.loginProgressIndicatorLoading.visibility = if (isVisible) View.VISIBLE else View.GONE
         }
 
         /* Listeners */
-        binding.loginInputEmailAddress.addTextChangedListener { validateEmail() }
-        binding.loginInputPassword.addTextChangedListener { validatePassword() }
         binding.loginTextForgotPassword.setOnClickListener {
 
             val email = binding.loginInputEmailAddress.text.toString()
@@ -98,17 +111,19 @@ class LoginFragment : Fragment() {
 
         }
         binding.loginButton.setOnClickListener {
-            if (validateEmail() && validatePassword()) {
+            if (isValidated()) {
 
                 val email = binding.loginInputEmailAddress.text.toString()
                 val password = binding.loginInputPassword.text.toString()
 
                 viewModel.loginWithEmailPassword(email, password)
+            } else {
+                binding.loginInputEmailAddress.doAfterTextChanged { validateEmail() }
+                binding.loginInputPassword.doAfterTextChanged { validatePassword() }
             }
         }
         binding.loginEmailButton.setOnClickListener {
-            val form = binding.loginLayoutForm
-            form.visibility = if (form.isVisible) View.GONE else View.VISIBLE
+            viewModel.toggleFormLayoutState()
         }
         binding.loginGoogleButton.setOnClickListener {
             (activity as LoginActivity).signIn()
@@ -120,6 +135,11 @@ class LoginFragment : Fragment() {
         return binding.root
     }
 
+    private fun isValidated(): Boolean {
+        val isEmailValid = validateEmail()
+        val isPasswordValid = validatePassword()
+        return isEmailValid && isPasswordValid
+    }
     private fun validateEmail(): Boolean {
         val email = binding.loginInputEmailAddress.text.toString()
         return when {

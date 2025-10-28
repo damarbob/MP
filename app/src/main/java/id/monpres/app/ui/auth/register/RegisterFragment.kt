@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.transition.MaterialSharedAxis
 import id.monpres.app.LoginActivity
 import id.monpres.app.MainActivity
 import id.monpres.app.R
@@ -33,6 +34,12 @@ class RegisterFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Set the transition for this fragment
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ false)
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ true)
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ false)
     }
 
     override fun onCreateView(
@@ -75,9 +82,6 @@ class RegisterFragment : Fragment() {
         }
 
         /* Listeners */
-        binding.registerInputFullName.addTextChangedListener { validateFullName() }
-        binding.registerInputEmailAddress.addTextChangedListener { validateEmail() }
-        binding.registerInputPassword.addTextChangedListener { validatePassword() }
         binding.registerCheckBoxTcAgreement.setOnCheckedChangeListener { buttonView, isChecked ->
             run {
                 if (isChecked) {
@@ -104,7 +108,7 @@ class RegisterFragment : Fragment() {
             }
         }
         binding.registerButton.setOnClickListener {
-            if (validateFullName() && validateEmail() && validatePassword() && validateAgreement()) {
+            if (isValidated()) {
 
                 val fullName = binding.registerInputFullName.text.toString()
                 val email = binding.registerInputEmailAddress.text.toString()
@@ -112,6 +116,10 @@ class RegisterFragment : Fragment() {
                 val cb = binding.registerCheckBoxTcAgreement.isChecked
 
                 viewModel.registerWithEmailPassword(fullName, email, password)
+            } else {
+                binding.registerInputFullName.addTextChangedListener { validateFullName() }
+                binding.registerInputEmailAddress.addTextChangedListener { validateEmail() }
+                binding.registerInputPassword.addTextChangedListener { validatePassword() }
             }
         }
         binding.registerGoogleButton.setOnClickListener {
@@ -122,6 +130,15 @@ class RegisterFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun isValidated(): Boolean {
+        val isFullNameValidated = validateFullName()
+        val isEmailValidated = validateEmail()
+        val isPasswordValidated = validatePassword()
+        val isAgreementValidated = validateAgreement()
+
+        return isFullNameValidated && isEmailValidated && isPasswordValidated && isAgreementValidated
     }
 
     private fun validateFullName(): Boolean {

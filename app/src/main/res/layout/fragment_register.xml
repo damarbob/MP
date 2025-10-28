@@ -107,15 +107,41 @@
 
             <Button
                 android:id="@+id/registerButton"
+                style="@style/Widget.Material3Expressive.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="@string/sign_up"
                 app:icon="@drawable/outline_arrow_forward_ios_24" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:divider="@drawable/divider_gap_16"
+                android:showDividers="middle">
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/or"
+                    android:textColor="@color/material_dynamic_neutral60"/>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"/>
+            </LinearLayout>
+
             <Button
                 android:id="@+id/registerGoogleButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Material3Expressive.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

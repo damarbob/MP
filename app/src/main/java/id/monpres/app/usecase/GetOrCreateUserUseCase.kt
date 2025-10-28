@@ -34,83 +34,79 @@ class GetOrCreateUserUseCase @Inject constructor(
             ?: return Result.failure(UserNotAuthenticatedException())
 
         return try {
-            val usersCollection = firestore.collection(MontirPresisiUser.COLLECTION)
+            // Force getting the token synchronously within the coroutine
+            val token = try {
+                FirebaseMessaging.getInstance().token.await()
+            } catch (e: Exception) {
+                Log.e(TAG, "Fetching FCM registration token failed", e)
+                // It's critical to fail here if we can't get a token.
+                return Result.failure(FirestoreOperationException("Failed to retrieve FCM token", e))
+            }
 
-            // Get by document ID (document ID is equal to firebaseUser.uid)
+            val usersCollection = firestore.collection(MontirPresisiUser.COLLECTION)
             val userDocRef = usersCollection.document(firebaseUser.uid)
             val documentSnapshot = userDocRef.get().await()
 
-            lateinit var token: String
-
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    // Handle the error
-                    Log.e(TAG, "Fetching FCM registration token failed: ${task.exception}")
-                    return@addOnCompleteListener
-                }
-
-                // Get the FCM token
-                token = task.result
-                Log.d(TAG, "FCM Token: $token")
-            }.await()
-
             if (documentSnapshot.exists()) {
                 Log.d(TAG, "User exists in Firestore for UID: ${firebaseUser.uid}")
-
-                // User exists
                 val existingUser = documentSnapshot.toObject(MontirPresisiUser::class.java)
-                if (existingUser != null) {
-                    val currentDisplayName = firebaseUser.displayName ?: "User"
-                    val currentPhoneNumber = firebaseUser.phoneNumber ?: ""
-                    val currentFcmToken = existingUser.fcmTokens
-                    var updatedUser = existingUser
+                    ?: return Result.failure(UserDataParseException("Failed to parse user data"))
 
-                    // Check if the user's profile has changed
-                    if ((existingUser.displayName != currentDisplayName && currentDisplayName.isNotEmpty()) ||
-                        (existingUser.phoneNumber != currentPhoneNumber && currentPhoneNumber.isNotEmpty())
-                    ) {
-                        Log.d(TAG, "User profile has changed for UID: ${firebaseUser.uid}")
+                val currentDisplayName = firebaseUser.displayName ?: "User"
+                val currentPhoneNumber = firebaseUser.phoneNumber ?: ""
+                var needsUpdate = false
+                var updatedUser = existingUser
 
-                        updatedUser = updatedUser.copy(
-                            displayName = currentDisplayName,
-                            phoneNumber = currentPhoneNumber,
-                            updatedAt = Timestamp.now().toDate().time.toDouble(),
-                        )
+                // Check if display name or phone number has changed
+                if ((updatedUser.displayName != currentDisplayName && currentDisplayName.isNotEmpty()) ||
+                    (updatedUser.phoneNumber != currentPhoneNumber && currentPhoneNumber.isNotEmpty())
+                ) {
+                    Log.d(TAG, "User profile data has changed for UID: ${firebaseUser.uid}")
+                    updatedUser = updatedUser.copy(
+                        displayName = currentDisplayName,
+                        phoneNumber = currentPhoneNumber
+                    )
+                    needsUpdate = true
+                }
 
-                    }
+                // Check if FCM token needs to be added
+                if (updatedUser.fcmTokens?.contains(token) != true) {
+                    Log.d(TAG, "FCM token needs to be updated for UID: ${firebaseUser.uid}")
+                    updatedUser = updatedUser.copy(
+                        fcmTokens = (updatedUser.fcmTokens ?: emptyList()) + token
+                    )
+                    needsUpdate = true
+                }
 
-                    if ((currentFcmToken?.isNotEmpty() == true && !currentFcmToken.contains(token)) ||
-                        (currentFcmToken == null) || (currentFcmToken.isEmpty())) {
-                        Log.d(TAG, "FCM token has changed for UID: ${firebaseUser.uid}")
-
-                        updatedUser = updatedUser.copy(
-                            updatedAt = Timestamp.now().toDate().time.toDouble(),
-                            fcmTokens = currentFcmToken?.plus(token) ?: listOf(token))
-                    }
-
-                    userDocRef.set(updatedUser, SetOptions.merge())
-                        .await() // Update Firestore with the new data
-                    userRepository.addRecord(updatedUser) // Create record in local repository after successful Firestore update
+                // Only perform a write if something has actually changed
+                if (needsUpdate) {
+                    Log.d(TAG, "Updating user document for UID: ${firebaseUser.uid}")
+                    updatedUser = updatedUser.copy(updatedAt = Timestamp.now().toDate().time.toDouble())
+                    userDocRef.set(updatedUser, SetOptions.merge()).await()
+                    userRepository.addRecord(updatedUser)
                     Result.success(updatedUser)
                 } else {
-                    Result.failure(UserDataParseException("Failed to parse existing user data from Firestore for UID: ${firebaseUser.uid}"))
+                    // No changes needed, just return the existing user and ensure local repo is up to date
+                    Log.d(TAG, "No user data changes detected for UID: ${firebaseUser.uid}")
+                    userRepository.addRecord(existingUser)
+                    Result.success(existingUser)
                 }
+
             } else {
                 Log.d(TAG, "User does not exist in Firestore for UID: ${firebaseUser.uid}")
 
                 // User does not exist, create new
                 val newUser = MontirPresisiUser(
                     userId = firebaseUser.uid,
-                    displayName = firebaseUser.displayName
-                        ?: "User", // Provide a default display name if null
+                    displayName = firebaseUser.displayName ?: "User",
                     role = role,
                     phoneNumber = firebaseUser.phoneNumber ?: "",
                     createdAt = Timestamp.now().toDate().time.toDouble(),
                     updatedAt = Timestamp.now().toDate().time.toDouble(),
                     fcmTokens = listOf(token)
                 )
-                usersCollection.document(firebaseUser.uid).set(newUser).await()
-                userRepository.addRecord(newUser) // Create record in local repository after successful Firestore creation
+                userDocRef.set(newUser).await()
+                userRepository.addRecord(newUser)
                 Result.success(newUser)
             }
         } catch (e: Exception) {
