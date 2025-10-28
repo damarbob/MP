@@ -122,7 +122,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             when {
                 isGranted -> {
                     processNextPermission()
-                    if (currentPermission == Manifest.permission.POST_NOTIFICATIONS) showNotification()
+                    if (currentPermission == Manifest.permission.POST_NOTIFICATIONS) {
+//                        showNotification()
+                    }
                 }
 
                 shouldShowRequestPermissionRationale(currentPermission) -> {
@@ -218,7 +220,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
             /* Permission */
             if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
-            else showNotification()
+//            else showNotification()
         }
 
         /* UI */
@@ -312,6 +314,10 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         // TODO (low priority): Handle admin role
         if (currentUserProfile.role == UserRole.PARTNER) {
             Log.d(TAG, "Current user is a partner")
+
+            // Set initial graph
+            navController.graph = navController.navInflater.inflate(R.navigation.nav_main)
+
             val navGraph = navController.navInflater.inflate(R.navigation.nav_main)
             navGraph.setStartDestination(R.id.partnerHomeFragment)
             navController.graph = navGraph
@@ -417,6 +423,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         val navHostFragment =
             supportFragmentManager.findFragmentById(binding.navHostFragmentActivityMain.id) as NavHostFragment
         navController = navHostFragment.navController
+        navController.graph = navController.navInflater.inflate(R.navigation.nav_main)
 
         setupAppBar()
 
@@ -881,6 +888,11 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 })
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateNavigationTree()
     }
 
 }

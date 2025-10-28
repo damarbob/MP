@@ -107,11 +107,11 @@ class MainViewModel @Inject constructor(
     }
 
     fun observeDataByRole() {
-        Log.d(TAG, "current role: ${userRepository.getCurrentUserRecord()?.role}")
-        if (userRepository.getCurrentUserRecord()?.role == UserRole.CUSTOMER) {
+        Log.d(TAG, "current role: ${getCurrentUser()?.role}")
+        if (getCurrentUser()?.role == UserRole.CUSTOMER) {
             observeUserOrderServices()
             observeUserVehicles()
-        } else if (userRepository.getCurrentUserRecord()?.role == UserRole.PARTNER) {
+        } else if (getCurrentUser()?.role == UserRole.PARTNER) {
             observePartnerOrderServices()
         }
     }
