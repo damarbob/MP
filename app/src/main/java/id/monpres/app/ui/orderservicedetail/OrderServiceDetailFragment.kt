@@ -36,7 +36,7 @@ import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
-import id.monpres.app.usecase.CurrencyFormatterUseCase
+import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.utils.toDateTimeDisplayString
 import java.io.File
 import java.io.FileOutputStream
@@ -58,7 +58,7 @@ class OrderServiceDetailFragment : Fragment() {
 
     private lateinit var orderService: OrderService
 
-    private val currencyFormatterUseCase = CurrencyFormatterUseCase()
+    private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
 
     private val permissionQueue: MutableList<String> =
         mutableListOf() // Queue for individual permissions
@@ -299,7 +299,7 @@ class OrderServiceDetailFragment : Fragment() {
                 )
 
             fragmentOrderServiceDetailPrice.text =
-                if (orderService.price != null) currencyFormatterUseCase(orderService.price!!) else ""
+                if (orderService.price != null) indonesianCurrencyFormatter(orderService.price!!) else ""
 
             // General info
             fragmentOrderServiceDetailInvoiceNumber.text = orderService.id ?: ""
@@ -324,7 +324,7 @@ class OrderServiceDetailFragment : Fragment() {
                 addItemDecoration(SpacingItemDecoration(8))
             }
             fragmentOrderServiceDetailSummaryTotal.text =
-                if (orderService.price != null) currencyFormatterUseCase(orderService.price!!) else ""
+                if (orderService.price != null) indonesianCurrencyFormatter(orderService.price!!) else ""
         }
     }
 

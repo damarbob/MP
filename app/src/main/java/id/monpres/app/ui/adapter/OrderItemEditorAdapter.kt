@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import id.monpres.app.databinding.ItemOrderItemEditorBinding
 import id.monpres.app.model.OrderItem
-import id.monpres.app.usecase.CurrencyFormatterUseCase
+import id.monpres.app.usecase.IndonesianCurrencyFormatter
 
 class OrderItemEditorAdapter(
 ) : ListAdapter<OrderItem, OrderItemEditorAdapter.ViewHolder>(OrderItemDiffCallback()) {
@@ -31,7 +31,7 @@ class OrderItemEditorAdapter(
     }
 
     private var listener: ItemClickListener? = null
-    private val currencyFormatterUseCase = CurrencyFormatterUseCase()
+    private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
 
     fun registerItemClickListener(listener: ItemClickListener) {
         this.listener = listener
@@ -41,8 +41,8 @@ class OrderItemEditorAdapter(
         fun bind(item: OrderItem) {
             binding.orderItemEditorTextViewName.text = item.name
             binding.orderItemEditorTextViewQuantity.text = "x${item.quantity}"
-            binding.orderItemEditorTextViewPrice.text = "${currencyFormatterUseCase(item.price)}"
-            binding.orderItemEditorTextViewSubtotal.text = "${currencyFormatterUseCase(item.subtotal)}"
+            binding.orderItemEditorTextViewPrice.text = "${indonesianCurrencyFormatter(item.price)}"
+            binding.orderItemEditorTextViewSubtotal.text = "${indonesianCurrencyFormatter(item.subtotal)}"
 
             binding.orderItemEditorButtonEdit.visibility = if (item.isFixed) ViewGroup.GONE else ViewGroup.VISIBLE
             binding.orderItemEditorButtonDelete.visibility = if (item.isFixed) ViewGroup.GONE else ViewGroup.VISIBLE

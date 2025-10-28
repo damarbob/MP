@@ -69,8 +69,8 @@ import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
 import id.monpres.app.usecase.CalculateAerialDistanceUseCase
-import id.monpres.app.usecase.CurrencyFormatterUseCase
 import id.monpres.app.usecase.GoogleMapsIntentUseCase
+import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
 import java.text.DateFormat
@@ -101,7 +101,7 @@ class ServiceProcessFragment : BaseFragment() {
     private lateinit var orderItemAdapter: OrderItemAdapter
 
     private val calculateAerialDistance = CalculateAerialDistanceUseCase()
-    private val currencyFormatterUseCase = CurrencyFormatterUseCase()
+    private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
     private val googleMapsIntentUseCase = GoogleMapsIntentUseCase()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -300,7 +300,7 @@ class ServiceProcessFragment : BaseFragment() {
 
             // Show total price with currency format
             price = orderService.price ?: OrderService.getPriceFromOrderItems(orderItems)
-            fragmentServiceProcessOrderItemsTotalPrice.text = currencyFormatterUseCase(price!!)
+            fragmentServiceProcessOrderItemsTotalPrice.text = indonesianCurrencyFormatter(price!!)
 
             // Set order items list
             orderItemAdapter.submitList(orderItems?.toList())

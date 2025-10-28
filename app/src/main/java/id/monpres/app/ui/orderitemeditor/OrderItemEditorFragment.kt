@@ -30,7 +30,7 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.ui.adapter.OrderItemEditorAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.CalculateAerialDistanceUseCase
-import id.monpres.app.usecase.CurrencyFormatterUseCase
+import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.ceil
@@ -56,7 +56,7 @@ class OrderItemEditorFragment : Fragment() {
     private val items: MutableList<OrderItem> = mutableListOf()
 
     private val calculateAerialDistance = CalculateAerialDistanceUseCase()
-    private val currencyFormatterUseCase = CurrencyFormatterUseCase()
+    private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,14 +101,14 @@ class OrderItemEditorFragment : Fragment() {
 
     private fun addAdditionalItems() {
         val user = mainViewModel.getCurrentUser()
-        var distanceFee = 0f
+        var distanceFee = 0.0
         if (user?.role == UserRole.PARTNER) {
             val orderDistance = calculateAerialDistance(
                 user.locationLat?.toDouble() ?: 0.0,
                 user.locationLng?.toDouble() ?: 0.0,
                 args.orderService.selectedLocationLat ?: 0.0,
                 args.orderService.selectedLocationLng ?: 0.0
-            )
+            ).toDouble()
             distanceFee = ceil(orderDistance / 1000) * OrderItem.DISTANCE_FEE
         }
         items.apply {
@@ -119,7 +119,7 @@ class OrderItemEditorFragment : Fragment() {
                         id = OrderItem.PLATFORM_FEE_ID,
                         name = OrderItem.PLATFORM_FEE_NAME,
                         price = OrderItem.PLATFORM_FEE,
-                        quantity = 1f,
+                        quantity = 1.0,
                         isFixed = true
                     )
                 )
@@ -131,7 +131,7 @@ class OrderItemEditorFragment : Fragment() {
                         id = OrderItem.DISTANCE_FEE_ID,
                         name = OrderItem.DISTANCE_FEE_NAME,
                         price = distanceFee,
-                        quantity = 1f,
+                        quantity = 1.0,
                         isFixed = true
                     )
                 )
@@ -163,7 +163,7 @@ class OrderItemEditorFragment : Fragment() {
 
     private fun updateTotalPriceView() {
         binding.fragmentOrderItemEditorTextViewTotal.text =
-            "${currencyFormatterUseCase(OrderService.getPriceFromOrderItems(items))}"
+            "${indonesianCurrencyFormatter(OrderService.getPriceFromOrderItems(items))}"
     }
 
     private fun setupListeners() {
@@ -191,7 +191,7 @@ class OrderItemEditorFragment : Fragment() {
             textInputLayoutName.editText?.setText(it.name)
             textInputLayoutQuantity.editText?.setText(it.quantity.toString())
             textInputLayoutPrice.editText?.setText(
-                currencyFormatterUseCase(it.price)
+                indonesianCurrencyFormatter(it.price)
             )
         }
 
@@ -205,12 +205,12 @@ class OrderItemEditorFragment : Fragment() {
                 if (!validateForm(textInputLayoutPrice)) return@setPositiveButton
 
                 val name = textInputLayoutName.editText?.text.toString()
-                val quantity = textInputLayoutQuantity.editText?.text.toString().toFloat()
+                val quantity = textInputLayoutQuantity.editText?.text.toString().toDouble()
                 val price = NumberFormat.getCurrencyInstance(
                     Locale.Builder().setRegion("ID").setLanguage("id").build()
                 ).apply {
                     maximumFractionDigits = 0
-                }.parse(textInputLayoutPrice.editText?.text.toString())?.toFloat() ?: 0f
+                }.parse(textInputLayoutPrice.editText?.text.toString())?.toDouble() ?: 0.0
 
                 if (item == null) {
                     // Add new item
@@ -272,7 +272,7 @@ class OrderItemEditorFragment : Fragment() {
      */
     fun EditText.addCurrencyFormatter() {
         this.addTextChangedListener(object : TextWatcher {
-            private var current = ""
+            private var current = this@addCurrencyFormatter.text.toString()
 
             override fun afterTextChanged(s: Editable?) {}
 
@@ -282,9 +282,25 @@ class OrderItemEditorFragment : Fragment() {
                 if (s.toString() != current) {
                     this@addCurrencyFormatter.removeTextChangedListener(this)
                     val cleanString = s.toString().replace("\\D".toRegex(), "")
-                    val parsed = if (cleanString.isBlank()) 0.0 else cleanString.toDouble()
-                    val formatted = currencyFormatterUseCase(parsed)
+                    val parsed = if (cleanString.isBlank()) {
+                        0L
+                    } else {
+                        // Use BigInteger to handle potentially huge numbers
+                        val bigIntValue = cleanString.toBigInteger()
+                        // Compare with Long.MAX_VALUE as BigInteger before converting
+                        if (bigIntValue > Long.MAX_VALUE.toBigInteger()) {
+                            // If it's too big, cap it at Long.MAX_VALUE
+                            Long.MAX_VALUE
+                        } else {
+                            // Otherwise, it's safe to convert to Long
+                            bigIntValue.toLong()
+                        }
+                    }
+                    val formatted = indonesianCurrencyFormatter(parsed)
                     current = formatted
+                    Log.d(TAG, "cleanString: $cleanString")
+                    Log.d(TAG, "parsed: $parsed")
+                    Log.d(TAG, "formatted: $formatted")
                     this@addCurrencyFormatter.setText(formatted)
                     this@addCurrencyFormatter.setSelection(formatted.length)
                     this@addCurrencyFormatter.addTextChangedListener(this)

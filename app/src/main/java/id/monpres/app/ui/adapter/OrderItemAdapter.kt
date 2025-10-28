@@ -7,12 +7,12 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import id.monpres.app.databinding.ItemOrderItemBinding
 import id.monpres.app.model.OrderItem
-import id.monpres.app.usecase.CurrencyFormatterUseCase
+import id.monpres.app.usecase.IndonesianCurrencyFormatter
 
 class OrderItemAdapter() :
     ListAdapter<OrderItem, OrderItemAdapter.OrderItemViewHolder>(OrderItemDiffCallback()) {
 
-    private val currencyFormatterUseCase = CurrencyFormatterUseCase()
+    private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
 
     class OrderItemDiffCallback() : DiffUtil.ItemCallback<OrderItem>() {
         override fun areItemsTheSame(
@@ -49,9 +49,9 @@ class OrderItemAdapter() :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(orderItem: OrderItem) {
             binding.orderItemTextViewName.text = "${orderItem.name}"
-            binding.orderItemTextViewPrice.text = currencyFormatterUseCase(orderItem.price)
+            binding.orderItemTextViewPrice.text = indonesianCurrencyFormatter(orderItem.price)
             binding.orderItemTextViewQuantity.text = "x${orderItem.quantity}"
-            binding.orderItemTextViewSubtotal.text = currencyFormatterUseCase(orderItem.subtotal)
+            binding.orderItemTextViewSubtotal.text = indonesianCurrencyFormatter(orderItem.subtotal)
 
         }
     }
