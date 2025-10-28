@@ -225,4 +225,9 @@
     <string name="filter_cancelled">Filter pesanan batal</string>
     <string name="no_order">Tidak ada pesanan</string>
     <string name="or">atau</string>
+    <string name="platform_fee">Biaya Layanan</string>
+    <string name="distance_fee">Biaya Jarak</string>
+    <string name="complete_anyway">Tetap selesaikan</string>
+    <string name="warning">Peringatan</string>
+    <string name="you_didn_t_add_any_items_fees_to_the_order">Anda belum menambah item/biaya ke pesanan. Tambahkan item/biaya?</string>
 </resources>

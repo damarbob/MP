@@ -8,6 +8,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -15,7 +18,6 @@ import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
 import id.monpres.app.MainViewModel
-import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceListBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
@@ -24,6 +26,7 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class OrderServiceListFragment : BaseFragment() {
@@ -116,57 +119,36 @@ class OrderServiceListFragment : BaseFragment() {
     private fun setupOrderServiceListObservers() {
         if (mainViewModel.getCurrentUser()?.role == UserRole.CUSTOMER) {
             observeUiState(mainViewModel.userOrderServicesState) {
-                setupList(it)
+                viewModel.setAllOrderServices(it)
             }
         } else if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER) {
             observeUiState(mainViewModel.partnerOrderServicesState) {
-                setupList(it)
+                viewModel.setAllOrderServices(it)
             }
         }
 
-        // This observer reacts to the selected chip changing and updates the UI accordingly.
-        viewModel.selectedChipId.observe(viewLifecycleOwner) { chipId ->
-            // Programmatically check the chip. This won't re-trigger the listener.
-            binding.fragmentOrderServiceListChipGroupOrderStatus.check(chipId ?: View.NO_ID)
-
-            // Submit the correct list to the adapter based on the selected chip
-            val listToSubmit = when (chipId) {
-                R.id.fragmentOrderServiceListChipOrderStatusOngoing ->
-                    ongoingOrders.sortedByDescending { it.createdAt }
-
-                R.id.fragmentOrderServiceListChipOrderStatusCompleted ->
-                    completedOrders.sortedByDescending { it.updatedAt }
-
-                R.id.fragmentOrderServiceListChipOrderStatusCancelled ->
-                    cancelledOrders.sortedByDescending { it.updatedAt }
-
-                else ->
-                    orderServices.sortedByDescending { it.updatedAt }
+        // 2. Observe the final, filtered list and submit it to the adapter.
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filteredOrderServices.collect { filteredList ->
+                    orderServiceAdapter.submitList(filteredList)
+                    toggleEmptyState(filteredList.isEmpty())
+                }
             }
-            orderServiceAdapter.submitList(listToSubmit)
-            toggleEmptyState(listToSubmit.isEmpty())
         }
 
-    }
-
-    private fun setupList(serviceOrders: List<OrderService>) {
-        this.orderServices = serviceOrders
-        // Re-group the orders whenever the main list changes
-        ongoingOrders =
-            serviceOrders.filter { it.status?.type == OrderStatusType.OPEN || it.status?.type == OrderStatusType.IN_PROGRESS }
-        completedOrders = serviceOrders.filter { it.status == OrderStatus.COMPLETED }
-        cancelledOrders = serviceOrders.filter { it.status == OrderStatus.CANCELLED || it.status == OrderStatus.FAILED || it.status == OrderStatus.RETURNED }
-
-
-        // Set the default filter, but only if one isn't already set (e.g. from screen rotation)
-        if (viewModel.selectedChipId.value == null) {
-            val defaultChipId = if (ongoingOrders.isNotEmpty()) {
-                R.id.fragmentOrderServiceListChipOrderStatusOngoing
-            } else {
-                View.NO_ID // Special value for no chip checked
+        // 3. Observe the selected chip ID just to update the UI (the ChipGroup).
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedChipId.collect { chipId ->
+                    // Ensure the correct chip is visually checked without triggering the listener again.
+                    if (binding.fragmentOrderServiceListChipGroupOrderStatus.checkedChipId != chipId) {
+                        binding.fragmentOrderServiceListChipGroupOrderStatus.check(chipId ?: View.NO_ID)
+                    }
+                }
             }
-            viewModel.setSelectedChipId(defaultChipId)
         }
+
     }
 
     private fun toggleEmptyState(isEmpty: Boolean) {

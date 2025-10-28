@@ -1,19 +1,78 @@
 package id.monpres.app.ui.home
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.R
+import id.monpres.app.enums.OrderStatus
+import id.monpres.app.enums.OrderStatusType
+import id.monpres.app.model.OrderService
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
 ) : ViewModel() {
+    private val _allOrderServices = MutableStateFlow<List<OrderService>>(emptyList())
 
-    // State for the selected chip ID. Null means no chip is selected.
+    // Input: The currently selected filter chip
     private val _selectedChipId = MutableStateFlow<Int?>(null)
-    val selectedChipId: LiveData<Int?> = _selectedChipId.asLiveData()
+    val selectedChipId: StateFlow<Int?> = _selectedChipId.asStateFlow()
+
+    // --- State to be observed by the UI ---
+
+    // Output: The final, filtered, and sorted list for the RecyclerView
+    val filteredOrderServices: StateFlow<List<OrderService>> = combine(
+        _allOrderServices,
+        _selectedChipId
+    ) { allOrders, chipId ->
+        // This block runs whenever the order list OR the selected chip changes
+        val ongoingOrders =
+            allOrders.filter { it.status?.type == OrderStatusType.OPEN || it.status?.type == OrderStatusType.IN_PROGRESS }
+
+        when (chipId) {
+            R.id.fragmentHomeChipOrderStatusOngoing ->
+                ongoingOrders.sortedByDescending { it.createdAt }
+
+            R.id.fragmentHomeChipOrderStatusCompleted -> {
+                val completedOrders = allOrders.filter { it.status == OrderStatus.COMPLETED }
+                completedOrders.take(5).sortedByDescending { it.updatedAt }
+            }
+
+            else -> {
+                // Default case: Show "All" or a default set
+                allOrders.take(5).sortedByDescending { it.updatedAt }
+
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    // Public functions to be called from the Fragment
+    fun setAllOrderServices(orders: List<OrderService>) {
+        _allOrderServices.value = orders
+
+        // Smart Default: Set the default chip selection only if one isn't already set
+        if (_selectedChipId.value == null) {
+            val ongoingOrdersExist =
+                orders.any { it.status?.type == OrderStatusType.OPEN || it.status?.type == OrderStatusType.IN_PROGRESS }
+            _selectedChipId.value = if (ongoingOrdersExist) {
+                R.id.fragmentHomeChipOrderStatusOngoing
+            } else {
+                // If there are no ongoing orders, you might default to "Completed" or "All".
+                // Here, we can check a different chip or leave it null/blank.
+                R.id.fragmentHomeChipOrderStatusCompleted
+            }
+        }
+    }
 
     fun setSelectedChipId(chipId: Int?) {
         _selectedChipId.value = chipId

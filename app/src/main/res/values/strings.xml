@@ -229,4 +229,9 @@
     <string name="filter_cancelled">Filter cancelled</string>
     <string name="no_order">No Order</string>
     <string name="or">or</string>
+    <string name="platform_fee">Platform Fee</string>
+    <string name="distance_fee">Distance Fee</string>
+    <string name="complete_anyway">Complete anyway</string>
+    <string name="warning">Warning</string>
+    <string name="you_didn_t_add_any_items_fees_to_the_order">You didn\'t add any items/fees to the order. Set items/fees?</string>
 </resources>

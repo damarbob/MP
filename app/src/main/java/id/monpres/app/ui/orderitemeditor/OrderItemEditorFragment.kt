@@ -117,7 +117,7 @@ class OrderItemEditorFragment : Fragment() {
                     if (items.isEmpty()) 0 else items.size - 1,
                     OrderItem(
                         id = OrderItem.PLATFORM_FEE_ID,
-                        name = OrderItem.PLATFORM_FEE_NAME,
+                        name = getString(OrderItem.PLATFORM_FEE_NAME),
                         price = OrderItem.PLATFORM_FEE,
                         quantity = 1.0,
                         isFixed = true
@@ -129,7 +129,7 @@ class OrderItemEditorFragment : Fragment() {
                     if (items.isEmpty()) 0 else items.size - 1,
                     OrderItem(
                         id = OrderItem.DISTANCE_FEE_ID,
-                        name = OrderItem.DISTANCE_FEE_NAME,
+                        name = getString(OrderItem.DISTANCE_FEE_NAME),
                         price = distanceFee,
                         quantity = 1.0,
                         isFixed = true

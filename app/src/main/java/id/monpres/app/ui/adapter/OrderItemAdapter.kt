@@ -48,7 +48,11 @@ class OrderItemAdapter() :
     inner class OrderItemViewHolder(val binding: ItemOrderItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(orderItem: OrderItem) {
-            binding.orderItemTextViewName.text = "${orderItem.name}"
+            binding.orderItemTextViewName.text = when (orderItem.id) {
+                OrderItem.PLATFORM_FEE_ID -> binding.root.context.getString(OrderItem.PLATFORM_FEE_NAME)
+                OrderItem.DISTANCE_FEE_ID -> binding.root.context.getString(OrderItem.DISTANCE_FEE_NAME)
+                else -> orderItem.name
+            }
             binding.orderItemTextViewPrice.text = indonesianCurrencyFormatter(orderItem.price)
             binding.orderItemTextViewQuantity.text = "x${orderItem.quantity}"
             binding.orderItemTextViewSubtotal.text = indonesianCurrencyFormatter(orderItem.subtotal)

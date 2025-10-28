@@ -122,9 +122,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             when {
                 isGranted -> {
                     processNextPermission()
-                    if (currentPermission == Manifest.permission.POST_NOTIFICATIONS) {
+//                    if (currentPermission == Manifest.permission.POST_NOTIFICATIONS) {
 //                        showNotification()
-                    }
+//                    }
                 }
 
                 shouldShowRequestPermissionRationale(currentPermission) -> {

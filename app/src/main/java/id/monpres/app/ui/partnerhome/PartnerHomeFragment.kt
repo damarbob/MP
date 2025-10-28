@@ -18,7 +18,6 @@ import com.google.android.material.carousel.HeroCarouselStrategy
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainViewModel
-import id.monpres.app.R
 import id.monpres.app.databinding.FragmentPartnerHomeBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
@@ -146,46 +145,31 @@ class PartnerHomeFragment : BaseFragment() {
     }
 
     private fun setupObservers() {
-        // This observer reacts to the list of orders changing
+        //1. Pass the master list of orders to the ViewModel whenever it changes.
         observeUiState(mainViewModel.partnerOrderServicesState) { serviceOrders ->
-            this.orderServices = serviceOrders
-            // Re-group the orders whenever the main list changes
-            ongoingOrders =
-                serviceOrders.filter { it.status?.type == OrderStatusType.OPEN || it.status?.type == OrderStatusType.IN_PROGRESS }
-            completedOrders = serviceOrders.filter { it.status == OrderStatus.COMPLETED }
-
-            // Set the default filter, but only if one isn't already set (e.g. from screen rotation)
-            if (viewModel.selectedChipId.value == null) {
-                val defaultChipId = if (ongoingOrders.isNotEmpty()) {
-                    R.id.fragmentPartnerHomeChipOrderStatusOngoing
-                } else {
-                    View.NO_ID // Special value for no chip checked
-                }
-                viewModel.setSelectedChipId(defaultChipId)
-            }
-
+            viewModel.setAllOrderServices(serviceOrders)
             binding.fragmentPartnerHomeButtonSeeAllOrderService.visibility =
                 if (serviceOrders.isEmpty()) View.GONE else View.VISIBLE
         }
 
-        // This observer reacts to the selected chip changing and updates the UI accordingly.
+        // 2. Observe the final, filtered list and submit it to the adapter.
         viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.selectedChipId.collect { chipId ->
-                    // Programmatically check the chip. This won't re-trigger the listener.
-                    binding.fragmentPartnerHomeChipGroupOrderStatus.check(chipId ?: View.NO_ID)
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filteredOrderServices.collect { filteredList ->
+                    orderServiceAdapter.submitList(filteredList)
+                    toggleEmptyState(filteredList.isEmpty())
+                }
+            }
+        }
 
-                    // Submit the correct list to the adapter based on the selected chip
-                    val listToSubmit = when (chipId) {
-                        R.id.fragmentPartnerHomeChipOrderStatusOngoing ->
-                            ongoingOrders.sortedByDescending { it.createdAt }
-                        R.id.fragmentPartnerHomeChipOrderStatusCompleted ->
-                            completedOrders.take(5).sortedByDescending { it.updatedAt }
-                        else ->
-                            orderServices.take(5).sortedByDescending { it.updatedAt }
+        // 3. Observe the selected chip ID just to update the UI (the ChipGroup).
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedChipId.collect { chipId ->
+                    // Ensure the correct chip is visually checked without triggering the listener again.
+                    if (binding.fragmentPartnerHomeChipGroupOrderStatus.checkedChipId != chipId) {
+                        binding.fragmentPartnerHomeChipGroupOrderStatus.check(chipId ?: View.NO_ID)
                     }
-                    orderServiceAdapter.submitList(listToSubmit)
-                    toggleEmptyState(listToSubmit.isEmpty())
                 }
             }
         }

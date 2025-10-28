@@ -243,6 +243,15 @@ class ServiceProcessFragment : BaseFragment() {
                     } else {
                         stopLocationUpdates()
                     }
+
+                    when (orderService.status) {
+                        OrderStatus.WAITING_FOR_PAYMENT, OrderStatus.COMPLETED -> {
+                            binding.fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
+                                View.VISIBLE
+                        }
+
+                        else -> {}
+                    }
                 }
 
 
@@ -277,7 +286,7 @@ class ServiceProcessFragment : BaseFragment() {
             fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
                 if (orderService.orderItems.isNullOrEmpty()) View.GONE else View.VISIBLE
             fragmentServiceProcessButtonEditOrderItem.visibility =
-                if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER) View.VISIBLE else View.GONE
+                if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER && orderService.status?.type != OrderStatusType.CLOSED) View.VISIBLE else View.GONE
 
             // Title and contents
             fragmentServiceProcessTextViewTitle.text =
@@ -306,7 +315,8 @@ class ServiceProcessFragment : BaseFragment() {
             orderItemAdapter.submitList(orderItems?.toList())
 
             // Current distance
-            fragmentServiceProcessTextViewCurrentDistance.visibility = if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
+            fragmentServiceProcessTextViewCurrentDistance.visibility =
+                if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
 
             // Mapbox
             fragmentServiceProcessMapView.mapboxMap.setCamera(
@@ -402,7 +412,8 @@ class ServiceProcessFragment : BaseFragment() {
 
                     if (orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE) {
                         if (hasLocationPermission()) {
-                            val currentDistance = NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)
+                            val currentDistance =
+                                NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)
                             Toast.makeText(
                                 requireContext(),
                                 getString(
@@ -411,10 +422,10 @@ class ServiceProcessFragment : BaseFragment() {
                                 ),
                                 Toast.LENGTH_LONG
                             ).show()
-                            view.setCompleted(completed = false, withAnimation = true)
                         } else {
                             requestLocationPermission()
                         }
+                        view.setCompleted(completed = false, withAnimation = true)
                         return
                     }
 
@@ -424,21 +435,40 @@ class ServiceProcessFragment : BaseFragment() {
                                 orderItems = orderItems?.toTypedArray(), orderService = orderService
                             )
                         )
+                        view.setCompleted(completed = false, withAnimation = true)
                         return
                     }
 
-                    observeUiStateOneShot(
-                        viewModel.updateOrderService(
-                            orderService.copy(
-                                updatedAt = Timestamp.now(),
-                                status = orderService.status?.serviceNextProcess(),
-                                orderItems = orderItems,
-                                price = price
-                            )
-                        )
-                    ) {
-                        view.setCompleted(completed = false, withAnimation = true)
+                    if (orderService.status?.serviceNextProcess() == OrderStatus.COMPLETED && orderItems.isNullOrEmpty()) {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(getString(R.string.warning))
+                            .setMessage(getString(R.string.you_didn_t_add_any_items_fees_to_the_order))
+                            .setPositiveButton(getString(R.string.okay)) { dialog, which ->
+                                findNavController().navigate(
+                                    ServiceProcessFragmentDirections.actionServiceProcessFragmentToOrderItemEditorFragment(
+                                        orderItems = orderItems?.toTypedArray(),
+                                        orderService = orderService
+                                    )
+                                )
+                                view.setCompleted(completed = false, withAnimation = true)
+                            }
+                            .setNegativeButton(getString(R.string.complete_anyway)) { dialog, which ->
+                                updateOrderStatus(view)
+                            }
+                            .setNeutralButton(getString(R.string.cancel)) { dialog, which ->
+                                dialog.dismiss()
+                                view.setCompleted(completed = false, withAnimation = true)
+                            }
+                            .setCancelable(false)
+                            .show()
+
+                        // IMPORTANT: Since the logic is now handled inside the listeners, we return here
+                        // to prevent the code below from running immediately.
+                        return
                     }
+
+                    // This is the default action if no special conditions are met
+                    updateOrderStatus(view)
                 }
             }
 
@@ -449,6 +479,24 @@ class ServiceProcessFragment : BaseFragment() {
                     orderService.selectedLocationLat!!, orderService.selectedLocationLng!!
                 )
             }
+        }
+    }
+
+    private fun updateOrderStatus(view: SlideToActView) {
+        observeUiStateOneShot(
+            viewModel.updateOrderService(
+                orderService.copy(
+                    updatedAt = Timestamp.now(),
+                    status = orderService.status?.serviceNextProcess(),
+                    orderItems = orderItems,
+                    price = price
+                )
+            )
+        ) {
+            // This block runs after the ViewModel update is successful.
+            // You might want to navigate away or show a success message.
+            // For now, we just reset the slider on success.
+            view.setCompleted(completed = false, withAnimation = true)
         }
     }
 
@@ -708,7 +756,8 @@ class ServiceProcessFragment : BaseFragment() {
 
         // Update your UI with the new location here
         // For example: updateTextView("Lat: $latitude, Long: $longitude")
-        binding.fragmentServiceProcessTextViewCurrentDistance.text = "± ${NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)} m"
+        binding.fragmentServiceProcessTextViewCurrentDistance.text =
+            "± ${NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)} m"
     }
 
     private fun handleLocationServicesDisabled() {
