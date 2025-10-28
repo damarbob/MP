@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -34,12 +35,17 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.transition.AutoTransition
+import androidx.transition.TransitionManager
 import com.bumptech.glide.Glide
+import com.dotlottie.dlplayer.Mode
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.gson.Gson
+import com.lottiefiles.dotlottie.core.model.Config
+import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.enums.UserRole
@@ -186,6 +192,12 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        // Start loading
+        viewModel.setMainLoadingState(true)
+
+        // Set lottie loading
+        setupLottie()
+
         /* Auth */
         runAuthentication()
 
@@ -201,6 +213,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             checkUserEligibility()
 
             viewModel.observeDataByRole()
+
+            viewModel.setMainLoadingState(false)
 
             /* Permission */
             if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
@@ -232,6 +246,23 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                     Log.e(TAG, t.localizedMessage ?: t.message ?: "Unknown error")
                 }
         }
+    }
+
+    private fun setupLottie() {
+        val config = Config.Builder()
+            .autoplay(true)
+            .speed(1f)
+            .loop(true)
+//            .source(DotLottieSource.Url("https://lottie.host/2b3473b5-0f5f-40da-985a-9d111dda0530/Ae6j7lkUo7.lottie"))
+//            .source(DotLottieSource.Asset("file.json")) // asset from the asset folder .json or .lottie
+            .source(DotLottieSource.Res(R.raw.car)) // resource from raw resources .json or .lottie
+            .useFrameInterpolation(true)
+            .playMode(Mode.FORWARD)
+            .threads(8u) // Use 6 threads for rendering
+//            .themeId("darkTheme") // Set initial theme
+//            .layout(Fit.FIT, LayoutUtil.Alignment.Center) // Set layout configuration
+            .build()
+        binding.activityMainLoadingLottieView.load(config)
     }
 
     private val a by lazy {
@@ -367,6 +398,16 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                     .collect {
                         clearCredentialsAndNavigate()
                     }
+            }
+        }
+
+        viewModel.mainLoadingState.observe(this) {
+            TransitionManager.beginDelayedTransition(binding.root, AutoTransition().apply {
+                duration = 300L
+            })
+            binding.apply {
+                navHostFragmentActivityMain.visibility = if (it) View.GONE else View.VISIBLE
+                activityMainLoadingStateLayout.visibility = if (it) View.VISIBLE else View.GONE
             }
         }
     }
@@ -828,7 +869,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         launchedFromOrderId = intent.getStringExtra(OrderServiceNotification.ORDER_ID_KEY)
         if (launchedFromOrderId != null) {
             Log.d(
-                "MainActivity",
+                TAG,
                 "Launched/Resumed from notification for order: $launchedFromOrderId"
             )
             // You might want to clear it after processing to avoid re-triggering this logic

@@ -1,6 +1,7 @@
 package id.monpres.app
 
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -37,6 +38,9 @@ class MainViewModel @Inject constructor(
     companion object {
         private const val TAG = "MainViewModel"
     }
+
+    private val _mainLoadingState = MutableLiveData(true)
+    val mainLoadingState: MutableLiveData<Boolean> = _mainLoadingState
 
     private val _signOutEvent = MutableSharedFlow<Unit>()
     val signOutEvent: SharedFlow<Unit> = _signOutEvent.asSharedFlow()
@@ -310,4 +314,8 @@ class MainViewModel @Inject constructor(
     }
 
     fun getCurrentUser() = userRepository.getCurrentUserRecord()
+
+    fun setMainLoadingState(isLoading: Boolean) {
+        _mainLoadingState.value = isLoading
+    }
 }

@@ -42,6 +42,28 @@
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
             app:navGraph="@navigation/nav_main" />
 
+        <LinearLayout
+            android:id="@+id/activityMainLoadingStateLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:divider="@drawable/divider_gap_16"
+            android:gravity="center"
+            android:showDividers="middle">
+
+            <com.lottiefiles.dotlottie.core.widget.DotLottieAnimation
+                android:id="@+id/activityMainLoadingLottieView"
+                android:layout_width="256dp"
+                android:layout_height="256dp"
+                />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/Widget.App.H5.Bold"
+                android:text="@string/loading"/>
+        </LinearLayout>
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- Container for contents of drawer - use NavigationView to make configuration easier -->
