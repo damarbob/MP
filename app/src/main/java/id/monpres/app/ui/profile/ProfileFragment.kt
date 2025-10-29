@@ -13,7 +13,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.firebase.Firebase
@@ -30,7 +29,6 @@ import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.utils.markRequiredInRed
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -142,16 +140,15 @@ class ProfileFragment : Fragment() {
             // Make button disabled
             it.isEnabled = false
 
-            lifecycleScope.launch {
-                viewModel.updateProfileNew(
-                    binding.editProfileInputEditFullName.text.toString(),
-                    binding.editProfileInputEmailAddress.text.toString(),
-                    binding.editProfileInputWhatsApp.text.toString(),
-                    !binding.editProfileCheckBoxHoliday.isChecked,
-                    selectedPrimaryLocationPoint,
-                    binding.editProfileInputEditAddress.text.toString()
-                )
-            }
+            viewModel.updateProfile(
+                binding.editProfileInputEditFullName.text.toString(),
+                binding.editProfileInputEmailAddress.text.toString(),
+                binding.editProfileInputWhatsApp.text.toString(),
+                !binding.editProfileCheckBoxHoliday.isChecked,
+                selectedPrimaryLocationPoint,
+                binding.editProfileInputEditAddress.text.toString()
+            )
+
         }
         binding.editProfileButtonSelectPrimaryLocationButton.setOnClickListener {
             openMap()

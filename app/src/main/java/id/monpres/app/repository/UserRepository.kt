@@ -37,6 +37,10 @@ class UserRepository @Inject constructor(
         // TODO("Not yet implemented")
     }
 
+    fun setUserRecord(user: MontirPresisiUser) {
+        setRecords(listOf(user), false)
+    }
+
     fun getCurrentUserRecord(): MontirPresisiUser? {
         return getRecords().find { it.userId == auth.currentUser?.uid }
     }
