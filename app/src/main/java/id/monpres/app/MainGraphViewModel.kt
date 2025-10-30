@@ -12,7 +12,7 @@ import id.monpres.app.model.Vehicle
 import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.repository.VehicleRepository
-import id.monpres.app.utils.UiState
+import id.monpres.app.state.UiState
 import id.monpres.app.utils.takeUntilSignal
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +80,7 @@ class MainGraphViewModel @Inject constructor(
     }
 
     fun observeDataByRole(user: MontirPresisiUser) {
-        Log.d(TAG, "current role: ${getCurrentUser()?.role}")
+        Log.d(TAG, "current role: ${user.role}")
         if (user.role == UserRole.CUSTOMER) {
             observeUserOrderServices()
             observeUserVehicles()
@@ -104,6 +104,7 @@ class MainGraphViewModel @Inject constructor(
                     _userOrderServicesState.value = UiState.Error(e)
                 }
                 .collect { state ->
+                    Log.d(TAG, "User orders state: $state")
                     _userOrderServicesState.value = state
                 }
         }
@@ -124,6 +125,7 @@ class MainGraphViewModel @Inject constructor(
                     _partnerOrderServicesState.value = UiState.Error(e)
                 }
                 .collect { state ->
+                    Log.d(TAG, "Partner orders state: $state")
                     _partnerOrderServicesState.value = state
                 }
         }

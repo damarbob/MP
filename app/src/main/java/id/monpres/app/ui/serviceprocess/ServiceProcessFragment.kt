@@ -24,8 +24,8 @@ import androidx.core.graphics.scale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -89,7 +89,7 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private val viewModel: ServiceProcessViewModel by viewModels()
-    private val mainGraphViewModel: MainGraphViewModel by hiltNavGraphViewModels(R.id.nav_main)
+    private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     private val args: ServiceProcessFragmentArgs by navArgs()
 

@@ -10,8 +10,8 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateMarginsRelative
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -35,7 +35,7 @@ class VehicleListFragment : BaseFragment() {
 
     /* View Models */
     private val viewModel: VehicleListViewModel by viewModels()
-    private val mainGraphViewModel: MainGraphViewModel by hiltNavGraphViewModels(R.id.nav_main)
+    private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* Bindings */
     private lateinit var binding: FragmentVehicleListBinding

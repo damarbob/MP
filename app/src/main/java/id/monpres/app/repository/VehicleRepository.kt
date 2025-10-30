@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import id.monpres.app.dao.VehicleDao
 import id.monpres.app.model.Vehicle
+import id.monpres.app.state.UiState
 import id.monpres.app.usecase.DeleteBulkDataByIdsUseCase
 import id.monpres.app.usecase.DeleteVehicleUseCase
 import id.monpres.app.usecase.GetVehicleByIdUseCase
@@ -12,7 +13,6 @@ import id.monpres.app.usecase.GetVehiclesByUserIdFlowUseCase
 import id.monpres.app.usecase.GetVehiclesByUserIdUseCase
 import id.monpres.app.usecase.InsertVehicleUseCase
 import id.monpres.app.usecase.UpdateVehicleUseCase
-import id.monpres.app.utils.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch

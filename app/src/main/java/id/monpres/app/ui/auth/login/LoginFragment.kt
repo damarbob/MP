@@ -74,10 +74,11 @@ class LoginFragment : Fragment() {
         }
         // Form Layout State
         viewModel.loginFormVisibilityState.observe(viewLifecycleOwner) {
-            TransitionManager.beginDelayedTransition(binding.root, AutoTransition())
-            val form = binding.loginLayoutForm
-            form.visibility = if (it) View.VISIBLE else View.GONE
+            TransitionManager.beginDelayedTransition(binding.root, AutoTransition().apply {
+                duration = 150L
+            })
             binding.loginEmailButton.visibility = if (it) View.GONE else View.VISIBLE
+            binding.loginLayoutForm.visibility = if (it) View.VISIBLE else View.GONE
         }
         // Loading indicator visibility
         viewModel.progressVisibility.observe(viewLifecycleOwner) { isVisible ->

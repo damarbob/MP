@@ -1,4 +1,4 @@
-package id.monpres.app.utils
+package id.monpres.app.state
 
 sealed class UiState<out T> {
     object Loading : UiState<Nothing>()

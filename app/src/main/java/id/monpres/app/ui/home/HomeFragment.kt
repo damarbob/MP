@@ -8,8 +8,8 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -46,7 +46,7 @@ class HomeFragment : BaseFragment() {
 
     /* View models */
     private val viewModel: HomeViewModel by viewModels()
-    private val mainGraphViewModel: MainGraphViewModel by hiltNavGraphViewModels(R.id.nav_main)
+    private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* Bindings */
     private lateinit var binding: FragmentHomeBinding

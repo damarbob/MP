@@ -48,12 +48,13 @@ import com.lottiefiles.dotlottie.core.model.Config
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
-import id.monpres.app.enums.UserRole
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.model.OrderService
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
+import id.monpres.app.state.NavigationGraphState
+import id.monpres.app.state.UserEligibilityState
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetColorFromAttrUseCase
@@ -61,7 +62,6 @@ import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -193,32 +193,12 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Start loading
-        viewModel.setMainLoadingState(true)
-
         // Set lottie loading
         setupLottie()
 
-        /* Auth */
-        runAuthentication()
-
-        lifecycleScope.launch {
-            getUserData()
-
-            /* Update navigation tree */
-            // Important to do this after getting user data
-            // to make sure the rest of the app is accessing the correct nav graph
-            // in case of nav graph modification
-            updateNavigationTree()
-
-            checkUserEligibility()
-
-            viewModel.setMainLoadingState(false)
-
-            /* Permission */
-            if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
+        /* Permission */
+        if (!hasPostNotificationPermission()) checkPermissions(getNotificationPermissions().toList())
 //            else showNotification()
-        }
 
         /* UI */
         setupUIComponents()
@@ -257,14 +237,14 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             .source(DotLottieSource.Res(R.raw.car)) // resource from raw resources .json or .lottie
             .useFrameInterpolation(true)
             .playMode(Mode.FORWARD)
-            .threads(8u) // Use 6 threads for rendering
+            .threads(6u) // Use 6 threads for rendering
 //            .themeId("darkTheme") // Set initial theme
 //            .layout(Fit.FIT, LayoutUtil.Alignment.Center) // Set layout configuration
             .build()
         binding.activityMainLoadingLottieView.load(config)
     }
 
-    private val a by lazy {
+    private val locationDialog by lazy {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.location)
             .setMessage(getString(R.string.as_a_partner_you_must_set_a_primary_location))
@@ -275,7 +255,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             .create()
     }
 
-    private val b by lazy {
+    private val whatsappDialog by lazy {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.whatsapp_number)
             .setMessage(getString(R.string.you_have_to_set_a_phone_number_so_we_can_contact_you))
@@ -286,39 +266,17 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             .create()
     }
 
-    private fun checkUserEligibility() {
-        val user = userRepository.getCurrentUserRecord()
-        Log.d(TAG, user.toString())
-
-        if (user?.role == UserRole.PARTNER && (user.locationLat.isNullOrBlank() || user.locationLng.isNullOrBlank())) {
-            // Prompt the partner to set location
-            if (!a.isShowing && !b.isShowing) a.show()
-        } else if (user?.role == UserRole.CUSTOMER && user.phoneNumber.isNullOrBlank()) {
-            // Prompt the customer to set phone number
-            if (!a.isShowing && !b.isShowing) b.show()
-        }
-    }
-
-    private fun updateNavigationTree() {
+    private fun updateNavigationTree(startDestination: Int) {
         // Update navigation tree
-        val currentUserProfile = userRepository.getCurrentUserRecord()
-        if (currentUserProfile == null) {
-            Log.e(TAG, "Current user profile is null")
+        // Prevent re-setting the graph if it's already correct
+        if (navController.graph.startDestinationId == startDestination) {
             return
         }
 
-        // If the user is a partner, update start destination to partner home
-        // TODO (low priority): Handle admin role
-        if (currentUserProfile.role == UserRole.PARTNER) {
-            Log.d(TAG, "Current user is a partner")
-
-            // Set initial graph
-            navController.graph = navController.navInflater.inflate(R.navigation.nav_main)
-
-            val navGraph = navController.navInflater.inflate(R.navigation.nav_main)
-            navGraph.setStartDestination(R.id.partnerHomeFragment)
-            navController.graph = navGraph
-        }
+        Log.d(TAG, "Updating nav graph, start destination: $startDestination")
+        val navGraph = navController.navInflater.inflate(R.navigation.nav_main)
+        navGraph.setStartDestination(startDestination)
+        navController.graph = navGraph
 
         setupAppBar() // Update app bar is required to reflect navigation tree changes
     }
@@ -381,7 +339,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
             // Check user eligibility anywhere except profile fragment
             if (destination.id != R.id.profileFragment) {
-                checkUserEligibility()
+                viewModel.recheckEligibility()
             }
 
             // Profile menu visibility
@@ -394,6 +352,42 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     }
 
     private fun setupObservers() {
+        // --- NEW OBSERVER FOR ERROR EVENTS ---
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // This collector will run whenever the activity is started
+                // and stop when it's stopped, preventing background UI work.
+                viewModel.errorEvent.collect { errorMessage ->
+                    // Show the error message in a Toast or a Snackbar
+                    Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        // Observe is user verified
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isUserVerified.collect {
+                    Log.d(TAG, "isUserVerified: $it")
+                    if (it != null) {
+                        handleVerificationStatus(it)
+                    }
+                }
+            }
+        }
+
+        // Observe resend email verification success
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isResendEmailVerificationSuccess.collect {
+                    Log.d(TAG, "isResendEmailVerificationSuccess: $it")
+                    if (it != null) {
+                        handleVerificationEmailResult(it)
+                    }
+                }
+            }
+        }
+
         // Observe sign-out event
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -411,6 +405,41 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             binding.apply {
                 navHostFragmentActivityMain.visibility = if (it) View.GONE else View.VISIBLE
                 activityMainLoadingStateLayout.visibility = if (it) View.VISIBLE else View.GONE
+            }
+        }
+
+        // --- NEW OBSERVERS FOR REFACTORED LOGIC ---
+
+        // Observe the navigation graph state
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.navigationGraphState.collect { state ->
+                    when (state) {
+                        is NavigationGraphState.Loading -> { /* Handled by mainLoadingState */
+                        }
+
+                        is NavigationGraphState.Partner -> updateNavigationTree(startDestination = R.id.partnerHomeFragment)
+                        is NavigationGraphState.Customer -> updateNavigationTree(startDestination = R.id.homeFragment)
+                    }
+                }
+            }
+        }
+
+        // Observe the user eligibility state
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.userEligibilityState.collect { state ->
+                    // Dismiss any existing dialogs first
+                    locationDialog.dismiss()
+                    whatsappDialog.dismiss()
+                    // Show the relevant dialog if needed
+                    when (state) {
+                        is UserEligibilityState.PartnerMissingLocation -> locationDialog.show()
+                        is UserEligibilityState.CustomerMissingPhoneNumber -> whatsappDialog.show()
+                        is UserEligibilityState.Eligible -> { /* Do nothing */
+                        }
+                    }
+                }
             }
         }
     }
@@ -431,9 +460,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         // Navigation view header user infos
         val navViewCardHeader = navView.inflateHeaderView(R.layout.header_navigation_activity_main)
         navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainDisplayName).text =
-            currentUser?.displayName
+            auth.currentUser?.displayName
         navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainEmail).text =
-            currentUser?.email
+            auth.currentUser?.email
     }
 
     private fun setupUIListeners() {
@@ -506,48 +535,30 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             .into(profileView!!)
     }
 
-    private fun runAuthentication() {
-        /* Auth */
-        currentUser = auth.currentUser ?: return // Get current user
+    private fun handleVerificationStatus(isVerified: Boolean) {
+        if (isVerified) {
+            Log.d(TAG, "Email is verified")
+        } else {
+            // Show confirmation dialog
+            MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.verification))
+                .setMessage(getString(R.string.please_verify_your_email))
+                .setNegativeButton(getString(R.string.refresh)) { _, _ ->
 
-        Log.d(TAG, "Current user name: ${currentUser?.displayName}")
+                    restartActivity() // Restart activity
 
-        checkEmailVerificationUseCase(
-            { isVerified ->
-                if (isVerified) {
-                    Log.d(TAG, "Email is verified")
-                } else {
+                }
+                .setPositiveButton(getString(R.string.send)) { _, _ ->
+
+                    viewModel.resendVerificationEmail() // Send verification email
+
                     // Show confirmation dialog
                     MaterialAlertDialogBuilder(this)
                         .setTitle(getString(R.string.verification))
                         .setMessage(getString(R.string.please_verify_your_email))
-                        .setNegativeButton(getString(R.string.refresh)) { _, _ ->
+                        .setPositiveButton(getString(R.string.refresh)) { _, _ ->
 
                             restartActivity() // Restart activity
-
-                        }
-                        .setPositiveButton(getString(R.string.send)) { _, _ ->
-
-                            resendVerificationEmail() // Send verification email
-
-                            // Show confirmation dialog
-                            MaterialAlertDialogBuilder(this)
-                                .setTitle(getString(R.string.verification))
-                                .setMessage(getString(R.string.please_verify_your_email))
-                                .setPositiveButton(getString(R.string.refresh)) { _, _ ->
-
-                                    restartActivity() // Restart activity
-
-                                }
-                                .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
-                                    onLogoutClicked() // Sign out
-                                }
-                                .setCancelable(false) // Prevent dismissing by back button
-                                .create()
-                                .apply {
-                                    setCanceledOnTouchOutside(false) // Prevent dismissing by clicking outside
-                                }
-                                .show()
 
                         }
                         .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
@@ -559,61 +570,17 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                             setCanceledOnTouchOutside(false) // Prevent dismissing by clicking outside
                         }
                         .show()
-                }
-            },
-            { errorMessage ->
-                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG)
-                    .show()
-            }
-        )
-    }
 
-    private suspend fun getUserData() {
-        /* Get user profile */
-        getOrCreateUserUseCase(UserRole.CUSTOMER).onSuccess { user ->
-            Log.d(TAG, "User: ${user.userId}")
-            user.userId?.let {
-                Log.d(
-                    TAG,
-                    "UserRepository record: ${userRepository.getRecordByUserId(it)}"
-                )
-            }
-        }.onFailure { exception ->
-            when (exception) {
-                is GetOrCreateUserUseCase.UserNotAuthenticatedException -> {
-                    // Handle unauthenticated user
-                    Log.e(TAG, "User not authenticated")
                 }
-
-                is GetOrCreateUserUseCase.UserDataParseException,
-                is GetOrCreateUserUseCase.FirestoreOperationException -> {
-                    // Handle specific exceptions
-                    Log.e(TAG, "Error: ${exception.message}")
+                .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
+                    onLogoutClicked() // Sign out
                 }
-
-                else -> {
-                    // Handle generic errors
-                    Log.e(TAG, "Unexpected error: ${exception.message}")
+                .setCancelable(false) // Prevent dismissing by back button
+                .create()
+                .apply {
+                    setCanceledOnTouchOutside(false) // Prevent dismissing by clicking outside
                 }
-            }
-        }
-
-        /* Get user identity */
-        getOrCreateUserIdentityUseCase().onSuccess { userIdentity ->
-            Log.d(TAG, "User: ${userIdentity.userId}")
-            userIdentity.userId?.let {
-                Log.d(
-                    TAG,
-                    "UserIdentityRepository record: ${
-                        userIdentityRepository.getRecordByUserId(
-                            it
-                        )
-                    }"
-                )
-            }
-        }.onFailure { exception ->
-            // Handle generic errors
-            Log.e(TAG, "Unexpected error: ${exception.message}")
+                .show()
         }
     }
 
@@ -718,40 +685,21 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
     }*/
 
-    private fun resendVerificationEmail() {
-        resendVerificationEmailUseCase(
-            { isSuccessful ->
-                Toast.makeText(
-                    this,
-                    getString(R.string.verification_email_has_been_sent),
-                    Toast.LENGTH_SHORT
-                )
-                    .show()
-            },
-            { errorMessage ->
-                Toast.makeText(
-                    this,
-                    "${getString(R.string.failed_to_send_the_verification_email)}: ${errorMessage}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        )
-    }
-
-    // Sign out and navigate to login
-    private fun logoutAndNavigateToLogin() {
-
-        Firebase.auth.signOut() // Sign out from firebase
-
-        val cm = CredentialManager.create(this)
-        CoroutineScope(Dispatchers.Main).launch {
-            cm.clearCredentialState(ClearCredentialStateRequest())
+    private fun handleVerificationEmailResult(isSuccessful: Boolean) {
+        if (isSuccessful) {
+            Toast.makeText(
+                this,
+                getString(R.string.verification_email_has_been_sent),
+                Toast.LENGTH_SHORT
+            )
+                .show()
+        } else {
+            Toast.makeText(
+                this,
+                getString(R.string.failed_to_send_the_verification_email),
+                Toast.LENGTH_SHORT
+            ).show()
         }
-
-        // Navigate to LoginActivity
-        val intent = Intent(this, LoginActivity::class.java)
-        startActivity(intent)
-        finish() // Finish MainActivity to prevent the user from coming back to it
     }
 
     private fun clearCredentialsAndNavigate() {
@@ -769,10 +717,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
 
         // 2. Navigate immediately (don't wait for credential clearing)
-        navigateToLogin()
-    }
-
-    private fun navigateToLogin() {
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }
@@ -886,10 +830,4 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
         }
     }
-
-    override fun onResume() {
-        super.onResume()
-        updateNavigationTree()
-    }
-
 }

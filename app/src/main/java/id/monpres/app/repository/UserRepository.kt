@@ -44,7 +44,7 @@ class UserRepository @Inject constructor(
     }
 
     override fun onRecordCleared() {
-        // TODO("Not yet implemented")
+        _userRecord.value = null
     }
 
     fun setCurrentUserRecord(user: MontirPresisiUser) {

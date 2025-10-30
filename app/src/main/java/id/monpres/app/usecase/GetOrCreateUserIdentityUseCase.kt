@@ -51,11 +51,18 @@ class GetOrCreateUserIdentityUseCase @Inject constructor(
                             updatedAt = Timestamp.now().toDate().time.toDouble()
                         )
 
-                        userDocRef.set(updatedUserIdentity, SetOptions.merge()).await() // Update Firestore with the new data
-                        userIdentityRepository.addRecord(updatedUserIdentity) // Create record in local repository after successful Firestore update
+                        userDocRef.set(updatedUserIdentity, SetOptions.merge())
+                            .await() // Update Firestore with the new data
+                        userIdentityRepository.setRecords(
+                            listOf(updatedUserIdentity),
+                            false
+                        ) // Create record in local repository after successful Firestore update
                         Result.success(updatedUserIdentity)
                     } else {
-                        userIdentityRepository.addRecord(existingIdentity) // Create record in local repository after successful Firestore creation
+                        userIdentityRepository.setRecords(
+                            listOf(existingIdentity),
+                            false
+                        ) // Create record in local repository after successful Firestore creation
                         Result.success(existingIdentity)
                     }
                 } else {
@@ -72,7 +79,10 @@ class GetOrCreateUserIdentityUseCase @Inject constructor(
                     updatedAt = Timestamp.now().toDate().time.toDouble()
                 )
                 usersCollection.document(firebaseUser.uid).set(newIdentity).await()
-                userIdentityRepository.addRecord(newIdentity) // Create record in local repository after successful Firestore creation
+                userIdentityRepository.setRecords(
+                    listOf(newIdentity),
+                    false
+                ) // Create record in local repository after successful Firestore creation
                 Result.success(newIdentity)
             }
         } catch (e: Exception) {

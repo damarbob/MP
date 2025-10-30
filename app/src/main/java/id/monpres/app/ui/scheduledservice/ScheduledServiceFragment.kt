@@ -18,9 +18,9 @@ import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentScheduledServiceBinding
 import id.monpres.app.model.OrderService
+import id.monpres.app.state.UiState
 import id.monpres.app.ui.BaseServiceFragment
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
-import id.monpres.app.utils.UiState
 import id.monpres.app.utils.markRequiredInRed
 import java.text.SimpleDateFormat
 import java.util.Calendar
