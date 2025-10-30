@@ -7,12 +7,11 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.view.ActionMode
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateMarginsRelative
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -20,7 +19,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
-import id.monpres.app.MainViewModel
+import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentVehicleListBinding
 import id.monpres.app.ui.BaseFragment
@@ -36,14 +35,14 @@ class VehicleListFragment : BaseFragment() {
 
     /* View Models */
     private val viewModel: VehicleListViewModel by viewModels()
-    private val mainViewModel: MainViewModel by activityViewModels()
+    private val mainGraphViewModel: MainGraphViewModel by hiltNavGraphViewModels(R.id.nav_main)
 
     /* Bindings */
     private lateinit var binding: FragmentVehicleListBinding
 
     /* Variables */
     private lateinit var vehicleAdapter: VehicleAdapter
-    private var actionMode: ActionMode? = null
+    private var actionMode: android.view.ActionMode? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,8 +129,8 @@ class VehicleListFragment : BaseFragment() {
                 if (isInSelectionMode) {
                     if (actionMode == null) {
                         actionMode =
-                            (requireActivity() as MainActivity).startSupportActionMode(
-                                actionModeCallback
+                            (requireActivity() as MainActivity).startActionMode(
+                                actionModeCallback, android.view.ActionMode.TYPE_PRIMARY
                             )
                     }
                     updateActionModeTitle()
@@ -155,7 +154,7 @@ class VehicleListFragment : BaseFragment() {
 
     private fun setupVehiclesObservers() {
         // Submit vehicles to adapter
-        observeUiState(mainViewModel.userVehiclesState) {
+        observeUiState(mainGraphViewModel.userVehiclesState) {
             vehicleAdapter.submitList(it)
         }
     }
@@ -166,21 +165,68 @@ class VehicleListFragment : BaseFragment() {
         }
     }
 
-    private val actionModeCallback: ActionMode.Callback =
-        object : ActionMode.Callback {
-            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-                mode.menuInflater.inflate(R.menu.contextual_vehicle_menu, menu)
-                mode.title = getString(R.string.select_items) // Initial title
-                return true // Return true to show the CAB
-            }
+    private val actionModeCallback: android.view.ActionMode.Callback2 =
+        object : android.view.ActionMode.Callback2() {
+//            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+//                mode.menuInflater.inflate(R.menu.contextual_vehicle_menu, menu)
+//                mode.title = getString(R.string.select_items) // Initial title
+//                (requireActivity() as MainActivity).supportActionBar?.hide()
+//                return true // Return true to show the CAB
+//            }
+//
+//            override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+//                // Can be used to update the CAB's menu items if needed
+//                return false // Return false if nothing is changed
+//            }
+//
+//            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+//                return when (item.itemId) {
+//                    R.id.contextual_vehicle_menu_action_delete_selected -> {
+//                        val selectedIds = vehicleAdapter.getSelectedVehicleIds()
+//                        if (selectedIds.isNotEmpty()) {
+//                            MaterialAlertDialogBuilder(requireContext())
+//                                .setTitle(getString(R.string.delete_vehicles))
+//                                .setMessage(getString(R.string.delete_selected_vehicles_confirmation))
+//                                .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+//                                    dialog.dismiss()
+//                                }
+//                                .setPositiveButton(getString(R.string.delete)) { dialog, _ ->
+//                                    // Call ViewModel to delete these items
+//                                    observeUiStateOneShot(viewModel.deleteVehicles(selectedIds)) {
+//                                        Toast.makeText(
+//                                            requireContext(),
+//                                            resources.getQuantityString(
+//                                                R.plurals.deleted_x_items,
+//                                                selectedIds.size,
+//                                                selectedIds.size
+//                                            ),
+//                                            Toast.LENGTH_SHORT
+//                                        ).show()
+//                                        dialog.dismiss()
+//                                    }
+//                                }.show()
+//                            // The list will update via the ViewModel observer after deletion
+//                        }
+//                        mode.finish() // Close the CAB
+//                        true
+//                    }
+//                    // Handle other actions
+//                    else -> false
+//                }
+//            }
+//
+//            override fun onDestroyActionMode(mode: ActionMode) {
+//                // Called when the CAB is removed (e.g., by pressing back or mode.finish())
+//                vehicleAdapter.finishSelectionMode() // Ensure adapter is also out of selection mode
+//                actionMode = null
+//                (requireActivity() as MainActivity).supportActionBar?.show()
+//            }
 
-            override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-                // Can be used to update the CAB's menu items if needed
-                return false // Return false if nothing is changed
-            }
-
-            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-                return when (item.itemId) {
+            override fun onActionItemClicked(
+                mode: android.view.ActionMode?,
+                item: MenuItem?
+            ): Boolean {
+                return when (item?.itemId) {
                     R.id.contextual_vehicle_menu_action_delete_selected -> {
                         val selectedIds = vehicleAdapter.getSelectedVehicleIds()
                         if (selectedIds.isNotEmpty()) {
@@ -207,7 +253,7 @@ class VehicleListFragment : BaseFragment() {
                                 }.show()
                             // The list will update via the ViewModel observer after deletion
                         }
-                        mode.finish() // Close the CAB
+                        mode?.finish() // Close the CAB
                         true
                     }
                     // Handle other actions
@@ -215,86 +261,43 @@ class VehicleListFragment : BaseFragment() {
                 }
             }
 
-            override fun onDestroyActionMode(mode: ActionMode) {
+            override fun onCreateActionMode(
+                mode: android.view.ActionMode?,
+                menu: Menu?
+            ): Boolean {
+//                (requireActivity() as MainActivity).supportActionBar?.hide()
+                mode?.menuInflater?.inflate(R.menu.contextual_vehicle_menu, menu)
+                mode?.title = getString(R.string.select_items) // Initial title
+                return true // Return true to show the CAB
+            }
+
+            override fun onDestroyActionMode(p0: android.view.ActionMode?) {
                 // Called when the CAB is removed (e.g., by pressing back or mode.finish())
                 vehicleAdapter.finishSelectionMode() // Ensure adapter is also out of selection mode
                 actionMode = null
-                (requireActivity() as MainActivity).supportActionBar?.show()
+//                (requireActivity() as MainActivity).supportActionBar?.show()
             }
 
-//            override fun onActionItemClicked(
-//                mode: android.view.ActionMode?,
-//                item: MenuItem?
-//            ): Boolean {
-//                return when (item?.itemId) {
-//                    R.id.contextual_vehicle_menu_action_delete_selected -> {
-//                        val selectedIds = vehicleAdapter.getSelectedVehicleIds()
-//                        if (selectedIds.isNotEmpty()) {
-//                            // Call ViewModel to delete these items
-//                            observeUiStateOneShot(viewModel.deleteVehicles(selectedIds)) {
-//                                Toast.makeText(
-//                                    requireContext(),
-//                                    getString(R.string.deleted_x_items, selectedIds.size),
-//                                    Toast.LENGTH_SHORT
-//                                ).show()
-//                            }
-//                            // The list will update via the ViewModel observer after deletion
-//                        }
-//                        mode?.finish() // Close the CAB
-//                        true
-//                    }
-//                    // Handle other actions
-//                    else -> false
-//                }
-//            }
-//
-//            override fun onCreateActionMode(
-//                mode: android.view.ActionMode?,
-//                menu: Menu?
-//            ): Boolean {
-//                mode?.menuInflater?.inflate(R.menu.contextual_vehicle_menu, menu)
-//                mode?.title = getString(R.string.select_items) // Initial title
-//                return true // Return true to show the CAB
-//            }
-//
-//            override fun onDestroyActionMode(p0: android.view.ActionMode?) {
-//                // Called when the CAB is removed (e.g., by pressing back or mode.finish())
-//                vehicleAdapter.finishSelectionMode() // Ensure adapter is also out of selection mode
-//                actionMode = null
-//            }
-//
-//            override fun onPrepareActionMode(
-//                p0: android.view.ActionMode?,
-//                p1: Menu?
-//            ): Boolean {
-//                // Can be used to update the CAB's menu items if needed
-//                return false // Return false if nothing is changed
-//            }
+            override fun onPrepareActionMode(
+                p0: android.view.ActionMode?,
+                p1: Menu?
+            ): Boolean {
+                // Can be used to update the CAB's menu items if needed
+                return false // Return false if nothing is changed
+            }
         }
 
     private fun updateActionModeTitle() {
-        actionMode?.title = resources.getQuantityString(
-            R.plurals.x_items_selected,
-            vehicleAdapter.getSelectedItemCount(), vehicleAdapter.getSelectedItemCount()
-        )
-    }
-
-    private fun Int.dpToPx(): Int {
-        return (this * resources.displayMetrics.density).toInt()
-    }
-
-    // It's good practice to finish action mode if the fragment is being destroyed
-    // or if the user navigates away while CAB is active.
-    override fun onPause() {
-        super.onPause()
-        actionMode?.finish()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        actionMode?.finish() // Clean up CAB
+        val selectedCount = vehicleAdapter.getSelectedItemCount()
+        actionMode?.title = resources.getQuantityString(R.plurals.x_items_selected, selectedCount, selectedCount)
     }
 
     override val progressIndicator: LinearProgressIndicator
         get() = binding.fragmentListVehicleProgressIndicator
+
+
+    private fun Int.dpToPx(): Int {
+        val density = resources.displayMetrics.density
+        return (this * density).toInt()
+    }
 }

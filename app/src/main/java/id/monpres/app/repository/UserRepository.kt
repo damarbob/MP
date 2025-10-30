@@ -5,6 +5,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import id.monpres.app.model.MontirPresisiUser
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -13,6 +16,13 @@ class UserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
 ) : Repository<MontirPresisiUser>() {
+
+    // Private mutable state flow to hold the user record
+    private val _userRecord = MutableStateFlow<MontirPresisiUser?>(null)
+
+    // Public, read-only state flow for observers
+    val userRecord: StateFlow<MontirPresisiUser?> = _userRecord.asStateFlow()
+
     override fun onStart() {
         // TODO("Not yet implemented")
     }
@@ -37,7 +47,8 @@ class UserRepository @Inject constructor(
         // TODO("Not yet implemented")
     }
 
-    fun setUserRecord(user: MontirPresisiUser) {
+    fun setCurrentUserRecord(user: MontirPresisiUser) {
+        _userRecord.value = user
         setRecords(listOf(user), false)
     }
 

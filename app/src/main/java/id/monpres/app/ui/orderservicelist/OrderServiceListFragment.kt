@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -17,7 +17,8 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
-import id.monpres.app.MainViewModel
+import id.monpres.app.MainGraphViewModel
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceListBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
@@ -36,7 +37,7 @@ class OrderServiceListFragment : BaseFragment() {
     }
 
     private val viewModel: OrderServiceListViewModel by viewModels()
-    private val mainViewModel: MainViewModel by activityViewModels()
+    private val mainGraphViewModel: MainGraphViewModel by hiltNavGraphViewModels(R.id.nav_main)
 
     private lateinit var binding: FragmentOrderServiceListBinding
 
@@ -117,12 +118,12 @@ class OrderServiceListFragment : BaseFragment() {
     }
 
     private fun setupOrderServiceListObservers() {
-        if (mainViewModel.getCurrentUser()?.role == UserRole.CUSTOMER) {
-            observeUiState(mainViewModel.userOrderServicesState) {
+        if (mainGraphViewModel.getCurrentUser()?.role == UserRole.CUSTOMER) {
+            observeUiState(mainGraphViewModel.userOrderServicesState) {
                 viewModel.setAllOrderServices(it)
             }
-        } else if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER) {
-            observeUiState(mainViewModel.partnerOrderServicesState) {
+        } else if (mainGraphViewModel.getCurrentUser()?.role == UserRole.PARTNER) {
+            observeUiState(mainGraphViewModel.partnerOrderServicesState) {
                 viewModel.setAllOrderServices(it)
             }
         }

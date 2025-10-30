@@ -37,16 +37,16 @@ class HomeViewModel @Inject constructor(
 
         when (chipId) {
             R.id.fragmentHomeChipOrderStatusOngoing ->
-                ongoingOrders.sortedByDescending { it.createdAt }
+                ongoingOrders.sortedByDescending { it.createdAt }.take(5)
 
             R.id.fragmentHomeChipOrderStatusCompleted -> {
                 val completedOrders = allOrders.filter { it.status == OrderStatus.COMPLETED }
-                completedOrders.take(5).sortedByDescending { it.updatedAt }
+                completedOrders.sortedByDescending { it.updatedAt }.take(5)
             }
 
             else -> {
                 // Default case: Show "All" or a default set
-                allOrders.take(5).sortedByDescending { it.updatedAt }
+                allOrders.sortedByDescending { it.updatedAt }.take(5)
 
             }
         }

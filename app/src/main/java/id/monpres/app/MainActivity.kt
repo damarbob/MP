@@ -61,7 +61,6 @@ import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
-import id.monpres.app.utils.UiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -213,8 +212,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             updateNavigationTree()
 
             checkUserEligibility()
-
-            viewModel.observeDataByRole()
 
             viewModel.setMainLoadingState(false)
 
@@ -620,7 +617,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
     }
 
-    private fun showNotification() {
+    /*private fun showNotification() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 when (userRepository.getCurrentUserRecord()?.role) {
@@ -719,7 +716,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             OrderServiceNotification.cancelNotification(this, orderId)
             viewModel.removeNotifiedOrderStatus(orderId)
         }
-    }
+    }*/
 
     private fun resendVerificationEmail() {
         resendVerificationEmailUseCase(
@@ -867,9 +864,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         super.onNewIntent(intent)
         setIntent(intent) // Update the activity's intent
         handleNotificationIntent(intent)
-        if (launchedFromOrderId != null) {
-            viewModel.setOpenedFromNotification(launchedFromOrderId)
-        }
+//        if (launchedFromOrderId != null) {
+//            viewModel.setOpenedFromNotification(launchedFromOrderId)
+//        }
     }
 
     fun handleNotificationIntent(intent: Intent) {
@@ -881,12 +878,12 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             )
             // You might want to clear it after processing to avoid re-triggering this logic
             // on normal app opens, or pass it to the ViewModel to handle.
-            if (launchedFromOrderId != null) {
-                viewModel.setOpenedFromNotification(launchedFromOrderId)
-                navController.navigate(R.id.action_global_serviceProcessFragment, Bundle().apply {
-                    putString(ServiceProcessFragment.ARG_ORDER_SERVICE_ID, launchedFromOrderId)
-                })
-            }
+
+//                viewModel.setOpenedFromNotification(launchedFromOrderId)
+            navController.navigate(R.id.action_global_serviceProcessFragment, Bundle().apply {
+                putString(ServiceProcessFragment.ARG_ORDER_SERVICE_ID, launchedFromOrderId)
+            })
+
         }
     }
 

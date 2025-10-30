@@ -83,12 +83,12 @@ class GetOrCreateUserUseCase @Inject constructor(
                     Log.d(TAG, "Updating user document for UID: ${firebaseUser.uid}")
                     updatedUser = updatedUser.copy(updatedAt = Timestamp.now().toDate().time.toDouble())
                     userDocRef.set(updatedUser, SetOptions.merge()).await()
-                    userRepository.addRecord(updatedUser)
+                    userRepository.setCurrentUserRecord(updatedUser)
                     Result.success(updatedUser)
                 } else {
                     // No changes needed, just return the existing user and ensure local repo is up to date
                     Log.d(TAG, "No user data changes detected for UID: ${firebaseUser.uid}")
-                    userRepository.addRecord(existingUser)
+                    userRepository.setCurrentUserRecord(existingUser)
                     Result.success(existingUser)
                 }
 
@@ -106,7 +106,7 @@ class GetOrCreateUserUseCase @Inject constructor(
                     fcmTokens = listOf(token)
                 )
                 userDocRef.set(newUser).await()
-                userRepository.addRecord(newUser)
+                userRepository.setCurrentUserRecord(newUser)
                 Result.success(newUser)
             }
         } catch (e: Exception) {

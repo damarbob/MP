@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
     <style name="Base.Theme.MontirPresisi" parent="Theme.Material3Expressive.DynamicColors.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
@@ -9,9 +9,8 @@
 
 <!--    <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">-->
     <style name="AppTheme" parent="Base.Theme.MontirPresisi">
-        <item name="android:windowActionModeOverlay">true</item>
-        <item name="android:actionModeCloseDrawable">@drawable/close_24px</item>
-        <item name="android:actionModeSelectAllDrawable">@drawable/check_24px</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeCloseDrawable">@drawable/close_24px</item>
 
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>

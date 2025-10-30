@@ -127,6 +127,6 @@ class ProfileViewModel @Inject constructor(
             userProfile.address = address
         }
         // After updating the fields, save the object back to the repository if needed
-         userRepository.setUserRecord(userProfile) // or similar method
+         userRepository.setCurrentUserRecord(userProfile) // or similar method
     }
 }

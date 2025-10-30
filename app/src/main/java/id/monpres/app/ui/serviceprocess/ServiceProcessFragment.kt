@@ -24,8 +24,8 @@ import androidx.core.graphics.scale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -56,7 +56,7 @@ import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.ncorti.slidetoact.SlideToActView
 import com.ncorti.slidetoact.SlideToActView.OnSlideCompleteListener
 import dagger.hilt.android.AndroidEntryPoint
-import id.monpres.app.MainViewModel
+import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentServiceProcessBinding
 import id.monpres.app.enums.OrderStatus
@@ -89,7 +89,7 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private val viewModel: ServiceProcessViewModel by viewModels()
-    private val mainViewModel: MainViewModel by activityViewModels()
+    private val mainGraphViewModel: MainGraphViewModel by hiltNavGraphViewModels(R.id.nav_main)
 
     private val args: ServiceProcessFragmentArgs by navArgs()
 
@@ -189,7 +189,7 @@ class ServiceProcessFragment : BaseFragment() {
             }
         }
 
-        mainViewModel.observeOrderServiceById(args.orderServiceId)
+        mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
 
         setupRecyclerView()
         setupObservers()
@@ -214,9 +214,9 @@ class ServiceProcessFragment : BaseFragment() {
 
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
-        when (mainViewModel.getCurrentUser()?.role) {
+        when (mainGraphViewModel.getCurrentUser()?.role) {
             UserRole.CUSTOMER ->
-                observeUiState(mainViewModel.userOrderServiceState) { data ->
+                observeUiState(mainGraphViewModel.userOrderServiceState) { data ->
                     orderService = data
                     orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
                     Log.d(TAG, "OrderService: $orderService")
@@ -228,7 +228,7 @@ class ServiceProcessFragment : BaseFragment() {
 
 
             UserRole.PARTNER ->
-                observeUiState(mainViewModel.partnerOrderServiceState) { data ->
+                observeUiState(mainGraphViewModel.partnerOrderServiceState) { data ->
                     orderService = data
                     orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
                     Log.d(TAG, "OrderService: $orderService")
@@ -286,7 +286,7 @@ class ServiceProcessFragment : BaseFragment() {
             fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
                 if (orderService.orderItems.isNullOrEmpty()) View.GONE else View.VISIBLE
             fragmentServiceProcessButtonEditOrderItem.visibility =
-                if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER && orderService.status?.type != OrderStatusType.CLOSED) View.VISIBLE else View.GONE
+                if (mainGraphViewModel.getCurrentUser()?.role == UserRole.PARTNER && orderService.status?.type != OrderStatusType.CLOSED) View.VISIBLE else View.GONE
 
             // Title and contents
             fragmentServiceProcessTextViewTitle.text =
@@ -316,7 +316,7 @@ class ServiceProcessFragment : BaseFragment() {
 
             // Current distance
             fragmentServiceProcessTextViewCurrentDistance.visibility =
-                if (mainViewModel.getCurrentUser()?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
+                if (mainGraphViewModel.getCurrentUser()?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
 
             // Mapbox
             fragmentServiceProcessMapView.mapboxMap.setCamera(
@@ -554,7 +554,7 @@ class ServiceProcessFragment : BaseFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mainViewModel.stopObserve()
+        mainGraphViewModel.stopObserve()
         stopLocationUpdates()
     }
 

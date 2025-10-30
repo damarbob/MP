@@ -41,12 +41,12 @@ class PartnerHomeViewModel @Inject constructor() : ViewModel() {
 
             R.id.fragmentPartnerHomeChipOrderStatusCompleted -> {
                 val completedOrders = allOrders.filter { it.status == OrderStatus.COMPLETED }
-                completedOrders.take(5).sortedByDescending { it.updatedAt }
+                completedOrders.sortedByDescending { it.updatedAt }.take(5)
             }
 
             else -> {
                 // Default case: Show "All" or a default set
-                allOrders.take(5).sortedByDescending { it.updatedAt }
+                allOrders.sortedByDescending { it.updatedAt }.take(5)
 
             }
         }

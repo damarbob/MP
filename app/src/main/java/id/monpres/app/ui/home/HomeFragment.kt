@@ -8,8 +8,8 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.hilt.navigation.fragment.hiltNavGraphViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -22,7 +22,7 @@ import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
 import id.monpres.app.MainApplication
-import id.monpres.app.MainViewModel
+import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.enums.OrderStatus
@@ -46,7 +46,7 @@ class HomeFragment : BaseFragment() {
 
     /* View models */
     private val viewModel: HomeViewModel by viewModels()
-    private val mainViewModel: MainViewModel by activityViewModels()
+    private val mainGraphViewModel: MainGraphViewModel by hiltNavGraphViewModels(R.id.nav_main)
 
     /* Bindings */
     private lateinit var binding: FragmentHomeBinding
@@ -205,7 +205,7 @@ class HomeFragment : BaseFragment() {
      * Updates the [VehicleAdapter] with the list of vehicles, limiting it to the first 5 vehicles.
      */
     private fun vehiclesObservers() {
-        observeUiState(mainViewModel.userVehiclesState) { vehicles ->
+        observeUiState(mainGraphViewModel.userVehiclesState) { vehicles ->
             vehicleAdapter.submitList(vehicles.take(5))
 
             binding.fragmentHomeButtonSeeAllVehicle.visibility =
@@ -243,7 +243,7 @@ class HomeFragment : BaseFragment() {
 
     fun setupOrderServiceObservers() {
         //1. Pass the master list of orders to the ViewModel whenever it changes.
-        observeUiState(mainViewModel.partnerOrderServicesState) { serviceOrders ->
+        observeUiState(mainGraphViewModel.userOrderServicesState) { serviceOrders ->
             viewModel.setAllOrderServices(serviceOrders)
             binding.fragmentHomeButtonSeeAllHistory.visibility =
                 if (serviceOrders.isEmpty()) View.GONE else View.VISIBLE
