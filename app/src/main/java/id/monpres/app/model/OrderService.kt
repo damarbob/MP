@@ -26,6 +26,7 @@ data class OrderService(
     override var updatedAt: Timestamp? = null,
 
     var partnerId: String? = null,
+    var partner: MontirPresisiUser? = null, // Denormalized partner data
     var serviceId: String? = null,
     var recurring: Boolean? = null,
 
@@ -33,6 +34,7 @@ data class OrderService(
     var selectedDateMillis: Double? = null,
 
     // User
+    var user: MontirPresisiUser? = null, // Denormalized user data
     var selectedLocationLat: Double? = null,
     var selectedLocationLng: Double? = null,
     var vehicle: Vehicle? = null,

@@ -96,7 +96,7 @@ class OrderServiceListFragment : BaseFragment() {
                     // The status is closed (completed, cancelled, returned, failed)
                     findNavController().navigate(
                         OrderServiceListFragmentDirections.actionOrderServiceListFragmentToOrderServiceDetailFragment(
-                            orderService
+                            orderService, mainGraphViewModel.getCurrentUser()
                         )
                     )
                 }

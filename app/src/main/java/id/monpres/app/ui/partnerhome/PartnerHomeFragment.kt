@@ -125,7 +125,7 @@ class PartnerHomeFragment : BaseFragment() {
                     // The status is closed (completed, cancelled, returned, failed)
                     findNavController().navigate(
                         PartnerHomeFragmentDirections.actionPartnerHomeFragmentToOrderServiceDetailFragment(
-                            orderService
+                            orderService, mainGraphViewModel.getCurrentUser()
                         )
                     )
                 }

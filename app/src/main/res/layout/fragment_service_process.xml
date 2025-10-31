@@ -67,10 +67,68 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 android:textAlignment="center"
-                app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessCardView"
+                app:layout_constraintBottom_toTopOf="@+id/fragmentServiceProcessLinearLayoutUserOrPartnerContainer"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintWidth_max="@dimen/input_field_max_width" />
+
+            <LinearLayout
+                android:id="@+id/fragmentServiceProcessLinearLayoutUserOrPartnerContainer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/rounded_large_rectangle_background"
+                android:divider="@drawable/divider_gap_16"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:showDividers="middle"
+                app:layout_constraintBottom_toTopOf="@id/fragmentServiceProcessCardView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width"
+                app:layout_goneMarginBottom="96dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/fragmentServiceProcessImageViewUser"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="?colorSecondaryContainer"
+                    android:minWidth="48dp"
+                    android:minHeight="48dp"
+                    android:src="@drawable/person_24px"
+                    android:tint="?colorOnSecondaryContainer"
+                    app:contentPadding="8dp"
+                    app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="7"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/fragmentServiceProcessTextViewUserName"
+                        style="@style/Widget.App.H5.Bold.Primary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:maxLines="1"
+                        android:text="@string/title"
+                        android:ellipsize="end"
+                        android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+                    <TextView
+                        android:id="@+id/fragmentServiceProcessTextViewUserDetail"
+                        style="@style/Widget.App.P"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/subtitle" />
+                </LinearLayout>
+            </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/fragmentServiceProcessCardView"
@@ -235,6 +293,7 @@
                     android:layout_height="wrap_content"
                     android:divider="@drawable/divider_gap_8"
                     android:gravity="fill"
+                    android:visibility="gone"
                     android:showDividers="middle">
 
                     <com.google.android.material.textview.MaterialTextView

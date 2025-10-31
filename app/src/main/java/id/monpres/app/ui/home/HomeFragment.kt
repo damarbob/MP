@@ -221,7 +221,7 @@ class HomeFragment : BaseFragment() {
                     // The status is closed (completed, cancelled, returned, failed)
                     findNavController().navigate(
                         HomeFragmentDirections.actionHomeFragmentToOrderServiceDetailFragment(
-                            orderService
+                            orderService, mainGraphViewModel.getCurrentUser()
                         )
                     )
                 }

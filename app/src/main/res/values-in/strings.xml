@@ -230,4 +230,5 @@
     <string name="complete_anyway">Tetap selesaikan</string>
     <string name="warning">Peringatan</string>
     <string name="you_didn_t_add_any_items_fees_to_the_order">Anda belum menambah item/biaya ke pesanan. Tambahkan item/biaya?</string>
+    <string name="customer">Pelanggan</string>
 </resources>

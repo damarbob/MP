@@ -30,6 +30,7 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.model.Service
 import id.monpres.app.model.Vehicle
 import id.monpres.app.repository.PartnerRepository
+import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
 import id.monpres.app.ui.partnerselection.PartnerSelectionFragment
 import id.monpres.app.utils.markRequiredInRed
@@ -70,6 +71,9 @@ abstract class BaseServiceFragment : Fragment() {
 
     @Inject
     lateinit var partnerRepository: PartnerRepository
+
+    @Inject
+    lateinit var userRepository: UserRepository
 
     interface OrderPlacedCallback {
         fun onSuccess(orderService: OrderService)
@@ -304,6 +308,7 @@ abstract class BaseServiceFragment : Fragment() {
         val orderService = getBaseOrderService().apply {
             /* System */
             userId = Firebase.auth.currentUser?.uid
+            user = userRepository.getCurrentUserRecord()
             serviceId = service?.id
             status = OrderStatus.ORDER_PLACED
             createdAt = Timestamp.now()
@@ -322,6 +327,7 @@ abstract class BaseServiceFragment : Fragment() {
 
             /* User inputs */
             partnerId = selectedPartnerId
+            partner = selectedPartnerId?.let { partnerRepository.getRecordByUserId(it) }
             userAddress = getAddressText()
             vehicle = chosenMyVehicle
             issue = getIssueAutoCompleteTextView().text.toString()

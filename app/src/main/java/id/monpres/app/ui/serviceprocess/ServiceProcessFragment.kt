@@ -62,6 +62,7 @@ import id.monpres.app.databinding.FragmentServiceProcessBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.UserRole
+import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
@@ -111,6 +112,8 @@ class ServiceProcessFragment : BaseFragment() {
     private var currentLongitude: Double = 0.0
     private var currentAccuracy: Float = 0f
     private var aerialDistanceToTargetInMeters: Float = 40000000f
+
+    private var currentUser: MontirPresisiUser? = null
 
     // Permission request launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -190,6 +193,7 @@ class ServiceProcessFragment : BaseFragment() {
         }
 
         mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
+        currentUser = mainGraphViewModel.getCurrentUser()
 
         setupRecyclerView()
         setupObservers()
@@ -214,7 +218,7 @@ class ServiceProcessFragment : BaseFragment() {
 
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
-        when (mainGraphViewModel.getCurrentUser()?.role) {
+        when (currentUser?.role) {
             UserRole.CUSTOMER ->
                 observeUiState(mainGraphViewModel.userOrderServiceState) { data ->
                     orderService = data
@@ -286,7 +290,7 @@ class ServiceProcessFragment : BaseFragment() {
             fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
                 if (orderService.orderItems.isNullOrEmpty()) View.GONE else View.VISIBLE
             fragmentServiceProcessButtonEditOrderItem.visibility =
-                if (mainGraphViewModel.getCurrentUser()?.role == UserRole.PARTNER && orderService.status?.type != OrderStatusType.CLOSED) View.VISIBLE else View.GONE
+                if (currentUser?.role == UserRole.PARTNER && orderService.status?.type != OrderStatusType.CLOSED) View.VISIBLE else View.GONE
 
             // Title and contents
             fragmentServiceProcessTextViewTitle.text =
@@ -296,6 +300,16 @@ class ServiceProcessFragment : BaseFragment() {
                     dateStyle = DateFormat.FULL,
                     timeStyle = DateFormat.LONG
                 )
+
+            fragmentServiceProcessTextViewUserName.text =
+                if (currentUser?.role == UserRole.CUSTOMER) orderService.partner?.displayName
+                    ?: "-" else if (currentUser?.role == UserRole.PARTNER) orderService.user?.displayName
+                    ?: "-" else "-"
+            fragmentServiceProcessTextViewUserDetail.text =
+                if (currentUser?.role == UserRole.CUSTOMER) getString(R.string.partner) else if (currentUser?.role == UserRole.PARTNER) getString(
+                    R.string.customer
+                ) else ""
+
             fragmentServiceProcessOrderId.text = orderService.id ?: "-"
             fragmentServiceProcessLocation.text =
                 "${orderService.selectedLocationLat}, ${orderService.selectedLocationLng}"
@@ -316,7 +330,7 @@ class ServiceProcessFragment : BaseFragment() {
 
             // Current distance
             fragmentServiceProcessTextViewCurrentDistance.visibility =
-                if (mainGraphViewModel.getCurrentUser()?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
+                if (currentUser?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
 
             // Mapbox
             fragmentServiceProcessMapView.mapboxMap.setCamera(

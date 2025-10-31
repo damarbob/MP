@@ -33,6 +33,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
+import id.monpres.app.enums.UserRole
+import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
@@ -57,6 +59,7 @@ class OrderServiceDetailFragment : Fragment() {
     private lateinit var binding: FragmentOrderServiceDetailBinding
 
     private lateinit var orderService: OrderService
+    private var currentUser: MontirPresisiUser? = null
 
     private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
 
@@ -134,6 +137,7 @@ class OrderServiceDetailFragment : Fragment() {
         }
 
         orderService = args.orderService
+        currentUser = args.currentUser
 
         setupView()
         setupListeners()
@@ -300,6 +304,15 @@ class OrderServiceDetailFragment : Fragment() {
 
             fragmentOrderServiceDetailPrice.text =
                 if (orderService.price != null) indonesianCurrencyFormatter(orderService.price!!) else ""
+
+            fragmentOrderServiceDetailTextViewUserName.text =
+                if (currentUser?.role == UserRole.CUSTOMER) orderService.partner?.displayName
+                    ?: "-" else if (currentUser?.role == UserRole.PARTNER) orderService.user?.displayName
+                    ?: "-" else "-"
+            fragmentOrderServiceDetailTextViewUserDetail.text =
+                if (currentUser?.role == UserRole.CUSTOMER) getString(R.string.partner) else if (currentUser?.role == UserRole.PARTNER) getString(
+                    R.string.customer
+                ) else ""
 
             // General info
             fragmentOrderServiceDetailInvoiceNumber.text = orderService.id ?: ""

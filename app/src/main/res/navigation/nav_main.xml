@@ -156,6 +156,11 @@
         <argument
             android:name="orderService"
             app:argType="id.monpres.app.model.OrderService" />
+        <argument
+            android:name="currentUser"
+            app:argType="id.monpres.app.model.MontirPresisiUser"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
     <action
         android:id="@+id/action_global_orderServiceDetailFragment"

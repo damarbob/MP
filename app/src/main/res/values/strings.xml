@@ -234,4 +234,5 @@
     <string name="complete_anyway">Complete anyway</string>
     <string name="warning">Warning</string>
     <string name="you_didn_t_add_any_items_fees_to_the_order">You didn\'t add any items/fees to the order. Set items/fees?</string>
+    <string name="customer">Customer</string>
 </resources>
