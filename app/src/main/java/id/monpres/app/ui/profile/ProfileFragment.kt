@@ -51,7 +51,7 @@ class ProfileFragment : Fragment() {
     private val getColorFromAttrUseCase = GetColorFromAttrUseCase()
 
     /* Location */
-    protected var selectedPrimaryLocationPoint: Point? = null
+    private var selectedPrimaryLocationPoint: Point? = null
 
     /* UI */
     private lateinit var binding: FragmentEditProfileBinding
@@ -172,7 +172,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    protected fun openMap() {
+    private fun openMap() {
         val points = arrayListOf(selectedPrimaryLocationPoint?.toJson())
         Log.d(
             TAG,

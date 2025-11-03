@@ -51,8 +51,8 @@ class ProfileViewModel @Inject constructor(
                     firestoreUpdates["phoneNumber"] = whatsAppNumber
                 }
                 if (location != null) {
-                    firestoreUpdates["locationLat"] = location.latitude()
-                    firestoreUpdates["locationLng"] = location.longitude()
+                    firestoreUpdates["locationLat"] = location.latitude().toString()
+                    firestoreUpdates["locationLng"] = location.longitude().toString()
                 }
                 if (!address.isNullOrBlank()) {
                     firestoreUpdates["address"] = address
