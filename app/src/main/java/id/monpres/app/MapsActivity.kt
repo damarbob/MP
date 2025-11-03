@@ -238,6 +238,7 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
 
     private fun submitLocation() {
 
+        // If no location selected, prompt to use current location
         if (selectedLocationPoint == null && userLocationPoint != null) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.location))
@@ -271,7 +272,9 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
                     return@setNegativeButton
                 }
                 .show()
-        } else if (selectedLocationPoint != null) {
+        }
+        // If user has selected a location (expected case)
+        else if (selectedLocationPoint != null) {
             // Package up the user’s selection
             val data = Intent().apply {
                 putExtra(MapsActivityExtraData.SELECTED_LOCATION, selectedLocationPoint?.toJson())
@@ -281,6 +284,16 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
             Log.d(TAG, "User's location: ${userLocationPoint.toString()}")
             Log.d(TAG, "Selected location: ${selectedLocationPoint.toString()}")
             finish()  // return to previous activity
+        }
+        // If no location selected and no user location available, prompt to select a location
+        else {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.location))
+                .setMessage(getString(R.string.select_a_location))
+                .setPositiveButton(getString(R.string.okay)) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
         }
     }
 
