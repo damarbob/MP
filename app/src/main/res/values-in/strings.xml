@@ -231,4 +231,7 @@
     <string name="warning">Peringatan</string>
     <string name="you_didn_t_add_any_items_fees_to_the_order">Anda belum menambah item/biaya ke pesanan. Tambahkan item/biaya?</string>
     <string name="customer">Pelanggan</string>
+    <string name="no_vehicle">Tidak ada kendaraan</string>
+    <string name="vehicle_added">Kendaraan ditambahkan</string>
+    <string name="no_vehicle_has_been_added_yet">Tidak ada kendaraan yang ditambahkan. Mohon tambahkan kendaraan terlebih dahulu</string>
 </resources>

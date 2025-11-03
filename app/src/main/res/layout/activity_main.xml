@@ -54,6 +54,10 @@
                 android:id="@+id/activityMainLoadingLottieView"
                 android:layout_width="256dp"
                 android:layout_height="256dp"
+                app:dotLottie_autoplay="true"
+                app:dotLottie_loop="true"
+                app:dotLottie_speed="1.0"
+                app:dotLottie_src="@raw/car"
                 />
 
             <com.google.android.material.textview.MaterialTextView

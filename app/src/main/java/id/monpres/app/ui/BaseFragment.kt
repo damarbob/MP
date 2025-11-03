@@ -2,7 +2,6 @@ package id.monpres.app.ui
 
 import android.animation.ObjectAnimator
 import android.view.View
-import android.widget.Toast
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.fragment.app.Fragment
@@ -10,7 +9,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.progressindicator.LinearProgressIndicator
-import id.monpres.app.R
 import id.monpres.app.state.UiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -24,224 +22,120 @@ abstract class BaseFragment : Fragment() {
     abstract val progressIndicator: LinearProgressIndicator
 
     /**
-     * Shows or hides the loading indicator based on the activeLoaders count.
-     * This should be the ONLY place that directly calls your actual showLoading(Boolean) implementation.
-     */
-    private fun updateGlobalLoadingState(show: Boolean) {
-        if (show) {
-            showLoading(true)
-        } else {
-            // Only hide if there are absolutely no loaders active.
-            if (activeLoaders.get() == 0) {
-                showLoading(false)
-            }
-        }
-//        if (activeLoaders.get() > 0) {
-//            // If you have a specific showLoading function in BaseFragment that subclasses override:
-//            showLoading(true)
-//        } else {
-//            showLoading(false)
-//        }
-    }
-
-    /**
      * Observes a [Flow] of [UiState] and executes the provided callbacks based on the state.
-     * This function uses `repeatOnLifecycle` to ensure that the flow collection is active
-     * only when the Fragment's view lifecycle is in the specified [lifecycleState].
+     * Error handling is now done in a separate observer in the implementing fragment.
+     * This function uses `repeatOnLifecycle` for lifecycle-safe collection.
      *
      * @param T The type of data wrapped in [UiState.Success].
      * @param flow The [Flow] of [UiState] to observe.
-     * @param lifecycleState The [Lifecycle.State] at which the flow collection should start and stop.
-     *                       Defaults to [Lifecycle.State.STARTED].
-     * @param onError Optional callback to be executed when the [UiState] is [UiState.Error].
-     *                It receives the error message. Defaults to showing a [Toast] with the error message.
-     * @param onSuccess Callback to be executed when the [UiState] is [UiState.Success].
-     *                  It receives the data of type [T].
+     * @param lifecycleState The [Lifecycle.State] at which flow collection should start. Defaults to [Lifecycle.State.STARTED].
+     * @param onEmpty Optional callback to be executed when the state is [UiState.Empty].
+     * @param onSuccess Callback to be executed when the state is [UiState.Success].
      */
     protected fun <T> observeUiState(
         flow: Flow<UiState<T>>,
         lifecycleState: Lifecycle.State = Lifecycle.State.STARTED,
-        onError: (message: String) -> Unit = { message ->
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-        },
+        onEmpty: () -> Unit = {},
         onSuccess: (data: T) -> Unit,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
-            // Increment loader count when this observation starts
-            // and it's expected to potentially go into a loading state.
-            // This is tricky if the flow doesn't immediately emit Loading.
-            // A better place to increment is right before the flow collection starts
-            // if the flow is guaranteed to start with Loading or if you always want
-            // to assume a potential load.
-
-            // Alternative: Increment when UiState.Loading is first received.
-            // Decrement when UiState.Success or UiState.Error is received for THIS flow.
-
-            var thisFlowIsLoading =
-                false // Track if this specific flow instance caused a loading increment
+            // Tracks if this specific flow has incremented the loader count.
+            var thisFlowIsLoading = false
 
             repeatOnLifecycle(lifecycleState) {
                 flow.collect { state ->
-                    // --- Handle Finish for the PREVIOUS state of THIS flow ---
-//                    if (thisFlowIsLoading) {
-//                        if (state !is UiState.Loading) {
-//                            activeLoaders.decrementAndGet()
-//                            thisFlowIsLoading = false
-//                        }
-//                    }
-//                    updateGlobalLoadingState()
-                    // --- Current State Processing ---
                     when (state) {
                         is UiState.Loading -> {
-                            if (!thisFlowIsLoading) { // Only increment if it wasn't already loading
+                            if (!thisFlowIsLoading) { // Only increment once per loading sequence
                                 activeLoaders.incrementAndGet()
                                 thisFlowIsLoading = true
                             }
-                                updateGlobalLoadingState(true)
+                            showLoading(true)
                         }
 
                         is UiState.Success -> {
-                            // Decrement was handled above if it was previously loading
                             if (thisFlowIsLoading) {
                                 activeLoaders.decrementAndGet()
                                 thisFlowIsLoading = false
                             }
-                                updateGlobalLoadingState(false)
+                            showLoading(false)
                             onSuccess(state.data)
                         }
 
-                        is UiState.Error -> {
-                            // Decrement was handled above if it was previously loading
+                        is UiState.Empty -> {
                             if (thisFlowIsLoading) {
                                 activeLoaders.decrementAndGet()
                                 thisFlowIsLoading = false
                             }
-                                updateGlobalLoadingState(false)
-                            val message = when (state.exception) {
-                                is NullPointerException -> getString(
-                                    R.string.x_not_found, "Data"
-                                )
-                                // Add NoSuchElementException for "not found"
-                                is NoSuchElementException -> state.exception.localizedMessage
-                                    ?: getString(R.string.x_not_found, "Item")
-
-                                else -> state.exception?.localizedMessage
-                                    ?: getString(R.string.unknown_error)
-                            }
-                            onError(message)
+                            showLoading(false)
+                            onEmpty()
                         }
                     }
-                    // Update the global loading UI based on the overall count
-//                    updateGlobalLoadingState()
                 }
             }
         }
     }
 
     /**
-     * Observes a [Flow] of [UiState] and executes the provided callbacks based on the state.
-     * This function collects the flow only once and does not repeat on lifecycle changes,
-     * making it suitable for one-shot operations.
+     * Observes a one-shot [Flow] of [UiState], suitable for operations like form submission.
+     * Error handling is now done in a separate observer in the implementing fragment.
      *
      * @param T The type of data wrapped in [UiState.Success].
      * @param flow The [Flow] of [UiState] to observe.
-     * @param onError Optional callback to be executed when the [UiState] is [UiState.Error].
-     *                It receives the error message. Defaults to showing a [Toast] with the error message.
-     * @param onSuccess Callback to be executed when the [UiState] is [UiState.Success].
-     *                  It receives the data of type [T].
+     * @param onComplete Callback to be executed when the flow emits [UiState.Success].
      */
     protected fun <T> observeUiStateOneShot(
         flow: Flow<UiState<T>>,
-        onError: (message: String) -> Unit = { message ->
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-        },
-        onSuccess: (data: T) -> Unit
+        onEmpty: () -> Unit = {},
+        onComplete: (data: T) -> Unit
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
-            // Increment loader count when this observation starts
-            // and it's expected to potentially go into a loading state.
-            // This is tricky if the flow doesn't immediately emit Loading.
-            // A better place to increment is right before the flow collection starts
-            // if the flow is guaranteed to start with Loading or if you always want
-            // to assume a potential load.
-
-            // Alternative: Increment when UiState.Loading is first received.
-            // Decrement when UiState.Success or UiState.Error is received for THIS flow.
-
-//            var thisFlowIsLoading =
-//                false // Track if this specific flow instance caused a loading increment
             activeLoaders.incrementAndGet()
-            updateGlobalLoadingState(true)
+            showLoading(true)
 
+            // This will collect states until a terminal one (Success/Empty) is reached
             flow.collect { state ->
-                // --- Handle Finish for the PREVIOUS state of THIS flow ---
-//                if (thisFlowIsLoading) {
-//                    if (state !is UiState.Loading) {
-//                        activeLoaders.decrementAndGet()
-//                        thisFlowIsLoading = false
-//                    }
-//                }
-//                updateGlobalLoadingState()
-                // --- Current State Processing ---
                 when (state) {
                     is UiState.Loading -> {
-//                        if (!thisFlowIsLoading) { // Only increment if it wasn't already loading
-//                            activeLoaders.incrementAndGet()
-//                            thisFlowIsLoading = true
-//                        }
-//                        updateGlobalLoadingState()
+                        // The loading indicator is already showing, do nothing extra.
                     }
 
                     is UiState.Success -> {
-                        // Decrement was handled above if it was previously loading
-//                        onSuccess(state.data)
                         activeLoaders.decrementAndGet()
-                        updateGlobalLoadingState(false)
-                        // Delay the success action to let the animation finish
-                        view?.postDelayed({ onSuccess(state.data) }, 300) // 300ms is a safe delay
-                        // Cancel collection after the first result
-                        return@collect
+                        showLoading(false)
+                        // Post the action to allow the hide animation to play.
+                        view?.postDelayed({ onComplete(state.data) }, 300)
+                        return@collect // Stop collecting after the first terminal state.
                     }
 
-                    is UiState.Error -> {
-                        // Decrement was handled above if it was previously loading
+                    is UiState.Empty -> {
+                        // Treat Empty as a terminal state for a one-shot operation
                         activeLoaders.decrementAndGet()
-                        updateGlobalLoadingState(false)
-
-                        val message = when (state.exception) {
-                            is NullPointerException -> getString(
-                                R.string.x_not_found, "Data"
-                            )
-                            // Add NoSuchElementException for "not found"
-                            is NoSuchElementException -> state.exception.localizedMessage
-                                ?: getString(R.string.x_not_found, "Item")
-
-                            else -> state.exception?.localizedMessage
-                                ?: getString(R.string.unknown_error)
-                        }
-//                        onError(message)
-                        // Delay the error action to let the animation finish
-                        view?.postDelayed({ onError(message) }, 300)
-                        // Cancel collection after the first result
-                        return@collect
+                        showLoading(false)
+                        onEmpty
+                        // We don't call onComplete here as it's typically for success with data.
+                        // You could add an onEmpty lambda if needed for one-shot operations.
+                        return@collect // Stop collecting.
                     }
                 }
-                // Update the global loading UI based on the overall count
-//                updateGlobalLoadingState()
             }
-
         }
     }
 
+    /**
+     * Manages the visibility of the progress indicator. This is the single source of truth for showing/hiding it.
+     */
     private fun showLoading(isLoading: Boolean) {
-        if (isLoading) {
-//            progressIndicator.visibility = View.VISIBLE
-//            slideDown(progressIndicator)
+        // Only change visibility if the state is different to prevent redundant animations
+        val isCurrentlyVisible = progressIndicator.visibility == View.VISIBLE
+
+        if (isLoading && !isCurrentlyVisible) {
             progressIndicator.show()
-        } else {
-//            progressIndicator.visibility = View.GONE
-//            slideUp(progressIndicator)
-            progressIndicator.hide()
+        } else if (!isLoading && isCurrentlyVisible) {
+            // Only hide if there are absolutely no more active loaders.
+            if (activeLoaders.get() == 0) {
+                progressIndicator.hide()
+            }
         }
     }
 

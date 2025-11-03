@@ -4,7 +4,6 @@ import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import id.monpres.app.model.OrderService
-import id.monpres.app.state.UiState
 import id.monpres.app.usecase.GetDataByUserIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByFieldUseCase
 import id.monpres.app.usecase.ObserveCollectionByIdUseCase
@@ -14,11 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,10 +28,48 @@ class OrderServiceRepository @Inject constructor(
     private val updateDataByIdUseCase: UpdateDataByIdUseCase
 ) : Repository<OrderService>() {
     companion object {
-        const val TAG = "OrderServiceRepository"
+        val TAG = OrderServiceRepository::class.simpleName
     }
 
-    fun observeOrderServicesByUserId(): Flow<UiState<List<OrderService>>> =
+    fun observeOrderServicesByUserId(): Flow<List<OrderService>> =
+        observeCollectionByUserIdUseCase(
+            getCurrentUserId(),
+            OrderService.COLLECTION, OrderService::class.java
+        )
+            .mapNotNull { orderServices ->
+                // Clean up any nulls that might come from Firestore
+                orderServices
+            }
+            .distinctUntilChanged()
+            .catch {
+                Log.e(TAG, "Error observing order services", it)
+                emit(emptyList())
+            }
+            .flowOn(Dispatchers.IO) // Run the collection and mapping on an IO thread
+
+    fun observeOrderServicesByPartnerId(): Flow<List<OrderService>> =
+        observeCollectionByFieldUseCase(
+            OrderService.PARTNER_ID,
+            getCurrentUserId(),
+            OrderService.COLLECTION, OrderService::class.java
+        )
+            .mapNotNull { orderServices ->
+                orderServices
+            }
+            .distinctUntilChanged()
+            .flowOn(Dispatchers.IO)
+
+
+    /**
+     * Best Practice: This is a one-shot write operation. It should be a simple suspend function.
+     * It will throw an exception on failure, which the ViewModel will catch.
+     */
+    suspend fun updateOrderService(orderService: OrderService) {
+        val id = orderService.id ?: throw IllegalArgumentException("OrderService ID cannot be null")
+        updateDataByIdUseCase(id, OrderService.COLLECTION, orderService)
+    }
+
+    /*fun observeOrderServicesByUserId(): Flow<UiState<List<OrderService>>> =
         observeCollectionByUserIdUseCase(
             getCurrentUserId(),
             OrderService.COLLECTION, OrderService::class.java
@@ -79,45 +113,7 @@ class OrderServiceRepository @Inject constructor(
         }.catch {
             it.printStackTrace()
             emit(UiState.Error(it))
-        }.flowOn(Dispatchers.IO)
-
-
-    suspend fun observeOrderServiceById(id: String): Flow<UiState<OrderService>> {
-        val orderServices = getOrderServiceByUserId()
-        Log.d(TAG, "OrderServices: $orderServices")
-        Log.d(TAG, "id: $id")
-        Log.d(TAG, "userId: ${getCurrentUserId()}")
-        val isOwned = orderServices?.any {
-            it.id == id
-            it.userId == getCurrentUserId()
-        } ?: false
-        return if (orderServices?.isEmpty() == true)
-            flowOf(UiState.Error(NullPointerException()))
-        else if (!isOwned)
-            flowOf(UiState.Error(Exception()))
-        else
-            observeCollectionByIdUseCase(
-                id,
-                OrderService.COLLECTION, OrderService::class.java
-            )
-                .distinctUntilChanged()
-                .map<OrderService?, UiState<OrderService>> { orderService ->
-                    UiState.Success(
-                        orderService ?: throw NullPointerException()
-                    )
-                }
-                .onStart { emit(UiState.Loading) }
-                .catch { e ->
-                    emit(UiState.Error(e))
-                }
-                .flowOn(Dispatchers.IO)
-    }
-
-    suspend fun getOrderServiceByUserId() = getDataByUserIdUseCase(
-        getCurrentUserId(),
-        OrderService.COLLECTION,
-        OrderService::class.java
-    )
+        }.flowOn(Dispatchers.IO)*/
 
     /**
      * Retrieves the UID of the currently authenticated Firebase user.

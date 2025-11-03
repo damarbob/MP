@@ -79,6 +79,22 @@
                 android:nestedScrollingEnabled="false"
                 android:padding="1dp" />
 
+            <LinearLayout
+                android:id="@+id/fragmentHomeLinearLayoutVehicleEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_rectangle_background_clip"
+                android:paddingVertical="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.App.H5"
+                    android:text="@string/no_vehicle"/>
+            </LinearLayout>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentHomeButtonAddVehicle"
                 style="@style/Widget.Material3Expressive.Button"
@@ -154,7 +170,7 @@
                 android:padding="1dp" />
 
             <LinearLayout
-                android:id="@+id/fragmentHomeLinearLayoutEmptyState"
+                android:id="@+id/fragmentHomeLinearLayoutOrderServiceEmptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"

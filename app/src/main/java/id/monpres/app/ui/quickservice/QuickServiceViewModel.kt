@@ -1,6 +1,5 @@
 package id.monpres.app.ui.quickservice
 
-import androidx.lifecycle.asLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.model.OrderService
 import id.monpres.app.repository.VehicleRepository
@@ -13,5 +12,4 @@ class QuickServiceViewModel @Inject constructor(private val vehicleRepository: V
         super.placeOrder(orderService)
     }
 
-    fun getVehicles() = vehicleRepository.getVehiclesByUserId().asLiveData()
 }
