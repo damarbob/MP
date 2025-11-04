@@ -8,20 +8,25 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainApplication
+import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentScheduledServiceBinding
 import id.monpres.app.model.OrderService
-import id.monpres.app.state.UiState
 import id.monpres.app.ui.BaseServiceFragment
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
 import id.monpres.app.utils.markRequiredInRed
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -29,6 +34,7 @@ import java.util.Locale
 @AndroidEntryPoint
 class ScheduledServiceFragment : BaseServiceFragment() {
     private val viewModel: ScheduledServiceViewModel by viewModels()
+    private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     private lateinit var fragBinding: FragmentScheduledServiceBinding
     private var selectedDateMillis: Long? = null
@@ -86,11 +92,10 @@ class ScheduledServiceFragment : BaseServiceFragment() {
         super.onViewCreated(view, savedInstanceState)
         service = MainApplication.services?.find { it.id == args.serviceId }
 
-        viewModel.getVehicles().observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> Log.d(TAG, "Loading vehicles")
-                is UiState.Success -> {
-                    myVehicles = state.data
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainGraphViewModel.userVehicles.collect { vehicles ->
+                    myVehicles = vehicles
                     val adapter = ArrayAdapter(
                         requireContext(),
                         R.layout.item_list,
@@ -105,11 +110,6 @@ class ScheduledServiceFragment : BaseServiceFragment() {
                         )
                     }
                 }
-
-                is UiState.Error -> Log.e(
-                    TAG,
-                    "Failed to load vehicles: ${state.exception?.message}"
-                )
             }
         }
 
@@ -160,7 +160,8 @@ class ScheduledServiceFragment : BaseServiceFragment() {
     }
 
     private fun showLoading(show: Boolean) {
-        fragBinding.scheduledServiceProgressIndicator.visibility = if (show) View.VISIBLE else View.GONE
+        fragBinding.scheduledServiceProgressIndicator.visibility =
+            if (show) View.VISIBLE else View.GONE
     }
 
     private fun validateDate(): Boolean {

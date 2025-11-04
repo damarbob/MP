@@ -45,6 +45,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.gson.Gson
 import com.lottiefiles.dotlottie.core.model.Config
+import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
@@ -64,6 +65,7 @@ import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -86,7 +88,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 
     /* View models */
     private val viewModel: MainViewModel by viewModels()
-//    private val orderViewModel: OrderViewModel by viewModels()
+    private val mainGraphViewModel: MainGraphViewModel by viewModels()
 
     /* Use cases */
     private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
@@ -242,6 +244,30 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 //            .layout(Fit.FIT, LayoutUtil.Alignment.Center) // Set layout configuration
             .build()
         binding.activityMainLoadingLottieView.load(config)
+        binding.activityMainLoadingLottieView.addEventListener(object : DotLottieEventListener {
+            override fun onLoad() {
+                super.onLoad()
+                binding.activityMainLoadingLottieView.visibility = View.VISIBLE
+                binding.activityMainLoadingLottieView.play()
+            }
+
+            override fun onLoadError() {
+                super.onLoadError()
+                binding.activityMainLoadingLottieView.visibility = View.GONE
+            }
+
+            override fun onError(error: Throwable) {
+                super.onError(error)
+                Log.e(TAG, "Lottie error: $error")
+                binding.activityMainLoadingLottieView.visibility = View.GONE
+            }
+
+            override fun onLoadError(error: Throwable) {
+                super.onLoadError(error)
+                Log.e(TAG, "Lottie error: $error")
+                binding.activityMainLoadingLottieView.visibility = View.GONE
+            }
+        })
     }
 
     private val locationDialog by lazy {
@@ -359,6 +385,21 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 // and stop when it's stopped, preventing background UI work.
                 viewModel.errorEvent.collect { errorMessage ->
                     // Show the error message in a Toast or a Snackbar
+                    Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // This collector will run whenever the activity is started
+                // and stop when it's stopped, preventing background UI work.
+                mainGraphViewModel.errorEvent.collect { exception ->
+                    // Show a Toast, Snackbar, or Dialog
+                    val errorMessage = when (exception) {
+                        is IOException -> "Network error. Please check your connection."
+                        else -> "An unexpected error occurred."
+                    }
+                    Log.e(TAG, errorMessage, exception)
                     Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }

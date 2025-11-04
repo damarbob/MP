@@ -7,6 +7,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.model.Vehicle
 import id.monpres.app.model.VehicleType
 import id.monpres.app.repository.VehicleRepository
+import id.monpres.app.state.UiState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,6 +24,13 @@ class InsertVehicleViewModel @Inject constructor(
         _vehicleTypes.value = VehicleType.getSampleList()
     }
 
-    fun insertVehicle(vehicle: Vehicle) = vehicleRepository.insertVehicle(vehicle)
+    fun insertVehicle(vehicle: Vehicle): Flow<UiState<Vehicle>> = flow {
+        emit(UiState.Loading)
+        val insertedVehicle = vehicleRepository.insertVehicle(vehicle)
+        emit(UiState.Success(insertedVehicle))
+    }.catch { e ->
+        emit(UiState.Empty)
+        throw e
+    }
 
 }

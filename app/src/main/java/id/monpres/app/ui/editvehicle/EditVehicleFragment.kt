@@ -149,7 +149,7 @@ class EditVehicleFragment : BaseFragment() {
                 }
 
                 // Update vehicle
-                observeUiStateOneShot(viewModel.updateVehicle(editedVehicle), { message ->
+                observeUiStateOneShot(viewModel.updateVehicle(editedVehicle), {
                     it.isEnabled = true
                 }) {
                     Toast.makeText(

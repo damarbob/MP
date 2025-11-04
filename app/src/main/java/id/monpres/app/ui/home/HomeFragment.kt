@@ -17,6 +17,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.HeroCarouselStrategy
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,7 +29,7 @@ import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
-import id.monpres.app.model.OrderService
+import id.monpres.app.model.Vehicle
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
 import id.monpres.app.ui.adapter.OrderServiceAdapter
@@ -56,9 +57,7 @@ class HomeFragment : BaseFragment() {
     private lateinit var vehicleAdapter: VehicleAdapter
     private lateinit var orderServiceAdapter: OrderServiceAdapter
 
-    private var orderServices: List<OrderService> = emptyList()
-    private var ongoingOrders: List<OrderService> = emptyList()
-    private var completedOrders: List<OrderService> = emptyList()
+    private var vehicles: List<Vehicle> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -158,13 +157,27 @@ class HomeFragment : BaseFragment() {
             override fun onServiceClicked(serviceId: String?) {
                 when (serviceId) {
                     // Quick Service (temp id) TODO: Finalize ID
-                    "1" ->
-                        findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToQuickServiceFragment(serviceId))
+                    "1" -> {
+                        if (vehicles.isEmpty()) {
+                            handleNoVehicle()
+                        } else {
+                            findNavController().navigate(
+                                HomeFragmentDirections.actionHomeFragmentToQuickServiceFragment(
+                                    serviceId
+                                )
+                            )
+                        }
+                    }
                     // Scheduled Service (temp id) TODO: Finalize ID
                     "2" ->
-                        findNavController().navigate(R.id.action_homeFragment_to_scheduledServiceFragment,
-                            bundleOf(Pair("serviceId", serviceId))
-                        )
+                        if (vehicles.isEmpty()) {
+                            handleNoVehicle()
+                        } else {
+                            findNavController().navigate(
+                                R.id.action_homeFragment_to_scheduledServiceFragment,
+                                bundleOf(Pair("serviceId", serviceId))
+                            )
+                        }
                     // Component Replacement (temp id) TODO: Finalize ID
                     "3" ->
                         Toast.makeText(
@@ -175,6 +188,19 @@ class HomeFragment : BaseFragment() {
                 }
             }
         })
+    }
+
+    private fun handleNoVehicle() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.warning))
+            .setMessage(getString(R.string.no_vehicle_has_been_added_yet))
+            .setPositiveButton(getString(R.string.okay)) { _, _ ->
+                findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToInsertVehicleFragment())
+            }
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     /**
@@ -201,16 +227,21 @@ class HomeFragment : BaseFragment() {
     }
 
     /**
-     * Observes the vehicles data from the [HomeViewModel].
+     * Observes the vehicles data from the [MainGraphViewModel].
      * Updates the [VehicleAdapter] with the list of vehicles, limiting it to the first 5 vehicles.
      */
     private fun vehiclesObservers() {
-        observeUiState(mainGraphViewModel.userVehiclesState) { vehicles ->
+        observeUiState(mainGraphViewModel.userVehiclesState, onEmpty = {
+            binding.fragmentHomeButtonSeeAllVehicle.visibility = View.GONE
+            binding.fragmentHomeLinearLayoutVehicleEmptyState.visibility = View.VISIBLE
+        }) { vehicles ->
+            this.vehicles = vehicles
             vehicleAdapter.submitList(vehicles.take(5))
 
             binding.fragmentHomeButtonSeeAllVehicle.visibility =
                 if (vehicles.isNotEmpty()) View.VISIBLE else View.GONE
-
+            binding.fragmentHomeLinearLayoutVehicleEmptyState.visibility =
+                if (vehicles.isNotEmpty()) View.GONE else View.VISIBLE
         }
     }
 
@@ -243,7 +274,10 @@ class HomeFragment : BaseFragment() {
 
     fun setupOrderServiceObservers() {
         //1. Pass the master list of orders to the ViewModel whenever it changes.
-        observeUiState(mainGraphViewModel.userOrderServicesState) { serviceOrders ->
+        observeUiState(mainGraphViewModel.userOrderServicesState, onEmpty = {
+            binding.fragmentHomeButtonSeeAllHistory.visibility = View.GONE
+            toggleOrderServiceEmptyState(true)
+        }) { serviceOrders ->
             viewModel.setAllOrderServices(serviceOrders)
             binding.fragmentHomeButtonSeeAllHistory.visibility =
                 if (serviceOrders.isEmpty()) View.GONE else View.VISIBLE
@@ -254,7 +288,7 @@ class HomeFragment : BaseFragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filteredOrderServices.collect { filteredList ->
                     orderServiceAdapter.submitList(filteredList)
-                    toggleEmptyState(filteredList.isEmpty())
+                    toggleOrderServiceEmptyState(filteredList.isEmpty())
                 }
             }
         }
@@ -272,15 +306,15 @@ class HomeFragment : BaseFragment() {
         }
     }
 
-    private fun toggleEmptyState(isEmpty: Boolean) {
+    private fun toggleOrderServiceEmptyState(isEmpty: Boolean) {
         if (isEmpty) {
             binding.apply {
-                fragmentHomeLinearLayoutEmptyState.visibility = View.VISIBLE
+                fragmentHomeLinearLayoutOrderServiceEmptyState.visibility = View.VISIBLE
                 fragmentHomeRecyclerViewHistory.visibility = View.GONE
             }
         } else {
             binding.apply {
-                fragmentHomeLinearLayoutEmptyState.visibility = View.GONE
+                fragmentHomeLinearLayoutOrderServiceEmptyState.visibility = View.GONE
                 fragmentHomeRecyclerViewHistory.visibility = View.VISIBLE
             }
         }

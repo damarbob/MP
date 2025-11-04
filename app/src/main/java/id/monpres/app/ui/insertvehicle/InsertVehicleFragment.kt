@@ -147,10 +147,11 @@ class InsertVehicleFragment : BaseFragment() {
                     }
                 }
 
-                observeUiStateOneShot(viewModel.insertVehicle(newVehicle), { message ->
+                observeUiStateOneShot(viewModel.insertVehicle(newVehicle), {
                     it.isEnabled = true
                 }) {
-                    Toast.makeText(requireContext(), "Vehicle added", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(),
+                        getString(R.string.vehicle_added), Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
             } else {

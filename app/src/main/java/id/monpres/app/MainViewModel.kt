@@ -61,7 +61,8 @@ class MainViewModel @Inject constructor(
     val isUserVerified: StateFlow<Boolean?> = _isUserVerified.asStateFlow()
 
     private val _isResendEmailVerificationSuccess = MutableStateFlow<Boolean?>(null)
-    val isResendEmailVerificationSuccess: StateFlow<Boolean?> = _isResendEmailVerificationSuccess.asStateFlow()
+    val isResendEmailVerificationSuccess: StateFlow<Boolean?> =
+        _isResendEmailVerificationSuccess.asStateFlow()
 
     // --- NEW SHARED FLOW FOR UI EVENTS ---
     private val _errorEvent = MutableSharedFlow<String>() // No replay needed for one-time events

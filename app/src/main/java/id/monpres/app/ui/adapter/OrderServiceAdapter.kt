@@ -3,9 +3,11 @@ package id.monpres.app.ui.adapter
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import id.monpres.app.R
 import id.monpres.app.databinding.ItemTwoLineBinding
 import id.monpres.app.model.OrderService
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
@@ -34,6 +36,7 @@ class OrderServiceAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(orderService: OrderService) {
             val date = orderService.updatedAt.toDateTimeDisplayString()
+            binding.itemTwoLineImageViewImage.setImageDrawable(AppCompatResources.getDrawable(binding.root.context, R.drawable.build_24px))
             binding.itemTwoLineTextViewTitle.text = orderService.name
             binding.itemTwoLineTextViewSubtitle.text =
                 "${orderService.vehicle?.name} - $date"

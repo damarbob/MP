@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -63,6 +64,12 @@ class MainGraphViewModel @Inject constructor(
 
     private val _userVehiclesState = MutableStateFlow<UiState<List<Vehicle>>>(UiState.Loading)
     val userVehiclesState: StateFlow<UiState<List<Vehicle>>> = _userVehiclesState.asStateFlow()
+    private val _userVehicles = MutableStateFlow<List<Vehicle>>(emptyList())
+    val userVehicles: StateFlow<List<Vehicle>> = _userVehicles.asStateFlow()
+
+    // Event channel for one-time error messages
+    private val _errorEvent = MutableSharedFlow<Throwable>()
+    val errorEvent: SharedFlow<Throwable> = _errorEvent.asSharedFlow()
 
     // To keep track of orders for which notifications have been shown/updated
     // Key: OrderID, Value: LastNotifiedStatus
@@ -90,6 +97,54 @@ class MainGraphViewModel @Inject constructor(
     }
 
     private fun observeUserOrderServices() {
+        viewModelScope.launch {
+            orderServiceRepository.observeOrderServicesByUserId()
+                .takeUntilSignal(sessionManager.externalSignOutSignal)
+                .onStart { _userOrderServicesState.value = UiState.Loading }
+                .catch { e ->
+                    // If the exception is for cancellation, re-throw it to stop the coroutine gracefully.
+                    if (e is CancellationException) {
+                        Log.i(TAG, "User orders observation was cancelled.")
+                        throw e
+                    }
+                    // Now the ViewModel can handle specific exceptions if needed
+                    Log.e(TAG, "Error observing user orders", e)
+                    // On failure, emit the error as a one-time event
+                    _errorEvent.emit(e)
+                    // Set the UI state to Empty or keep the last successful state
+                    _userOrderServicesState.value = UiState.Empty
+                }
+                .collect { orders ->
+                    // The repository gives us clean data.
+                    _userOrderServicesState.value = if (orders.isEmpty()) UiState.Empty else UiState.Success(orders)
+                }
+        }
+    }
+
+    private fun observePartnerOrderServices() {
+        viewModelScope.launch {
+            orderServiceRepository.observeOrderServicesByPartnerId()
+                .takeUntilSignal(sessionManager.externalSignOutSignal)
+                .onStart { _partnerOrderServicesState.value = UiState.Loading }
+                .catch { e ->
+                    // If the exception is for cancellation, re-throw it to stop the coroutine gracefully.
+                    if (e is CancellationException) {
+                        Log.i(TAG, "Partner orders observation was cancelled.")
+                        throw e
+                    }
+                    Log.e(TAG, "Error observing partner orders", e)
+                    // On failure, emit the error as a one-time event
+                    _errorEvent.emit(e)
+                    // Set the UI state to Empty or keep the last successful state
+                    _partnerOrderServicesState.value = UiState.Empty
+                }
+                .collect { orders ->
+                    _partnerOrderServicesState.value = if (orders.isEmpty()) UiState.Empty else UiState.Success(orders)
+                }
+        }
+    }
+
+    /*private fun observeUserOrderServices() {
         viewModelScope.launch {
             orderServiceRepository.observeOrderServicesByUserId()
                 .takeUntilSignal(sessionManager.externalSignOutSignal) // Stop observation on logout
@@ -129,7 +184,7 @@ class MainGraphViewModel @Inject constructor(
                     _partnerOrderServicesState.value = state
                 }
         }
-    }
+    }*/
 
     private fun observeUserOrderServiceById(orderId: String) {
         viewModelScope.launch {
@@ -141,7 +196,7 @@ class MainGraphViewModel @Inject constructor(
                 .map { userOrderServicesUiState -> // Transform the UiState<List<OrderService>>
                     when (userOrderServicesUiState) {
                         is UiState.Loading -> UiState.Loading
-                        is UiState.Error -> UiState.Error(userOrderServicesUiState.exception)
+                        is UiState.Empty -> UiState.Empty
                         is UiState.Success -> {
                             val orderService =
                                 userOrderServicesUiState.data.find { it.id == orderId }
@@ -150,7 +205,8 @@ class MainGraphViewModel @Inject constructor(
                             } else {
                                 // Be more specific about the error if possible.
                                 // Is it truly a "not found" scenario or an unexpected null?
-                                UiState.Error(NoSuchElementException("OrderService with ID $orderId not found."))
+                                _errorEvent.emit(NoSuchElementException())
+                                UiState.Empty
                             }
                         }
                     }
@@ -163,7 +219,8 @@ class MainGraphViewModel @Inject constructor(
                         throw e // Re-throw to propagate cancellation
                     }
                     Log.e(TAG, "Error in OrderService by ID flow collection", e)
-                    _userOrderServiceState.value = UiState.Error(e)
+                    _userOrderServiceState.value = UiState.Empty
+                    _errorEvent.emit(e)
                 }
                 .collect { specificOrderServiceUiState ->
                     _userOrderServiceState.value = specificOrderServiceUiState
@@ -181,7 +238,7 @@ class MainGraphViewModel @Inject constructor(
                 .map { partnerOrderServicesUiState -> // Transform the UiState<List<OrderService>>
                     when (partnerOrderServicesUiState) {
                         is UiState.Loading -> UiState.Loading
-                        is UiState.Error -> UiState.Error(partnerOrderServicesUiState.exception)
+                        is UiState.Empty -> UiState.Empty
                         is UiState.Success -> {
                             val orderService =
                                 partnerOrderServicesUiState.data.find { it.id == orderId }
@@ -190,7 +247,8 @@ class MainGraphViewModel @Inject constructor(
                             } else {
                                 // Be more specific about the error if possible.
                                 // Is it truly a "not found" scenario or an unexpected null?
-                                UiState.Error(NoSuchElementException("OrderService with ID $orderId not found."))
+                                _errorEvent.emit(NoSuchElementException())
+                                UiState.Empty
                             }
                         }
                     }
@@ -203,7 +261,8 @@ class MainGraphViewModel @Inject constructor(
                         throw e // Re-throw to propagate cancellation
                     }
                     Log.e(TAG, "Error in OrderService by ID flow collection", e)
-                    _partnerOrderServiceState.value = UiState.Error(e)
+                    _partnerOrderServiceState.value = UiState.Empty
+                    _errorEvent.emit(e)
                 }
                 .collect { specificOrderServiceUiState ->
                     _partnerOrderServiceState.value = specificOrderServiceUiState
@@ -222,8 +281,11 @@ class MainGraphViewModel @Inject constructor(
 
     private fun observeUserVehicles() {
         viewModelScope.launch {
-            vehicleRepository.getVehiclesByUserIdFlow()
+            vehicleRepository.getVehiclesByUserIdFlow(this)
                 .takeUntilSignal(sessionManager.externalSignOutSignal) // Stop observation on logout
+                .onStart {
+                    _userVehiclesState.value = UiState.Loading
+                }
                 .catch { e ->
                     if (e is CancellationException) {
                         Log.i(TAG, "Vehicle observation cancelled.", e)
@@ -232,10 +294,12 @@ class MainGraphViewModel @Inject constructor(
                         throw e
                     }
                     Log.e(TAG, "Error in vehicles flow collection", e)
-                    _userVehiclesState.value = UiState.Error(e)
+                    _userVehiclesState.value = UiState.Empty
+                    _errorEvent.emit(e)
                 }
-                .collect { state ->
-                    _userVehiclesState.value = state
+                .collect { vehicles ->
+                    _userVehiclesState.value = if (vehicles.isEmpty()) UiState.Empty else UiState.Success(vehicles)
+                    _userVehicles.value = vehicles
                 }
         }
     }
