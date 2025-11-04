@@ -41,9 +41,11 @@ import javax.inject.Inject
  * It provides common functionality for selecting a vehicle, issue, location,
  * and placing an order. Subclasses must implement methods to provide
  * specific UI elements and the ViewModel.
+ * It also handles navigation to the partner selection screen and receives the result.
  *
  * This fragment handles:
  * - Setting up MaterialSharedAxis transitions for enter, return, exit, and reenter.
+ * - Handling partner selection by listening to results from `PartnerSelectionFragment`.
  * - Managing a list of user's vehicles and the chosen vehicle.
  * - Handling the selection of a location via an external MapsActivity using `pickLocationLauncher`.
  * - Observing changes to the selected location and updating the UI accordingly.
@@ -53,6 +55,7 @@ import javax.inject.Inject
  * - Providing a common method to construct and place an order.
  *
  * Subclasses are expected to:
+ * - Handle validation logic by calling the provided `validate...` methods before placing an order.
  * - Provide implementations for abstract methods to return specific UI components (e.g., AutoCompleteTextViews, Buttons, CheckBox, TextInputLayouts).
  * - Provide an implementation for `getBaseOrderService()` to return an instance of `OrderService`.
  * - Provide an implementation for `getViewModel()` to return an instance of `BaseServiceViewModel` (or a subclass).
@@ -61,7 +64,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 abstract class BaseServiceFragment : Fragment() {
     protected val TAG = this::class.java.simpleName
-    protected lateinit var binding: Any
+
+    /* Properties */
     protected var service: Service? = null
     protected var selectedPartnerId: String? = null
     protected var myVehicles: List<Vehicle> = listOf()
@@ -69,26 +73,44 @@ abstract class BaseServiceFragment : Fragment() {
     protected var selectedLocationPoint: Point? = null
     protected var orderPlacedCallback: OrderPlacedCallback? = null
 
+    /* Dependencies */
     @Inject
     lateinit var partnerRepository: PartnerRepository
-
     @Inject
     lateinit var userRepository: UserRepository
+
+    /* Views */
+    protected lateinit var binding: Any
 
     interface OrderPlacedCallback {
         fun onSuccess(orderService: OrderService)
         fun onFailure(orderService: OrderService, throwable: Throwable)
     }
 
+    /**
+     * An [androidx.activity.result.ActivityResultLauncher] for starting the [MapsActivity]
+     * to pick a location.
+     *
+     * It uses [ActivityResultContracts.StartActivityForResult] to handle the activity result.
+     * When the result is `Activity.RESULT_OK`, it extracts the selected location and the user's
+     * current location from the result data.
+     *
+     * If the location data is valid, it updates the ViewModel with the selected location point
+     * and the user's location point.
+     * If the location data is missing or blank, it displays a `MaterialAlertDialog` to inform
+     * the user about the failure to retrieve the location.
+     */
     private val pickLocationLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { data ->
+                // Extract selected location and user's current location from the result data
                 val selectedLocation =
                     data.getStringExtra(MapsActivityExtraData.SELECTED_LOCATION) ?: ""
                 val userLocation = data.getStringExtra(MapsActivityExtraData.USER_LOCATION) ?: ""
 
+                // If either location is missing or blank, display an error message
                 if (selectedLocation.isBlank() || userLocation.isBlank()) {
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle(getString(R.string.location))
@@ -99,6 +121,7 @@ abstract class BaseServiceFragment : Fragment() {
                         .show()
                     return@let
                 }
+                // Otherwise, set the selected and user location to the view model
                 else {
                     Log.d(TAG, "User's location $userLocation")
                     Log.d(TAG, "Selected location $selectedLocation")
@@ -111,39 +134,12 @@ abstract class BaseServiceFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Set transition
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
-    }
-
-    abstract fun getPartnerSelectionButton(): Button
-    abstract fun getVehicleAutoCompleteTextView(): AutoCompleteTextView
-    abstract fun getIssueAutoCompleteTextView(): AutoCompleteTextView
-    abstract fun getAddressText(): String
-    abstract fun getIssueDescriptionText(): String
-    abstract fun getLocationSelectButton(): Button
-    abstract fun getLocationReSelectButton(): Button
-    abstract fun getLocationConsentCheckBox(): CheckBox
-    abstract fun getVehicleInputLayout(): TextInputLayout
-    abstract fun getIssueInputLayout(): TextInputLayout
-    abstract fun getPlaceOrderButton(): Button
-
-    /**
-     * Abstract method to be implemented by subclasses.
-     * This method should return an instance of `OrderService` which represents
-     * the basic structure of the order being placed. Subclasses might return
-     * a specific type of `OrderService` (e.g., `RepairOrderService`, `TowingOrderService`).
-     * This base order object will then be populated with details like user information,
-     * service details, location, and user inputs before being sent to the ViewModel
-     * for processing.
-     *
-     * @return An instance of [OrderService] or its subclass.
-     */
-    abstract fun getBaseOrderService(): OrderService
-
-    protected fun registerOrderPlacedCallback(callback: OrderPlacedCallback) {
-        orderPlacedCallback = callback
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -237,6 +233,85 @@ abstract class BaseServiceFragment : Fragment() {
         getLocationConsentCheckBox().markRequiredInRed()
     }
 
+    /**
+     * Opens the map activity to allow the user to select a location.
+     *
+     * This function creates an intent for [MapsActivity], sets it to "pick mode",
+     * and launches it using [pickLocationLauncher] to get the selected location back.
+     */
+    protected fun openMap() {
+        val intent = Intent(requireContext(), MapsActivity::class.java).apply {
+            putExtra(MapsActivityExtraData.EXTRA_PICK_MODE, true)
+        }
+        pickLocationLauncher.launch(intent)
+    }
+
+    /**
+     * Constructs an [OrderService] object and submits it for placement via the ViewModel.
+     *
+     * This function gathers all necessary information from the system, user inputs, and selected
+     * data points to create a comprehensive [OrderService] object. The process involves:
+     * 1.  Getting a base `OrderService` object from the abstract `getBaseOrderService()` method.
+     * 2.  Populating system-generated data like user ID, timestamps, and order status.
+     * 3.  Creating a snapshot of the service details (type, name, description).
+     * 4.  Adding delivery data, including the user's current location and the selected service location.
+     * 5.  Incorporating user-provided inputs such as the selected partner, vehicle, address, issue, and issue description.
+     *
+     * After the `OrderService` object is fully constructed, it is passed to the ViewModel's
+     * `placeOrder` method to be processed and sent to the repository. The result of this
+     * operation is observed by the `placeOrderResult` LiveData.
+     */
+    protected fun placeOrder() {
+        val orderService = getBaseOrderService().apply {
+            /* System */
+            userId = Firebase.auth.currentUser?.uid
+            user = userRepository.getCurrentUserRecord()
+            serviceId = service?.id
+            status = OrderStatus.ORDER_PLACED
+            createdAt = Timestamp.now()
+            updatedAt = Timestamp.now()
+
+            /* Service snapshot */
+            type = MainApplication.serviceTypes?.find { it.id == service?.typeId }?.name
+            name = service?.name
+            description = service?.description
+
+            /* Delivery data */
+            userLocationLat = getViewModel().userLocationPoint.value?.latitude()
+            userLocationLng = getViewModel().userLocationPoint.value?.longitude()
+            selectedLocationLat = selectedLocationPoint?.latitude()
+            selectedLocationLng = selectedLocationPoint?.longitude()
+
+            /* User inputs */
+            partnerId = selectedPartnerId
+            partner = selectedPartnerId?.let { partnerRepository.getRecordByUserId(it) }
+            userAddress = getAddressText()
+            vehicle = chosenMyVehicle
+            issue = getIssueAutoCompleteTextView().text.toString()
+            issueDescription = getIssueDescriptionText()
+        }
+        getViewModel().placeOrder(orderService)
+    }
+
+    /**
+     * Registers a callback to be invoked when an order placement operation completes.
+     * This allows the caller (e.g., the hosting Activity or another Fragment) to react to the
+     * success or failure of the order placement.
+     *
+     * The provided callback will be triggered from the `placeOrderResult` LiveData observer
+     * within this fragment.
+     * - `onSuccess` is called when the order is successfully placed.
+     * - `onFailure` is called when the order placement fails.
+     *
+     * @param callback An implementation of [OrderPlacedCallback] that defines the actions
+     *                 to be taken on success or failure.
+     */
+    protected fun registerOrderPlacedCallback(callback: OrderPlacedCallback) {
+        orderPlacedCallback = callback
+    }
+
+    /* Validation */
+
     protected fun validateLocation(): Boolean {
         return if (selectedLocationPoint == null) {
             getLocationSelectButton().error = ""
@@ -297,44 +372,47 @@ abstract class BaseServiceFragment : Fragment() {
         }
     }
 
-    protected fun openMap() {
-        val intent = Intent(requireContext(), MapsActivity::class.java).apply {
-            putExtra(MapsActivityExtraData.EXTRA_PICK_MODE, true)
-        }
-        pickLocationLauncher.launch(intent)
-    }
+    /* End of validation */
 
-    protected fun placeOrder() {
-        val orderService = getBaseOrderService().apply {
-            /* System */
-            userId = Firebase.auth.currentUser?.uid
-            user = userRepository.getCurrentUserRecord()
-            serviceId = service?.id
-            status = OrderStatus.ORDER_PLACED
-            createdAt = Timestamp.now()
-            updatedAt = Timestamp.now()
+    /* UI elements */
 
-            /* Service snapshot */
-            type = MainApplication.serviceTypes?.find { it.id == service?.typeId }?.name
-            name = service?.name
-            description = service?.description
+    abstract fun getPartnerSelectionButton(): Button
+    abstract fun getVehicleAutoCompleteTextView(): AutoCompleteTextView
+    abstract fun getIssueAutoCompleteTextView(): AutoCompleteTextView
+    abstract fun getAddressText(): String
+    abstract fun getIssueDescriptionText(): String
+    abstract fun getLocationSelectButton(): Button
+    abstract fun getLocationReSelectButton(): Button
+    abstract fun getLocationConsentCheckBox(): CheckBox
+    abstract fun getVehicleInputLayout(): TextInputLayout
+    abstract fun getIssueInputLayout(): TextInputLayout
+    abstract fun getPlaceOrderButton(): Button
 
-            /* Delivery data */
-            userLocationLat = getViewModel().userLocationPoint.value?.latitude()
-            userLocationLng = getViewModel().userLocationPoint.value?.longitude()
-            selectedLocationLat = selectedLocationPoint?.latitude()
-            selectedLocationLng = selectedLocationPoint?.longitude()
+    /* End of UI elements */
 
-            /* User inputs */
-            partnerId = selectedPartnerId
-            partner = selectedPartnerId?.let { partnerRepository.getRecordByUserId(it) }
-            userAddress = getAddressText()
-            vehicle = chosenMyVehicle
-            issue = getIssueAutoCompleteTextView().text.toString()
-            issueDescription = getIssueDescriptionText()
-        }
-        getViewModel().placeOrder(orderService)
-    }
+    /**
+     * Abstract method to be implemented by subclasses.
+     * This method should return an instance of `OrderService` which represents
+     * the basic structure of the order being placed. Subclasses might return
+     * a specific type of `OrderService` (e.g., `RepairOrderService`, `TowingOrderService`).
+     * This base order object will then be populated with details like user information,
+     * service details, location, and user inputs before being sent to the ViewModel
+     * for processing.
+     *
+     * @return An instance of [OrderService] or its subclass.
+     */
+    abstract fun getBaseOrderService(): OrderService
 
+    /**
+     * Abstract method that must be implemented by subclasses to provide their specific
+     * instance of [BaseServiceViewModel] or a subclass.
+     *
+     * This ViewModel is crucial for the base fragment's functionality, as it holds the state
+     * for the selected location, user location, and handles the logic for placing an order.
+     * The base fragment observes LiveData from this ViewModel to react to UI changes and
+     * operation results.
+     *
+     * @return An instance of [BaseServiceViewModel] or its subclass.
+     */
     protected abstract fun getViewModel(): BaseServiceViewModel
 }
