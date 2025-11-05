@@ -102,6 +102,7 @@
                 android:layout_marginTop="8dp"
                 android:hint="@string/whatsapp_number"
                 app:endIconMode="clear_text"
+                app:helperText="@string/make_sure_to_include_country_code"
                 app:startIconContentDescription="@string/whatsapp_number"
                 app:startIconDrawable="@drawable/mobile_24px">
 
@@ -119,6 +120,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/i_am_on_holiday" />
+
+            <Space
+                style="@style/Widget.App.Space.Large" />
 
             <TextView
                 style="@style/Widget.App.H4.Bold"
@@ -155,15 +159,21 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/editProfileButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/save"
-                app:icon="@drawable/check_24px" />
+            <Space
+                style="@style/Widget.App.Space.ExtraLarge" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/editProfileButton"
+        style="?extendedFloatingActionButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/save"
+        android:text="@string/save"
+        app:icon="@drawable/check_24px" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="this_app_version_is_only_supported_in_s_your_sim_card_region_is_s">Versi aplikasi ini hanya didukung di %1$s; wilayah karu SIM Anda adalah %2$s.</string>
+    <string name="unsupported_region">Wilayah Tidak Didukung</string>
+
     <string name="continue_">Lanjutkan</string>
     <string name="submit">Kirim</string>
     <string name="send">Kirim</string>
@@ -212,11 +215,14 @@
     <string name="multiple_order_updates">Update Order</string>
     <string name="order_location">Lokasi Order</string>
 
+    <string name="make_sure_to_include_country_code">Pastikan menyertakan kode negara, misalnya +62 untuk Indonesia.</string>
     <string name="as_a_partner_you_must_set_a_primary_location">Sebagai mitra, Anda harus menyetel lokasi utama.</string>
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">Anda harus mengatur nomor telepon agar kami dapat menghubungi Anda.</string>
     <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">Anda belum memilih lokasi. Apakah Anda ingin menggunakan lokasi Anda saat ini sebagai gantinya?</string>
     <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Tidak dapat mengambil lokasi Anda. Coba lagi dengan izin lokasi diaktifkan.</string>
     <string name="i_am_on_holiday">Saya sedang libur</string>
+    <string name="once_activated_customers_will_no_longer_see_you">Setelah diaktifkan, pelanggan tidak akan lagi melihat Anda di daftar mitra aktif terdekat hingga Anda menonaktifkannya. Pastikan untuk menonaktifkan Mode Liburan agar pelanggan dapat melakukan pemesanan.</string>
+    <string name="please_enter_a_valid_phone_number">Silakan masukkan nomor telepon yang valid</string>
 
     <string name="haven_t_arrived_at_the_location_yet">Anda belum sampai di titik lokasi, masih sekitar %1$s m lagi</string>
     <string name="ongoing">Dalam proses</string>

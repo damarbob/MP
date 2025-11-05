@@ -3,6 +3,7 @@ package id.monpres.app.ui.profile
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,13 +14,18 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
+import com.google.i18n.phonenumbers.NumberParseException
+import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.mapbox.geojson.Point
 import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.MainApplication
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentEditProfileBinding
@@ -29,6 +35,9 @@ import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.utils.markRequiredInRed
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -42,6 +51,8 @@ class ProfileFragment : Fragment() {
     /* Dependencies */
     @Inject
     lateinit var userRepository: UserRepository
+
+    /* Properties */
     private val viewModel: ProfileViewModel by viewModels()
     private val auth = Firebase.auth
     private var user: FirebaseUser? = null
@@ -134,27 +145,83 @@ class ProfileFragment : Fragment() {
 
         /* Listeners */
         binding.editProfileButton.setOnClickListener {
-            // show loading indicator
+
+            // Get input values
+            val whatsAppNumber = binding.editProfileInputWhatsApp.text.toString()
+            val fullName = binding.editProfileInputEditFullName.text.toString()
+            val emailAddress = binding.editProfileInputEmailAddress.text.toString()
+            val active = !binding.editProfileCheckBoxHoliday.isChecked
+            val location = selectedPrimaryLocationPoint
+            val address = binding.editProfileInputEditAddress.text.toString()
+
+            // Validate inputs (only necessary ones)
+            if (!validateWhatsAppNumber()) {
+                return@setOnClickListener
+            }
+
+            // Show loading indicator
             binding.editProfileProgressIndicator.visibility = View.VISIBLE
 
             // Make button disabled
             it.isEnabled = false
 
-            viewModel.updateProfile(
-                binding.editProfileInputEditFullName.text.toString(),
-                binding.editProfileInputEmailAddress.text.toString(),
-                binding.editProfileInputWhatsApp.text.toString(),
-                !binding.editProfileCheckBoxHoliday.isChecked,
-                selectedPrimaryLocationPoint,
-                binding.editProfileInputEditAddress.text.toString()
-            )
+            // Use the international format for the WhatsApp number
+            val phoneUtil = PhoneNumberUtil.getInstance()
+            val formattedWhatsApp = phoneUtil.format(phoneUtil.parse(whatsAppNumber, MainApplication.APP_REGION), PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL)
+            binding.editProfileInputWhatsApp.setText(formattedWhatsApp) // Update the input field to show formatted number
 
+            // Update profile
+            viewModel.updateProfile(
+                fullName,
+                emailAddress,
+                formattedWhatsApp,
+                active,
+                location,
+                address
+            )
         }
         binding.editProfileButtonSelectPrimaryLocationButton.setOnClickListener {
             openMap()
         }
+        binding.editProfileCheckBoxHoliday.setOnCheckedChangeListener { _, isChecked ->
+            // Show alert dialog if checked and user is partner
+            if (userProfile?.role == UserRole.PARTNER) {
+                if (isChecked) {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(getString(R.string.i_am_on_holiday))
+                        .setMessage(getString(R.string.once_activated_customers_will_no_longer_see_you))
+                        .setPositiveButton(getString(R.string.okay)) { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .show()
+                }
+            }
+        }
 
         return binding.root
+    }
+
+    private fun validateWhatsAppNumber(): Boolean {
+        val whatsAppNumber = binding.editProfileInputWhatsApp.text.toString()
+        val phoneUtil = PhoneNumberUtil.getInstance()
+
+        try {
+            val numberProto = phoneUtil.parse(whatsAppNumber, MainApplication.APP_REGION)
+            if (!phoneUtil.isValidNumber(numberProto)) {
+                binding.editProfileTextInputLayoutWhatsApp.error =
+                    getString(R.string.please_enter_a_valid_phone_number)
+                return false
+            }
+            // Clear previous error if any
+            binding.editProfileTextInputLayoutWhatsApp.error = null
+        } catch (e: NumberParseException) {
+            binding.editProfileTextInputLayoutWhatsApp.error =
+                getString(R.string.please_enter_a_valid_phone_number)
+            Log.w(TAG, "NumberParseException was thrown for number: $whatsAppNumber", e)
+            return false
+        }
+
+        return true
     }
 
     private val pickLocationLauncher = registerForActivityResult(
@@ -251,6 +318,45 @@ class ProfileFragment : Fragment() {
                 editProfileTextInputLayoutWhatsApp.markRequiredInRed()
             } else if (userProfile?.role == UserRole.PARTNER) {
                 editProfileButtonSelectPrimaryLocationButton.markRequiredInRed()
+            }
+        }
+
+        // As-you-type formatter for WhatsApp number
+        lifecycleScope.launch(Dispatchers.IO) {
+            // Create util and watcher on IO thread
+            val watcher = PhoneNumberFormattingTextWatcher(MainApplication.APP_REGION)
+            val phoneUtil = PhoneNumberUtil.getInstance()
+
+            // Get the current text (must be done on Main thread)
+            val currentNumber = withContext(Dispatchers.Main) {
+                binding.editProfileInputWhatsApp.text.toString()
+            }
+
+            var initialFormattedNumber: String? = null
+            if (currentNumber.isNotBlank()) {
+                try {
+                    // Parse and format the existing number on IO thread
+                    val numberProto = phoneUtil.parse(currentNumber, MainApplication.APP_REGION)
+                    initialFormattedNumber = phoneUtil.format(
+                        numberProto,
+                        PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL
+                    )
+                } catch (e: NumberParseException) {
+                    Log.w(TAG, "Initial number $currentNumber is not parseable. ${e.localizedMessage}")
+                    // Number is invalid, so we'll just leave it as-is
+                }
+            }
+
+            // Switch back to Main thread to update UI
+            withContext(Dispatchers.Main) {
+                // Set the formatted text (if we have it)
+                // This runs *before* the watcher is added, so no loops.
+                if (initialFormattedNumber != null) {
+                    binding.editProfileInputWhatsApp.setText(initialFormattedNumber)
+                }
+
+                // NOW add the watcher to format future user typing
+                binding.editProfileInputWhatsApp.addTextChangedListener(watcher)
             }
         }
     }

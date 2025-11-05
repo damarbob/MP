@@ -1,7 +1,10 @@
 package id.monpres.app
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
+import android.telephony.TelephonyManager
+import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
 import id.monpres.app.model.Service
 import id.monpres.app.model.ServiceType
@@ -13,6 +16,10 @@ class MainApplication : Application() {
     companion object {
         private val TAG = MainApplication::class.java.simpleName
 
+        // Region
+        const val APP_REGION = "ID" // Default region
+        var userRegion: String? = null
+
         // Services
         var serviceTypes: List<ServiceType>? = null // TODO: Use repository
         var services: List<Service>? = null  // TODO: Use repository
@@ -20,6 +27,15 @@ class MainApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // Initialize the userRegion
+        userRegion = getSimCountry(this)
+        Log.d(TAG, "User region from SIM card: $userRegion")
+
+        if (userRegion.isNullOrEmpty()) {
+            userRegion = APP_REGION
+            Log.d(TAG, "Falling back to default app region: $userRegion")
+        }
 
         /* Notification */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -77,5 +93,14 @@ class MainApplication : Application() {
 //                categoryId = "3"
 //            ),
         )
+    }
+
+    /**
+     * Gets the ISO country code from the SIM card.
+     */
+    private fun getSimCountry(context: Context): String? {
+        val telephonyManager = context.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+        // Returns the ISO country code (e.g., "US", "ID") or null
+        return telephonyManager.simCountryIso?.uppercase()
     }
 }

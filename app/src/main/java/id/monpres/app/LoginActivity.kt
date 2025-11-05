@@ -16,14 +16,18 @@ import androidx.navigation.fragment.NavHostFragment
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import id.monpres.app.MainApplication.Companion.APP_REGION
+import id.monpres.app.MainApplication.Companion.userRegion
 import id.monpres.app.databinding.ActivityLoginBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
 
 class LoginActivity : AppCompatActivity() {
 
@@ -44,16 +48,40 @@ class LoginActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-//        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(binding.navHostFragmentActivityLogin.id) as NavHostFragment
         navController = navHostFragment.navController
 
+        /* Region validation */
+        if (userRegion != APP_REGION) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.unsupported_region))
+                .setMessage(
+                    getString(
+                        R.string.this_app_version_is_only_supported_in_s_your_sim_card_region_is_s,
+                        APP_REGION,
+                        userRegion
+                    )
+                )
+                .setPositiveButton(R.string.continue_) { _, _ ->
+                    // The user forces to continue
+
+                    // Run auth
+                    runAuthentication()
+                }
+                .setNegativeButton(R.string.cancel) { _, _ -> exitProcess(0) }
+                .setCancelable(false)
+                .show()
+        }
+        // If the user region is the same as the application region
+        else {
+            // Run auth
+            runAuthentication()
+        }
+    }
+
+    private fun runAuthentication() {
         /* Auth */
         credentialManager = CredentialManager.create(this)
         auth = Firebase.auth // Initialize Firebase Auth
@@ -72,9 +100,10 @@ class LoginActivity : AppCompatActivity() {
         val request = GetCredentialRequest.Builder()
             .addCredentialOption(
                 GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(BuildConfig.GOOGLE_SERVER_CLIENT_ID)
-                .build())
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(BuildConfig.GOOGLE_SERVER_CLIENT_ID)
+                    .build()
+            )
             .build()
 
         CoroutineScope(Dispatchers.Main).launch {
@@ -128,13 +157,18 @@ class LoginActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
-                    Toast.makeText(this,
-                        getString(R.string.signed_in_as, user?.displayName), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        getString(R.string.signed_in_as, user?.displayName), Toast.LENGTH_SHORT
+                    ).show()
                     this.startActivity(Intent(this, MainActivity::class.java))
                     this.finish()
                 } else {
-                    Toast.makeText(this,
-                        getString(R.string.authentication_failed, task.exception?.localizedMessage), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        getString(R.string.authentication_failed, task.exception?.localizedMessage),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
     }

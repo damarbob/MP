@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name" translatable="false">Montir Presisi</string>
     <string name="terms_and_conditions_url" translatable="false">https://simsinfotekno.com/</string>
+
+    <string name="this_app_version_is_only_supported_in_s_your_sim_card_region_is_s">This app version is only supported in %1$s, your SIM card region is %2$s</string>
+    <string name="unsupported_region">Unsupported Region</string>
+
     <string name="continue_">Continue</string>
     <string name="submit">Submit</string>
     <string name="send">Send</string>
@@ -216,11 +220,14 @@
     <string name="multiple_order_updates">Multiple Order Updates</string>
     <string name="order_location">Order Location</string>
 
+    <string name="make_sure_to_include_country_code">Make sure to include country code e.g., +62 for Indonesia</string>
     <string name="as_a_partner_you_must_set_a_primary_location">As a partner, you must set a primary location.</string>
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">You have to set a phone number so we can contact you.</string>
     <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">You have not selected a location. Would you like to use your current location instead?</string>
     <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Unable to get your location. Please try again with location permission enabled.</string>
     <string name="i_am_on_holiday">I am on holiday</string>
+    <string name="once_activated_customers_will_no_longer_see_you">Once activated, customers will no longer see you in the list of nearby active partners until you disable it. Make sure to turn off Holiday Mode to allow customers to place orders.</string>
+    <string name="please_enter_a_valid_phone_number">Please enter a valid phone number</string>
 
     <string name="haven_t_arrived_at_the_location_yet">You haven\'t arrived at the location yet, still about %1$s m to go</string>
     <string name="ongoing">Ongoing</string>

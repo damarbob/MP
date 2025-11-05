@@ -6,6 +6,7 @@ firebaseMessagingDirectboot = "25.0.1"
 glide = "4.16.0"
 googleid = "1.1.1"
 hiltAndroid = "2.57"
+libphonenumber = "9.0.17"
 mapbox = "11.13.1"
 firebaseBom = "34.1.0"
 kotlin = "2.2.0"
@@ -49,6 +50,7 @@ glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
+libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 mapbox = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
