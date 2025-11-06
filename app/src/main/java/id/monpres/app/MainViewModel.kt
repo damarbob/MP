@@ -17,6 +17,7 @@ import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -47,8 +48,8 @@ class MainViewModel @Inject constructor(
     val navigationGraphState: StateFlow<NavigationGraphState> = _navigationGraphState.asStateFlow()
 
     private val _userEligibilityState =
-        MutableStateFlow<UserEligibilityState>(UserEligibilityState.Eligible)
-    val userEligibilityState: StateFlow<UserEligibilityState> = _userEligibilityState.asStateFlow()
+        MutableSharedFlow<UserEligibilityState>()
+    val userEligibilityState: SharedFlow<UserEligibilityState> = _userEligibilityState.asSharedFlow()
 
 
     private val _mainLoadingState = MutableLiveData(true)
@@ -90,20 +91,22 @@ class MainViewModel @Inject constructor(
         }
 
         Log.d(TAG, "Current user: ${currentUser.displayName}. Checking email verification.")
-        checkEmailVerificationUseCase(
-            { isVerified ->
-                // This will trigger the flow below if isVerified is true.
-                _isUserVerified.value = isVerified
-            },
-            { errorMessage ->
-                // Try to emit the error. tryEmit is non-suspending.
-                _errorEvent.tryEmit(errorMessage)
-            }
-        )
+        viewModelScope.launch(Dispatchers.IO) {
+            checkEmailVerificationUseCase(
+                { isVerified ->
+                    // This will trigger the flow below if isVerified is true.
+                    _isUserVerified.value = isVerified
+                },
+                { errorMessage ->
+                    // Try to emit the error. tryEmit is non-suspending.
+                    _errorEvent.tryEmit(errorMessage)
+                }
+            )
+        }
     }
 
     private fun waitForVerificationAndInitialize() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // This coroutine will suspend here until _isUserVerified becomes non-null.
             val isVerified = _isUserVerified.filterNotNull().first()
 
@@ -202,24 +205,27 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun checkUserEligibility(user: MontirPresisiUser) {
+    private suspend fun checkUserEligibility(user: MontirPresisiUser) {
         val isPartnerMissingLocation = user.role == UserRole.PARTNER &&
                 (user.locationLat.isNullOrBlank() || user.locationLng.isNullOrBlank())
 
         val isCustomerMissingPhone =
             user.role == UserRole.CUSTOMER && user.phoneNumber.isNullOrBlank()
 
-        _userEligibilityState.value = when {
+        _userEligibilityState.emit(when {
             isPartnerMissingLocation -> UserEligibilityState.PartnerMissingLocation
             isCustomerMissingPhone -> UserEligibilityState.CustomerMissingPhoneNumber
             else -> UserEligibilityState.Eligible
-        }
+        })
     }
 
     // You can also add a function to re-check eligibility when needed
     fun recheckEligibility() {
         val user = userRepository.getCurrentUserRecord() ?: return
-        checkUserEligibility(user)
+        Log.d(TAG, "Rechecking eligibility for user: ${user.userId}")
+        viewModelScope.launch {
+            checkUserEligibility(user)
+        }
     }
 
     fun signOut() {
