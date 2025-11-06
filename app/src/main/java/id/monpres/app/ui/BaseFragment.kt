@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.view.View
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -40,33 +41,33 @@ abstract class BaseFragment : Fragment() {
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             // Tracks if this specific flow has incremented the loader count.
-            var thisFlowIsLoading = false
+            var thisFlowIsLoading: Boolean? = null
 
             repeatOnLifecycle(lifecycleState) {
                 flow.collect { state ->
                     when (state) {
                         is UiState.Loading -> {
-                            if (!thisFlowIsLoading) { // Only increment once per loading sequence
+                            if (thisFlowIsLoading == null || thisFlowIsLoading == false) { // Only increment once per loading sequence
                                 activeLoaders.incrementAndGet()
-                                thisFlowIsLoading = true
                             }
+                            thisFlowIsLoading = true
                             showLoading(true)
                         }
 
                         is UiState.Success -> {
-                            if (thisFlowIsLoading) {
+                            if (thisFlowIsLoading == true || (thisFlowIsLoading == null && activeLoaders.get() > 0)) {
                                 activeLoaders.decrementAndGet()
-                                thisFlowIsLoading = false
                             }
+                            thisFlowIsLoading = false
                             showLoading(false)
                             onSuccess(state.data)
                         }
 
                         is UiState.Empty -> {
-                            if (thisFlowIsLoading) {
+                            if (thisFlowIsLoading == true) {
                                 activeLoaders.decrementAndGet()
-                                thisFlowIsLoading = false
                             }
+                            thisFlowIsLoading = false
                             showLoading(false)
                             onEmpty()
                         }
@@ -112,7 +113,7 @@ abstract class BaseFragment : Fragment() {
                         // Treat Empty as a terminal state for a one-shot operation
                         activeLoaders.decrementAndGet()
                         showLoading(false)
-                        onEmpty
+                        onEmpty()
                         // We don't call onComplete here as it's typically for success with data.
                         // You could add an onEmpty lambda if needed for one-shot operations.
                         return@collect // Stop collecting.
@@ -127,13 +128,13 @@ abstract class BaseFragment : Fragment() {
      */
     private fun showLoading(isLoading: Boolean) {
         // Only change visibility if the state is different to prevent redundant animations
-        val isCurrentlyVisible = progressIndicator.visibility == View.VISIBLE
+        val isCurrentlyVisible = progressIndicator.isVisible
 
         if (isLoading && !isCurrentlyVisible) {
             progressIndicator.show()
         } else if (!isLoading && isCurrentlyVisible) {
             // Only hide if there are absolutely no more active loaders.
-            if (activeLoaders.get() == 0) {
+            if (activeLoaders.get() <= 0) {
                 progressIndicator.hide()
             }
         }

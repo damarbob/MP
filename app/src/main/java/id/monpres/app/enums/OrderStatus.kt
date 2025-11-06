@@ -26,9 +26,9 @@ enum class OrderStatus(
     ),
 
     // For services: Service is currently being performed
-    IN_PROGRESS(
+    REPAIRING(
         OrderStatusType.IN_PROGRESS,
-        R.string.order_status_in_progress,
+        R.string.notification_title_repairing,
         R.string.start_repairs
     ),
 
@@ -79,8 +79,8 @@ enum class OrderStatus(
         return when (this) {
             ORDER_PLACED -> ACCEPTED
             ACCEPTED -> ON_THE_WAY
-            ON_THE_WAY -> IN_PROGRESS
-            IN_PROGRESS -> REPAIRED
+            ON_THE_WAY -> REPAIRING
+            REPAIRING -> REPAIRED
             REPAIRED -> WAITING_FOR_PAYMENT
             WAITING_FOR_PAYMENT -> COMPLETED
             COMPLETED -> COMPLETED

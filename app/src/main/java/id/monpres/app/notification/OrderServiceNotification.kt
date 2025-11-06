@@ -15,12 +15,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import com.google.firebase.Timestamp
 import id.monpres.app.MainActivity // Assuming your main activity
 import id.monpres.app.R
 import id.monpres.app.enums.OrderStatus // Assuming your OrderStatus enum
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.UserRole
-import id.monpres.app.model.OrderService
 import java.util.Calendar
 import java.util.Date
 import kotlin.math.absoluteValue
@@ -30,10 +30,13 @@ object OrderServiceNotification {
     private const val TAG = "OrderServiceNotification" // For android.util.Log
 
     // Notification Channel (Android 8.0+)
-    const val ORDER_UPDATES_CHANNEL_ID = "order_service_live_updates_channel_id"
+    private const val ORDER_UPDATES_CHANNEL_ID = "order_service_live_updates_channel_id"
     private const val ORDER_UPDATES_CHANNEL_NAME = "Order Service Updates" // User visible
     private const val ORDER_UPDATES_CHANNEL_DESC =
         "Real-time updates for your ongoing service orders" // User visible
+
+    const val BASE_CHANNEL_ID = "base_channel_id"
+    const val BASE_CHANNEL_NAME = "Base Channel" // User visible
 
     // Unique ID for this specific notification. If you have multiple ongoing order notifications,
     // you'll need a dynamic ID (e.g., based on orderId). For a single "QuickService" ongoing notification,
@@ -57,63 +60,99 @@ object OrderServiceNotification {
      * Initializes the notification channel. Call this from Application.onCreate().
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun createNotificationChannel(context: Context) {
+    fun createNotificationChannel(
+        context: Context,
+        channelId: String = ORDER_UPDATES_CHANNEL_ID,
+        channelName: String = ORDER_UPDATES_CHANNEL_NAME,
+        channelDesc: String = ORDER_UPDATES_CHANNEL_DESC,
+        importance: Int = NotificationManager.IMPORTANCE_HIGH
+    ) {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Check if channel exists before creating
-        if (notificationManager.getNotificationChannel(ORDER_UPDATES_CHANNEL_ID) == null) {
-            val channel = NotificationChannel(
-                ORDER_UPDATES_CHANNEL_ID,
-                ORDER_UPDATES_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH // Use HIGH for important real-time updates
-            ).apply {
-                description = ORDER_UPDATES_CHANNEL_DESC
-                // Configure other channel properties if needed (sound, vibration, etc.)
-                // enableVibration(true)
-                // setSound(defaultSoundUri, audioAttributes)
-            }
-            notificationManager.createNotificationChannel(channel)
-            Log.d(TAG, "Notification channel created: $ORDER_UPDATES_CHANNEL_ID")
+
+        val channel = NotificationChannel(
+            channelId,
+            channelName,
+            importance // Use HIGH for important real-time updates
+        ).apply {
+            description = channelDesc
+            // Configure other channel properties if needed (sound, vibration, etc.)
+            // enableVibration(true)
+            // setSound(defaultSoundUri, audioAttributes)
         }
+        notificationManager.createNotificationChannel(channel)
+        Log.d(TAG, "Notification channel created: $channelId")
+
     }
 
     /**
      * Shows or updates the ongoing order notification.
      *
      * @param context Context
-     * @param orderService The current order.
+     * @param orderServiceId The ID of the order.
+     * @param orderServiceStatus The status of the order.
+     * @param orderServiceUpdatedAt The timestamp when the order was last updated.
+     * @param userRole The user's role (customer or partner).
+     * @param currentProgress The current progress of the order (optional).
+     * @return The notification object.
      */
     fun showOrUpdateNotification(
         context: Context,
-        orderService: OrderService,
-        userRole: UserRole = UserRole.CUSTOMER
-    ) {
+        orderServiceId: String?,
+        orderServiceStatus: OrderStatus?,
+        orderServiceUpdatedAt: Timestamp?,
+        userRole: UserRole = UserRole.CUSTOMER,
+        currentProgress: Int? = null,
+        shortCriticalText: String? = null
+    ): Notification? {
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            return
+            return null
         }
 
-        if (shouldRemoveClosedOrder(orderService)) {
-            cancelNotification(context, orderService.id!!)
-            return
+        if (orderServiceId == null || orderServiceStatus == null || orderServiceUpdatedAt == null) {
+            return null
         }
 
-        val orderState = OrderState.fromOrderStatus(orderService.status) ?: return
-        val notificationId = getNotificationId(orderService.id!!)
+        if (shouldRemoveClosedOrder(orderServiceStatus, orderServiceUpdatedAt)) {
+            cancelNotification(context, orderServiceId)
+            return null
+        }
 
-        val notification = buildNotification(context, orderState, orderService, userRole, notificationId)
+        val orderState = OrderState.fromOrderStatus(orderServiceStatus) ?: return null
+        val notificationId = getNotificationId(orderServiceId)
+
+        val notification = buildNotification(
+            context,
+            orderState,
+            orderServiceId,
+            orderServiceUpdatedAt,
+            userRole,
+            notificationId,
+            currentProgress,
+            shortCriticalText
+        )
         NotificationManagerCompat.from(context).notify(notificationId, notification)
         updateGroupSummary(context)
+        return notification
     }
 
-    private fun shouldRemoveClosedOrder(orderService: OrderService): Boolean {
-        if (orderService.status?.type != OrderStatusType.CLOSED) return false
+    fun isPostPromotionEnabled(context: Context): Boolean {
+        return NotificationManagerCompat.from(context).canPostPromotedNotifications()
+    }
 
-        orderService.updatedAt?.toDate()?.let { updatedAt ->
+    private fun shouldRemoveClosedOrder(
+        orderServiceStatus: OrderStatus?,
+        orderServiceUpdatedAt: Timestamp?
+    ): Boolean {
+        if (orderServiceStatus?.type != OrderStatusType.CLOSED) return false
+
+        orderServiceUpdatedAt?.toDate()?.let { updatedAt ->
             val calendar = Calendar.getInstance().apply {
                 time = updatedAt
                 add(Calendar.HOUR, HOURS_TO_REMOVE_CLOSED_TYPE_ORDERS)
@@ -135,19 +174,27 @@ object OrderServiceNotification {
         NotificationManagerCompat.from(context)
             .cancel(getNotificationId(orderId))
         Log.d(TAG, "Notification cancelled for order: $orderId (ID: $orderId)")
-            updateGroupSummary(context)
+        updateGroupSummary(context)
+    }
+
+    fun cancelAll(context: Context) {
+        NotificationManagerCompat.from(context).cancelAll()
     }
 
     private fun buildNotification(
         context: Context,
         orderState: OrderState,
-        orderService: OrderService,
+        orderServiceId: String,
+        orderServiceUpdatedAt: Timestamp,
         userRole: UserRole,
-        notificationId: Int
+        notificationId: Int,
+        currentProgress: Int? = null,
+        shortCriticalText: String? = null
     ): Notification {
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra(ORDER_ID_KEY, orderService.id)
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP // These flags bring the existing task to the front without destroying it
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            putExtra(ORDER_ID_KEY, orderServiceId)
         }
 
         val pendingIntent = PendingIntent.getActivity(
@@ -160,8 +207,10 @@ object OrderServiceNotification {
         return orderState.buildNotification(
             context,
             userRole,
-            orderService.updatedAt?.toDate() ?: Date(),
-            pendingIntent
+            orderServiceUpdatedAt.toDate(),
+            pendingIntent,
+            currentProgress,
+            shortCriticalText
         ).build()
     }
 
@@ -212,6 +261,21 @@ object OrderServiceNotification {
         }
     }
 
+    fun createBaseNotification(context: Context): Notification {
+        return NotificationCompat.Builder(context, BASE_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_mp_notification)
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText("Starting service")
+            .setGroup(ORDER_NOTIFICATION_GROUP_KEY)
+//            .setContentIntent(contentIntent)
+//            .setOngoing(ongoing)
+//            .setAutoCancel(autoCancel)
+            .setOnlyAlertOnce(true) // Subsequent updates to the same notification won't make sound/vibrate
+//            .setWhen(updatedAt.time)
+            .setShowWhen(false)
+            .build()
+    }
+
     // --- Enum for defining notification content based on OrderStatus ---
     private enum class OrderState(
         val status: OrderStatus,
@@ -220,10 +284,10 @@ object OrderServiceNotification {
         private val partnerTextResId: Int,
         private val smallIconResId: Int = R.drawable.ic_mp_notification, // Default small icon
         private val isProgressIndeterminate: Boolean = false,
-        private val progressValue: Int? = null, // Null for indeterminate or no progress
+        private var progressValue: Int? = null, // Null for indeterminate or no progress
         private val progressTrackerIconResId: Int? = null,
         private val largeIconResId: Int? = null,
-        private val ongoing: Boolean = true, // Most order updates are ongoing
+        private val ongoing: Boolean = false, // Most order updates are ongoing
         private val autoCancel: Boolean = false // Only for final states if needed
     ) {
         ORDER_PLACED(
@@ -245,14 +309,15 @@ object OrderServiceNotification {
             R.string.notification_title_on_the_way,
             R.string.notification_text_on_the_way,
             R.string.notification_text_on_the_way_partner,
+            ongoing = true,
             progressValue = 0, // Example progress
-            progressTrackerIconResId = R.drawable.directions_car_24px,
-            largeIconResId = R.drawable.map_24px
+            progressTrackerIconResId = R.drawable.nav_rot_90,
+            largeIconResId = R.drawable.navigation_24px
         ),
         REPAIRING(
-            OrderStatus.IN_PROGRESS,
-            R.string.notification_title_in_progress,
-            R.string.notification_text_in_progress,
+            OrderStatus.REPAIRING,
+            R.string.notification_title_repairing,
+            R.string.notification_text_repairing,
             R.string.notification_text_in_progress_partner,
             isProgressIndeterminate = true,
         ),
@@ -277,7 +342,6 @@ object OrderServiceNotification {
             R.string.notification_title_completed,
             R.string.notification_text_completed,
             R.string.notification_text_completed_partner,
-            ongoing = false, // Consider making final notification not ongoing
             autoCancel = true  // Consider making it auto-cancel when clicked
         ),
         ORDER_CANCELLED( // Added a cancelled state
@@ -285,7 +349,6 @@ object OrderServiceNotification {
             R.string.notification_title_cancelled,
             R.string.notification_text_cancelled,
             R.string.notification_text_cancelled_partner,
-            ongoing = false,
             autoCancel = true
         );
 
@@ -295,10 +358,15 @@ object OrderServiceNotification {
             context: Context,
             userRole: UserRole,
             updatedAt: Date,
-            contentIntent: PendingIntent
+            contentIntent: PendingIntent,
+            progress: Int? = null,
+            shortCriticalText: String? = null
         ): NotificationCompat.Builder {
-            val textResId = if (userRole == UserRole.CUSTOMER) customerTextResId else partnerTextResId
+            val textResId =
+                if (userRole == UserRole.CUSTOMER) customerTextResId else partnerTextResId
 
+            Log.d(TAG, "Current Progress: $progress")
+            progressValue = progress
             val builder = NotificationCompat.Builder(context, ORDER_UPDATES_CHANNEL_ID)
                 .setSmallIcon(smallIconResId)
                 .setContentTitle(context.getString(titleResId))
@@ -310,6 +378,9 @@ object OrderServiceNotification {
                 .setAutoCancel(autoCancel)
                 .setOnlyAlertOnce(true) // Subsequent updates to the same notification won't make sound/vibrate
                 .setWhen(updatedAt.time)
+                .setShowWhen(this != ON_THE_WAY)
+                .setShortCriticalText(shortCriticalText)
+                .setRequestPromotedOngoing(true)
                 .apply {
                     setupProgressStyle(context)
                     largeIconResId?.let {
@@ -339,6 +410,7 @@ object OrderServiceNotification {
         }
 
         private fun NotificationCompat.Builder.setupProgressStyle(context: Context) {
+            Log.d(TAG, "Progress: $progressValue")
             if (progressValue != null || isProgressIndeterminate) {
                 val style = NotificationCompat.ProgressStyle()
                 style.setProgressSegments(

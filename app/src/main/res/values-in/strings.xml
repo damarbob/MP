@@ -157,8 +157,8 @@
     <string name="notification_text_cancelled">Pesanan Anda telah dibatalkan</string>
     <string name="notification_title_on_the_way">Dalam perjalanan</string>
     <string name="notification_text_on_the_way">Mitra layanan sedang dalam perjalanan</string>
-    <string name="notification_title_in_progress">Memperbaiki</string>
-    <string name="notification_text_in_progress">Kendaraan Anda sedang dalam proses perbaikan</string>
+    <string name="notification_title_repairing">Memperbaiki</string>
+    <string name="notification_text_repairing">Kendaraan Anda sedang dalam proses perbaikan</string>
     <string name="notification_title_repaired">Perbaikan selesai</string>
     <string name="notification_text_repaired">Lihatlah kendaraan Anda</string>
     <string name="notification_title_waiting_for_payment">Menunggu pembayaran</string>
@@ -240,4 +240,8 @@
     <string name="no_vehicle">Tidak ada kendaraan</string>
     <string name="vehicle_added">Kendaraan ditambahkan</string>
     <string name="no_vehicle_has_been_added_yet">Tidak ada kendaraan yang ditambahkan. Mohon tambahkan kendaraan terlebih dahulu</string>
+    <string name="enable_live_update_feature">Nyalakan fitur live update?</string>
+    <string name="x_distance_m">± %1$s m</string>
+    <string name="chat">Hubungi</string>
+    <string name="there_is_no_phone_number_for_that_user">Tidak ada nomor WhatsApp pada user tersebut</string>
 </resources>

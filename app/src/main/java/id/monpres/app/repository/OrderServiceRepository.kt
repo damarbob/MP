@@ -4,9 +4,7 @@ import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import id.monpres.app.model.OrderService
-import id.monpres.app.usecase.GetDataByUserIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByFieldUseCase
-import id.monpres.app.usecase.ObserveCollectionByIdUseCase
 import id.monpres.app.usecase.ObserveCollectionByUserIdUseCase
 import id.monpres.app.usecase.UpdateDataByIdUseCase
 import kotlinx.coroutines.Dispatchers
@@ -23,8 +21,6 @@ class OrderServiceRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val observeCollectionByUserIdUseCase: ObserveCollectionByUserIdUseCase,
     private val observeCollectionByFieldUseCase: ObserveCollectionByFieldUseCase,
-    private val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase,
-    private val getDataByUserIdUseCase: GetDataByUserIdUseCase,
     private val updateDataByIdUseCase: UpdateDataByIdUseCase
 ) : Repository<OrderService>() {
     companion object {
@@ -38,6 +34,7 @@ class OrderServiceRepository @Inject constructor(
         )
             .mapNotNull { orderServices ->
                 // Clean up any nulls that might come from Firestore
+                setRecords(orderServices, false)
                 orderServices
             }
             .distinctUntilChanged()
@@ -54,10 +51,14 @@ class OrderServiceRepository @Inject constructor(
             OrderService.COLLECTION, OrderService::class.java
         )
             .mapNotNull { orderServices ->
+                setRecords(orderServices, false)
                 orderServices
             }
             .distinctUntilChanged()
             .flowOn(Dispatchers.IO)
+
+    fun getOrderServiceById(id: String): OrderService? = getRecords().find { it.id == id }
+
 
 
     /**
@@ -147,6 +148,6 @@ class OrderServiceRepository @Inject constructor(
     }
 
     override fun onRecordCleared() {
-        TODO("Not yet implemented")
+
     }
 }

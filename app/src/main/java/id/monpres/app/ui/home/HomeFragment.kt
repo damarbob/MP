@@ -84,13 +84,6 @@ class HomeFragment : BaseFragment() {
             windowInsets
         }
 
-        setupServiceRecyclerView()
-        setupVehicleRecyclerView()
-        setupOrderServiceRecyclerView()
-        setupOrderServiceObservers()
-        vehiclesObservers()
-        setupListeners()
-
         val carousel = binding.fragmentHomeRecyclerViewCarousel
         carousel.adapter = BannerAdapter(
             listOf(
@@ -117,6 +110,13 @@ class HomeFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         (activity as MainActivity).binding.activityMainAppBarLayout.background =
             binding.root.background
+
+        setupServiceRecyclerView()
+        setupVehicleRecyclerView()
+        setupOrderServiceRecyclerView()
+        setupOrderServiceObservers()
+        vehiclesObservers()
+        setupListeners()
     }
 
     /**

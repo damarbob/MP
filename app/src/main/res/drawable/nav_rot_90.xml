@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape
+            android:shape="oval"
+            android:tint="?attr/colorSurface"/>
+    </item>
+    <item>
+        <rotate
+            android:drawable="@drawable/baseline_navigation_24"
+            android:fromDegrees="90"
+            android:toDegrees="90" />
+        <bitmap android:tint="?attr/colorSurface"/>
+    </item>
+</layer-list>

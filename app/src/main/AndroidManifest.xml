@@ -16,6 +16,11 @@
 
     <!-- Notification permissions -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -77,7 +82,7 @@
         </provider>
 
         <service
-            android:name=".notification.MyFirebaseMessagingService"
+            android:name=".service.MyFirebaseMessagingService"
             android:stopWithTask="false"
             android:directBootAware="true"
             android:exported="false">
@@ -86,6 +91,10 @@
             </intent-filter>
         </service>
 
+        <service android:name=".service.OrderServiceLocationTrackingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
     </application>
 

@@ -306,13 +306,21 @@ class OrderServiceDetailFragment : Fragment() {
                 if (orderService.price != null) indonesianCurrencyFormatter(orderService.price!!) else ""
 
             fragmentOrderServiceDetailTextViewUserName.text =
-                if (currentUser?.role == UserRole.CUSTOMER) orderService.partner?.displayName
-                    ?: "-" else if (currentUser?.role == UserRole.PARTNER) orderService.user?.displayName
-                    ?: "-" else "-"
+                when (currentUser?.role) {
+                    UserRole.CUSTOMER -> orderService.partner?.displayName
+                        ?: "-"
+                    UserRole.PARTNER -> orderService.user?.displayName
+                        ?: "-"
+                    else -> "-"
+                }
             fragmentOrderServiceDetailTextViewUserDetail.text =
-                if (currentUser?.role == UserRole.CUSTOMER) getString(R.string.partner) else if (currentUser?.role == UserRole.PARTNER) getString(
-                    R.string.customer
-                ) else ""
+                when (currentUser?.role) {
+                    UserRole.CUSTOMER -> getString(R.string.partner)
+                    UserRole.PARTNER -> getString(
+                        R.string.customer
+                    )
+                    else -> ""
+                }
 
             // General info
             fragmentOrderServiceDetailInvoiceNumber.text = orderService.id ?: ""

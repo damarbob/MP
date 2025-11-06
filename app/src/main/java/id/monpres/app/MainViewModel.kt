@@ -9,6 +9,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.NavigationGraphState
@@ -36,7 +37,8 @@ class MainViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val getOrCreateUserUseCase: GetOrCreateUserUseCase,
     private val getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase,
-    private val userIdentityRepository: UserIdentityRepository
+    private val userIdentityRepository: UserIdentityRepository,
+    private val orderServiceRepository: OrderServiceRepository,
 ) : ViewModel() {
     companion object {
         private val TAG = MainViewModel::class.simpleName
@@ -237,6 +239,7 @@ class MainViewModel @Inject constructor(
 
         // Clear the local record
         userRepository.clearRecord()
+        orderServiceRepository.clearRecord()
 
         // Get the current FCM token
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->

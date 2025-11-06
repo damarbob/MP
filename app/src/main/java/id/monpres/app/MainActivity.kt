@@ -54,6 +54,7 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
+import id.monpres.app.service.OrderServiceLocationTrackingService
 import id.monpres.app.state.NavigationGraphState
 import id.monpres.app.state.UserEligibilityState
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
@@ -211,9 +212,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         /* Listeners */
         setupUIListeners()
         setupNavControllerListeners()
-
-        // Handle notification click from a cold start
-        handleNotificationIntent(intent)
 
         /* Testing. TODO: Remove on production */
         getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
@@ -434,7 +432,9 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.signOutEvent
                     .collect {
+                        OrderServiceNotification.cancelAll(this@MainActivity)
                         clearCredentialsAndNavigate()
+                        stopAllTrackingOrder()
                     }
             }
         }
@@ -447,6 +447,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 navHostFragmentActivityMain.visibility = if (it) View.GONE else View.VISIBLE
                 activityMainLoadingStateLayout.visibility = if (it) View.VISIBLE else View.GONE
             }
+            handleNotificationIntent(intent)
         }
 
         // --- NEW OBSERVERS FOR REFACTORED LOGIC ---
@@ -750,13 +751,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             cm.clearCredentialState(ClearCredentialStateRequest())
         }
 
-        if (::serviceOrders.isInitialized) {
-            serviceOrders.forEach {
-                OrderServiceNotification.cancelNotification(this, it.id!!)
-            }
-            serviceOrders = listOf()
-        }
-
         // 2. Navigate immediately (don't wait for credential clearing)
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
@@ -848,7 +842,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent) // Update the activity's intent
-        handleNotificationIntent(intent)
+        if (viewModel.mainLoadingState.value == false) handleNotificationIntent(intent)
+        else setupObservers()
 //        if (launchedFromOrderId != null) {
 //            viewModel.setOpenedFromNotification(launchedFromOrderId)
 //        }
@@ -870,5 +865,13 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             })
 
         }
+    }
+
+    private fun stopAllTrackingOrder() {
+        val intent = Intent(application, OrderServiceLocationTrackingService::class.java).apply {
+            action = OrderServiceLocationTrackingService.ACTION_STOP
+        }
+        application.startService(intent)
+        Log.d(TAG, "MainActivity requested to STOP all Location Services.")
     }
 }

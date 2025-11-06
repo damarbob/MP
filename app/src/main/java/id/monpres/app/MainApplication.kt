@@ -1,6 +1,7 @@
 package id.monpres.app
 
 import android.app.Application
+import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.telephony.TelephonyManager
@@ -9,6 +10,8 @@ import dagger.hilt.android.HiltAndroidApp
 import id.monpres.app.model.Service
 import id.monpres.app.model.ServiceType
 import id.monpres.app.notification.OrderServiceNotification
+import id.monpres.app.notification.OrderServiceNotification.BASE_CHANNEL_ID
+import id.monpres.app.notification.OrderServiceNotification.BASE_CHANNEL_NAME
 
 @HiltAndroidApp
 class MainApplication : Application() {
@@ -40,6 +43,10 @@ class MainApplication : Application() {
         /* Notification */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             OrderServiceNotification.createNotificationChannel(this)
+            OrderServiceNotification.createNotificationChannel(
+                this,
+                BASE_CHANNEL_ID, BASE_CHANNEL_NAME, importance = NotificationManager.IMPORTANCE_LOW
+            )
         }
 
 //        DynamicColors.applyToActivitiesIfAvailable(this)

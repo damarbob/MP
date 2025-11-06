@@ -8,8 +8,8 @@ import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.location.Location
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
@@ -19,6 +19,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.scale
 import androidx.core.view.ViewCompat
@@ -26,16 +27,14 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionManager
 import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.Granularity
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
@@ -48,6 +47,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialFade
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.GeoPoint
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.plugin.annotation.annotations
@@ -65,17 +65,19 @@ import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
+import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
-import id.monpres.app.usecase.CalculateAerialDistanceUseCase
 import id.monpres.app.usecase.GoogleMapsIntentUseCase
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
+import id.monpres.app.usecase.NumberFormatterUseCase
+import id.monpres.app.usecase.OpenWhatsAppUseCase
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
+import kotlinx.coroutines.launch
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.util.concurrent.TimeUnit
 
 
@@ -101,16 +103,11 @@ class ServiceProcessFragment : BaseFragment() {
     private var price: Double? = null
     private lateinit var orderItemAdapter: OrderItemAdapter
 
-    private val calculateAerialDistance = CalculateAerialDistanceUseCase()
     private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
     private val googleMapsIntentUseCase = GoogleMapsIntentUseCase()
+    private val numberFormatterUseCase = NumberFormatterUseCase()
+    private val openWhatsAppUseCase = OpenWhatsAppUseCase()
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationRequest: LocationRequest
-    private lateinit var locationCallback: LocationCallback
-    private var currentLatitude: Double = 0.0
-    private var currentLongitude: Double = 0.0
-    private var currentAccuracy: Float = 0f
     private var aerialDistanceToTargetInMeters: Float = 40000000f
 
     private var currentUser: MontirPresisiUser? = null
@@ -121,7 +118,13 @@ class ServiceProcessFragment : BaseFragment() {
     ) { permissions ->
         if (permissions.all { it.value }) {
             // All permissions granted
-            checkLocationSettings()
+            // Permissions granted. Check if we need to start the service now.
+            if (::orderService.isInitialized &&
+                orderService.status == OrderStatus.ON_THE_WAY &&
+                currentUser?.role == UserRole.PARTNER
+            ) {
+                checkLocationSettingsAndStartService()
+            }
         } else {
             // Permission denied
             handlePermissionDenied()
@@ -133,8 +136,13 @@ class ServiceProcessFragment : BaseFragment() {
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            // Location services enabled, start location updates
-            startLocationUpdates()
+            // User enabled location services. Start the service.
+//            if (::orderService.isInitialized &&
+//                orderService.status == OrderStatus.ON_THE_WAY &&
+//                currentUser?.role == UserRole.PARTNER
+//            ) {
+//                startLocationService(OrderServiceLocationTrackingService.MODE_PARTNER)
+//            }
         } else {
             // User didn't enable location services
             handleLocationServicesDisabled()
@@ -192,19 +200,41 @@ class ServiceProcessFragment : BaseFragment() {
             }
         }
 
-        mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
         currentUser = mainGraphViewModel.getCurrentUser()
+        mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
 
+
+
+        if (!OrderServiceNotification.isPostPromotionEnabled(requireContext())) {
+            Log.d(
+                TAG,
+                "onCreate: ${OrderServiceNotification.isPostPromotionEnabled(requireContext())}"
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+                openNotificationDeviceSetting()
+            }
+        }
+
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupObservers()
         setupListeners()
+    }
 
-        // Initialize location services
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        createLocationRequest()
-        createLocationCallback()
-
-        return binding.root
+    @RequiresApi(Build.VERSION_CODES.BAKLAVA)
+    private fun openNotificationDeviceSetting() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.enable_live_update_feature))
+            .setPositiveButton(getString(R.string.okay)) { dialog, which ->
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
+                }
+                requireContext().startActivity(intent)
+            }.show()
     }
 
     private fun setupRecyclerView() {
@@ -218,48 +248,125 @@ class ServiceProcessFragment : BaseFragment() {
 
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
-        when (currentUser?.role) {
-            UserRole.CUSTOMER ->
-                observeUiState(mainGraphViewModel.userOrderServiceState) { data ->
-                    orderService = data
-                    orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
-                    Log.d(TAG, "OrderService: $orderService")
-                    setupView()
-                    showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
-                    showActionButton(false)
-                    showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
+        // 1. Tell the ViewModel to start observing the specific order for this screen.
+        //    This will populate the dedicated `selectedOrderServiceState` flow.
+        mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
+
+        // 2. Observe the NEW dedicated state flow for the single selected order.
+        //    This is the CRITICAL FIX to prevent overwriting the master list.
+        observeUiState(mainGraphViewModel.openedOrderServiceState) { data ->
+            // This 'data' is now correctly a single OrderService object.
+            orderService = data
+            orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
+            Log.d(TAG, "Single OrderService updated: ${orderService.status}")
+
+            // This function sets up all the static UI text based on the order.
+            setupView()
+
+            // This function handles the visibility of the action button based on role and status.
+            updateUiBasedOnRoleAndStatus()
+
+            // If the order we are currently viewing is ON_THE_WAY, we need to observe its live location for UI updates.
+            if (orderService.status == OrderStatus.ON_THE_WAY) {
+                observePartnerLiveLocation()
+            }
+        }
+    }
+
+    /**
+     * A new helper function to consolidate UI visibility logic that depends on the user's role.
+     */
+    private fun updateUiBasedOnRoleAndStatus() {
+        val role = currentUser?.role
+        val status = orderService.status
+
+        val isClosed = status?.type == OrderStatusType.CLOSED
+
+        // Determine button visibility based on role and status
+        when (role) {
+            UserRole.CUSTOMER -> {
+                showCancelButton(status == OrderStatus.ORDER_PLACED)
+                showActionButton(false) // Customer never sees the main action button
+            }
+
+            UserRole.PARTNER -> {
+                showCancelButton(status == OrderStatus.ORDER_PLACED)
+                showActionButton(!isClosed)
+
+                if (orderService.status == OrderStatus.ON_THE_WAY) {
+                    checkLocationSettingsAndStartService()
                 }
+            }
 
+            else -> {
+                // Default case, hide all action buttons
+                showCancelButton(false)
+                showActionButton(false)
+            }
+        }
 
-            UserRole.PARTNER ->
-                observeUiState(mainGraphViewModel.partnerOrderServiceState) { data ->
-                    orderService = data
-                    orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
-                    Log.d(TAG, "OrderService: $orderService")
-                    setupView()
-                    showCancelButton(orderService.status == OrderStatus.ORDER_PLACED)
-                    showActionButton(orderService.status in OrderStatus.entries.filter { it.type != OrderStatusType.CLOSED })
-                    showCompleteStatus(orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED })
+        showCompleteStatus(isClosed)
+    }
 
-                    if (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED) {
-                        // Check and request permissions, then get location
-                        checkLocationPermission()
-                    } else {
-                        stopLocationUpdates()
+    private fun observePartnerLiveLocation() {
+        // Launch a new collector for the live location
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                orderService.id?.let { viewModel.observePartnerLocation(it) }
+                    ?.collect { livePartnerLocation ->
+                        val partnerGeoPoint = livePartnerLocation.location ?: return@collect
+                        Log.d(TAG, "Customer received partner location: $partnerGeoPoint")
+
+                        updateDistanceAndProgress(partnerGeoPoint)
                     }
+            }
+        }
+    }
 
-                    when (orderService.status) {
-                        OrderStatus.WAITING_FOR_PAYMENT, OrderStatus.COMPLETED -> {
-                            binding.fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
-                                View.VISIBLE
-                        }
+    /**
+     * New helper function to encapsulate the distance and progress UI updates.
+     */
+    private fun updateDistanceAndProgress(partnerGeoPoint: GeoPoint) {
+        val partnerLoc = Location("partner").apply {
+            latitude = partnerGeoPoint.latitude
+            longitude = partnerGeoPoint.longitude
+        }
+        val targetLoc = Location("target").apply {
+            latitude = orderService.selectedLocationLat ?: 0.0
+            longitude = orderService.selectedLocationLng ?: 0.0
+        }
+        val initialDistance = getInitialDistance(targetLoc)
+        val currentDistance = partnerLoc.distanceTo(targetLoc)
+        val progress = calculateProgress(initialDistance, currentDistance)
 
-                        else -> {}
-                    }
+        aerialDistanceToTargetInMeters = currentDistance
+
+        // Update the UI components
+        binding.fragmentServiceProcessProgressIndicator.isIndeterminate = false
+        binding.fragmentServiceProcessProgressIndicator.progress = progress
+
+        binding.fragmentServiceProcessTextViewCurrentDistance.text =
+            getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance))
+    }
+
+    // New helper functions for distance calculation
+    private fun getInitialDistance(targetLoc: Location): Float {
+        return orderService.partner?.locationLat?.let { lat ->
+            orderService.partner?.locationLng?.let { lng ->
+                val initialPartnerLoc = Location("initialPartner").apply {
+                    latitude = lat.toDouble()
+                    longitude = lng.toDouble()
                 }
+                initialPartnerLoc.distanceTo(targetLoc)
+            }
+        } ?: 0f
+    }
 
-
-            else -> {}
+    private fun calculateProgress(initialDistance: Float, currentDistance: Float): Int {
+        return if (initialDistance > 0) {
+            ((initialDistance - currentDistance) / initialDistance * 100).toInt().coerceIn(0, 100)
+        } else {
+            100 // If initial distance is 0, they are already there.
         }
     }
 
@@ -392,6 +499,27 @@ class ServiceProcessFragment : BaseFragment() {
     }
 
     private fun setupListeners() {
+        binding.fragmentServiceProcessButtonWhatsApp.setOnClickListener {
+            val whatsAppNumber =
+                when (currentUser?.role) {
+                    UserRole.CUSTOMER -> orderService.partner?.phoneNumber
+                    UserRole.PARTNER -> orderService.user?.phoneNumber
+                    else -> null
+                }
+
+            if (whatsAppNumber == null) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.there_is_no_phone_number_for_that_user),
+                    Toast.LENGTH_LONG
+                ).show()
+                it.isEnabled = false
+                return@setOnClickListener
+            } else {
+                openWhatsAppUseCase(requireContext(), whatsAppNumber)
+            }
+        }
+
         binding.fragmentServiceProcessButtonCancel.setOnClickListener {
             observeUiStateOneShot(
                 viewModel.updateOrderService(
@@ -424,21 +552,26 @@ class ServiceProcessFragment : BaseFragment() {
             object : OnSlideCompleteListener {
                 override fun onSlideComplete(view: SlideToActView) {
 
-                    if (orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE) {
-                        if (hasLocationPermission()) {
-                            val currentDistance =
-                                NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)
-                            Toast.makeText(
-                                requireContext(),
-                                getString(
-                                    R.string.haven_t_arrived_at_the_location_yet,
-                                    currentDistance
-                                ),
-                                Toast.LENGTH_LONG
-                            ).show()
-                        } else {
-                            requestLocationPermission()
+                    if (orderService.status?.serviceNextProcess() == OrderStatus.REPAIRING && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE) {
+                        when {
+                            hasLocationPermission() -> {
+                                val currentDistance =
+                                    numberFormatterUseCase(aerialDistanceToTargetInMeters)
+                                Toast.makeText(
+                                    requireContext(),
+                                    getString(
+                                        R.string.haven_t_arrived_at_the_location_yet,
+                                        currentDistance
+                                    ),
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            shouldShowRequestPermissionRationale() -> {
+                                showPermissionRationale()
+                            }
+                            else -> requestLocationPermission()
                         }
+
                         view.setCompleted(completed = false, withAnimation = true)
                         return
                     }
@@ -528,9 +661,7 @@ class ServiceProcessFragment : BaseFragment() {
             duration = 150L
         }
         TransitionManager.beginDelayedTransition(binding.root, materialFade)
-        val isButtonLocked =
-            orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE
-        Log.d(TAG, "Is button locked: $isButtonLocked")
+
         binding.fragmentServiceProcessActButton.apply {
             visibility =
                 if (show) View.VISIBLE else View.GONE
@@ -538,10 +669,6 @@ class ServiceProcessFragment : BaseFragment() {
                 orderService.status?.serviceNextProcess()?.getServiceActionLabel(requireContext())
                     ?.capitalizeWords()
                     ?: "Next"
-
-            // Lock button if next status is in progress (repairing) and distance is greater than MINIMUM_DISTANCE_TO_START_SERVICE
-//            isLocked = if (orderService.status?.serviceNextProcess() == OrderStatus.IN_PROGRESS) currentDistance > MINIMUM_DISTANCE_TO_START_SERVICE else false
-//            isLocked = isButtonLocked
         }
     }
 
@@ -566,43 +693,63 @@ class ServiceProcessFragment : BaseFragment() {
         } else binding.fragmentServiceProcessProgressIndicator.isIndeterminate = true
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        mainGraphViewModel.stopObserve()
-        stopLocationUpdates()
-    }
+    /**
+     * Checks for location permission first. If granted, checks for location settings.
+     * This is the entry point for the partner's location setup flow.
+     */
+    private fun checkLocationSettingsAndStartService() {
+        // This check is for the partner who needs to SEND location data.
+        if (currentUser?.role != UserRole.PARTNER) return
 
-//    override fun showLoading(isLoading: Boolean) {
-//        // Already handled by showCompleteStatus()
-//    }
-
-    override fun onResume() {
-        super.onResume()
-        if (hasLocationPermission()) {
-            startLocationUpdates()
+        if (ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            // Permission is granted, now check if the GPS setting is enabled.
+            checkDeviceLocationSettings()
+        } else {
+            // Permission is not granted, so request it.
+            // The result will be handled by the 'requestPermissionLauncher'.
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        stopLocationUpdates()
-    }
+    /**
+     * Checks if the device's location services are enabled and either starts the tracking service
+     * or prompts the user to enable them.
+     */
+    private fun checkDeviceLocationSettings() {
+        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY, TimeUnit.SECONDS.toMillis(30)
+        ).build()
 
-    private fun checkLocationPermission() {
-        when {
-            hasLocationPermission() -> {
-                // Already have permission, check location settings
-                checkLocationSettings()
-            }
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client: SettingsClient = LocationServices.getSettingsClient(requireActivity())
+        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
 
-            shouldShowRequestPermissionRationale() -> {
-                // Explain why we need permission
-                showPermissionRationale()
-            }
+        task.addOnSuccessListener {
+            // All location settings are satisfied. The environment is ready.
+            Log.d(TAG, "Location settings are satisfied.")
+//            startLocationService(OrderServiceLocationTrackingService.MODE_PARTNER)
+        }
 
-            else -> {
-                // Request the permission
-                requestLocationPermission()
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                // Location settings are not satisfied, but this can be fixed
+                // by showing the user a dialog.
+                try {
+                    val intentSenderRequest =
+                        IntentSenderRequest.Builder(exception.resolution).build()
+                    // The result of this dialog will be handled by 'locationSettingsRequestLauncher'.
+                    locationSettingsRequestLauncher.launch(intentSenderRequest)
+                } catch (sendEx: Exception) {
+                    // Ignore the error.
+                }
             }
         }
     }
@@ -678,102 +825,6 @@ class ServiceProcessFragment : BaseFragment() {
         startActivity(intent)
     }
 
-    private fun createLocationRequest() {
-        locationRequest =
-            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, TimeUnit.SECONDS.toMillis(10))
-                .apply {
-                    setMinUpdateDistanceMeters(100f)
-                    setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
-                    setWaitForAccurateLocation(true)
-                }.build()
-    }
-
-    private fun createLocationCallback() {
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                super.onLocationResult(locationResult)
-                locationResult.lastLocation?.let {
-                    handleNewLocation(it)
-                }
-            }
-        }
-    }
-
-    private fun checkLocationSettings() {
-        if (!hasLocationPermission() || orderService.status != OrderStatus.ON_THE_WAY || orderService.status != OrderStatus.ORDER_PLACED) {
-            return
-        }
-        val builder = LocationSettingsRequest.Builder()
-            .addLocationRequest(locationRequest)
-
-        val client: SettingsClient = LocationServices.getSettingsClient(requireActivity())
-        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
-
-        task.addOnSuccessListener {
-            // Location settings are satisfied, start location updates
-            startLocationUpdates()
-        }
-
-        task.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException) {
-                // Location settings are not satisfied, show dialog to enable
-                try {
-                    locationSettingsRequestLauncher.launch(
-                        IntentSenderRequest.Builder(exception.resolution).build()
-                    )
-                } catch (sendEx: Exception) {
-                    // Ignore the error
-                    Log.e("Location", "Error launching location settings", sendEx)
-                }
-            } else {
-                handleLocationServicesDisabled()
-            }
-        }
-    }
-
-    private fun startLocationUpdates() {
-        if (!hasLocationPermission() || orderService.status != OrderStatus.ON_THE_WAY) {
-            return
-        }
-
-        try {
-            fusedLocationClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                Looper.getMainLooper()
-            )
-        } catch (e: SecurityException) {
-            Log.e("Location", "SecurityException: ${e.message}")
-        }
-    }
-
-    private fun stopLocationUpdates() {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-    }
-
-    private fun handleNewLocation(location: Location) {
-        currentLatitude = location.latitude
-        currentLongitude = location.longitude
-        currentAccuracy = location.accuracy
-        aerialDistanceToTargetInMeters = calculateAerialDistance(
-            currentLatitude,
-            currentLongitude,
-            orderService.selectedLocationLat!!,
-            orderService.selectedLocationLng!!
-        )
-
-        Log.d(
-            "Location",
-            "Latitude: $currentLatitude, Longitude: $currentLongitude, Accuracy: $currentAccuracy, Distance: $aerialDistanceToTargetInMeters"
-        )
-
-
-        // Update your UI with the new location here
-        // For example: updateTextView("Lat: $latitude, Long: $longitude")
-        binding.fragmentServiceProcessTextViewCurrentDistance.text =
-            "± ${NumberFormat.getInstance().format(aerialDistanceToTargetInMeters)} m"
-    }
-
     private fun handleLocationServicesDisabled() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.location_services_disabled))
@@ -791,6 +842,11 @@ class ServiceProcessFragment : BaseFragment() {
     private fun openLocationSettings() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
         startActivity(intent)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mainGraphViewModel.stopObservingOpenedOrder()
     }
 
     override val progressIndicator: LinearProgressIndicator

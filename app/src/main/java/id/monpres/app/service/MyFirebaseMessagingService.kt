@@ -1,15 +1,17 @@
-package id.monpres.app.notification
+package id.monpres.app.service
 
 import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.OrderService
+import id.monpres.app.notification.OrderServiceNotification
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -73,7 +75,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // Use the fully-fledged notification handler
         OrderServiceNotification.showOrUpdateNotification(
             applicationContext,
-            orderService,
+            orderService.id,
+            orderService.status,
+            orderService.updatedAt,
             userRole
         )
     }
@@ -108,7 +112,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .addOnFailureListener { e ->
                 Log.w(TAG, "Failed to add token with arrayUnion, trying set...", e)
                 val data = hashMapOf("fcmTokens" to listOf(token))
-                userDocRef.set(data, com.google.firebase.firestore.SetOptions.merge())
+                userDocRef.set(data, SetOptions.merge())
                     .addOnSuccessListener {
                         Log.d(TAG, "FCM token array created for user: $userId")
                     }
