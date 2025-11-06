@@ -214,9 +214,14 @@ class MainViewModel @Inject constructor(
         val isCustomerMissingPhone =
             user.role == UserRole.CUSTOMER && user.phoneNumber.isNullOrBlank()
 
+        val isCustomerMissingSocialMedia =
+            user.role == UserRole.CUSTOMER &&
+                    (user.instagramId.isNullOrBlank() && user.facebookId.isNullOrBlank())
+
         _userEligibilityState.emit(when {
             isPartnerMissingLocation -> UserEligibilityState.PartnerMissingLocation
             isCustomerMissingPhone -> UserEligibilityState.CustomerMissingPhoneNumber
+            isCustomerMissingSocialMedia -> UserEligibilityState.CustomerMissingSocialMedia
             else -> UserEligibilityState.Eligible
         })
     }

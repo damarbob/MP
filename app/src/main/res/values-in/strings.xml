@@ -191,7 +191,14 @@
 
     <string name="whatsapp_number">Nomor WhatsApp</string>
     <string name="primary_location">Lokasi Utama</string>
+    <string name="social_media">Social Media</string>
+    <string name="instagram_id">Instagram ID</string>
+    <string name="facebook_id">Facebook ID</string>
+    <string name="enter_your_social_media_id_for">Masukkan ID media sosial Anda untuk proses verifikasi.</string>
+    <string name="your_primary_personal_facebook_id">ID/nama pengguna Facebook pribadi utama Anda (bukan nama tampilan Anda). Ketuk ikon untuk membuka profil Anda di browser.</string>
+    <string name="your_personal_instagram_id">ID/nama pengguna Instagram pribadi Anda tanpa simbol @. Ketuk ikon untuk membuka profil Anda di browser.</string>
     <string name="profile_updated_successfully">Profil berhasil diperbarui</string>
+
     <string name="location_permission_needed">Izin lokasi diperlukan</string>
     <string name="grant_location_permission">Aplikasi ini butuh izin lokasi untuk mendapatkan lokasi Anda. Izinkan akses lokasi</string>
     <string name="location_services_disabled">Layakan lokasi dinonaktifkan</string>
@@ -218,6 +225,7 @@
     <string name="make_sure_to_include_country_code">Pastikan menyertakan kode negara, misalnya +62 untuk Indonesia.</string>
     <string name="as_a_partner_you_must_set_a_primary_location">Sebagai mitra, Anda harus menyetel lokasi utama.</string>
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">Anda harus mengatur nomor telepon agar kami dapat menghubungi Anda.</string>
+    <string name="you_must_set_at_least_one_social_media_account">Anda harus mengatur setidaknya satu akun media sosial agar kami dapat memverifikasi identitas Anda.</string>
     <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">Anda belum memilih lokasi. Apakah Anda ingin menggunakan lokasi Anda saat ini sebagai gantinya?</string>
     <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Tidak dapat mengambil lokasi Anda. Coba lagi dengan izin lokasi diaktifkan.</string>
     <string name="i_am_on_holiday">Saya sedang libur</string>

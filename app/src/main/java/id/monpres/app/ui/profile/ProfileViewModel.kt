@@ -38,6 +38,8 @@ class ProfileViewModel @Inject constructor(
         active: Boolean,
         location: Point?,
         address: String?,
+        instagramId: String?,
+        facebookId: String?,
     ) {
         viewModelScope.launch {
             try {
@@ -56,6 +58,12 @@ class ProfileViewModel @Inject constructor(
                 }
                 if (!address.isNullOrBlank()) {
                     firestoreUpdates["address"] = address
+                }
+                if (!instagramId.isNullOrBlank()) {
+                    firestoreUpdates["instagramId"] = instagramId
+                }
+                if (!facebookId.isNullOrBlank()) {
+                    firestoreUpdates["facebookId"] = facebookId
                 }
                 // Always include the active status and display name in the Firestore document
                 firestoreUpdates["active"] = active
@@ -91,7 +99,9 @@ class ProfileViewModel @Inject constructor(
                     whatsAppNumber,
                     active,
                     location,
-                    address
+                    address,
+                    instagramId,
+                    facebookId
                 )
 
                 _updateProfileResult.postValue(Result.success(true))
@@ -108,7 +118,9 @@ class ProfileViewModel @Inject constructor(
         whatsAppNumber: String?,
         active: Boolean,
         location: Point?,
-        address: String?
+        address: String?,
+        instagramId: String?,
+        facebookId: String?,
     ) {
         val user = Firebase.auth.currentUser ?: return
         val userProfile = userRepository.getRecordByUserId(user.uid) ?: return
@@ -125,6 +137,12 @@ class ProfileViewModel @Inject constructor(
         }
         if (!address.isNullOrBlank()) {
             userProfile.address = address
+        }
+        if (!instagramId.isNullOrBlank()) {
+            userProfile.instagramId = instagramId
+        }
+        if (!facebookId.isNullOrBlank()) {
+            userProfile.facebookId = facebookId
         }
         // After updating the fields, save the object back to the repository if needed
          userRepository.setCurrentUserRecord(userProfile) // or similar method

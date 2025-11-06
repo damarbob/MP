@@ -195,7 +195,14 @@
 
     <string name="whatsapp_number">WhatsApp Number</string>
     <string name="primary_location">Primary Location</string>
+    <string name="social_media">Social Media</string>
+    <string name="instagram_id">Instagram ID</string>
+    <string name="facebook_id">Facebook ID</string>
+    <string name="enter_your_social_media_id_for">Enter your social media ID for the verification process.</string>
+    <string name="your_primary_personal_facebook_id">Your primary personal Facebook ID/username (not your display name). Tap the icon to open your profile in the browser.</string>
+    <string name="your_personal_instagram_id">Your personal Instagram ID/username without the @ symbol. Tap the icon to open your profile in the browser.</string>
     <string name="profile_updated_successfully">Profile updated successfully</string>
+
     <string name="location_permission_needed">Location Permission Needed</string>
     <string name="grant_location_permission">This app needs the Location permission to display your current location. Please grant the permission</string>
     <string name="location_services_disabled">Location Services Disabled</string>
@@ -223,6 +230,7 @@
     <string name="make_sure_to_include_country_code">Make sure to include country code e.g., +62 for Indonesia</string>
     <string name="as_a_partner_you_must_set_a_primary_location">As a partner, you must set a primary location.</string>
     <string name="you_have_to_set_a_phone_number_so_we_can_contact_you">You have to set a phone number so we can contact you.</string>
+    <string name="you_must_set_at_least_one_social_media_account">You must set at least one social media account so we can verify your identity.</string>
     <string name="you_have_not_selected_a_location_would_you_like_to_use_your_current_location_instead">You have not selected a location. Would you like to use your current location instead?</string>
     <string name="unable_to_get_your_location_please_try_again_with_location_permission_enabled">Unable to get your location. Please try again with location permission enabled.</string>
     <string name="i_am_on_holiday">I am on holiday</string>

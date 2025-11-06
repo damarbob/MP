@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateMarginsRelative
@@ -166,6 +167,8 @@ class ProfileFragment : Fragment() {
             val active = !binding.editProfileCheckBoxHoliday.isChecked
             val location = selectedPrimaryLocationPoint
             val address = binding.editProfileInputEditAddress.text.toString()
+            val instagramId = binding.editProfileInputEditInstagramId.text.toString()
+            val facebookId = binding.editProfileInputEditFacebookId.text.toString()
 
             // Validate inputs (only necessary ones)
             if (!validateWhatsAppNumber()) {
@@ -180,7 +183,10 @@ class ProfileFragment : Fragment() {
 
             // Use the international format for the WhatsApp number
             val phoneUtil = PhoneNumberUtil.getInstance()
-            val formattedWhatsApp = phoneUtil.format(phoneUtil.parse(whatsAppNumber, MainApplication.APP_REGION), PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL)
+            val formattedWhatsApp = phoneUtil.format(
+                phoneUtil.parse(whatsAppNumber, MainApplication.APP_REGION),
+                PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL
+            )
             binding.editProfileInputWhatsApp.setText(formattedWhatsApp) // Update the input field to show formatted number
 
             // Update profile
@@ -190,7 +196,9 @@ class ProfileFragment : Fragment() {
                 formattedWhatsApp,
                 active,
                 location,
-                address
+                address,
+                instagramId,
+                facebookId,
             )
         }
         binding.editProfileButtonSelectPrimaryLocationButton.setOnClickListener {
@@ -289,6 +297,8 @@ class ProfileFragment : Fragment() {
             // else, always uncheck
                 false
         binding.editProfileInputEditAddress.setText(userProfile?.address)
+        binding.editProfileInputEditInstagramId.setText(userProfile?.instagramId)
+        binding.editProfileInputEditFacebookId.setText(userProfile?.facebookId)
 
         if (userProfile?.locationLat != null && userProfile?.locationLng != null) {
             binding.editProfileButtonSelectPrimaryLocationButton.setText(getString(R.string.re_select_a_location))
@@ -334,6 +344,36 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        /* Listeners */
+
+        // Instagram ID input end icon listener
+        binding.editProfileInputLayoutInstagramId.setEndIconOnClickListener {
+            val instagramId = binding.editProfileInputEditInstagramId.text.toString().trim()
+            if (instagramId.isBlank()) return@setEndIconOnClickListener
+
+            // Open instagram in browser
+            val browserIntent =
+                Intent(
+                    Intent.ACTION_VIEW,
+                    "https://instagram.com/$instagramId".toUri()
+                )
+            startActivity(browserIntent)
+        }
+
+        // Facebook ID input end icon listener
+        binding.editProfileInputLayoutFacebookId.setEndIconOnClickListener {
+            val facebookId = binding.editProfileInputEditFacebookId.text.toString().trim()
+            if (facebookId.isBlank()) return@setEndIconOnClickListener
+
+            // Open facebook in browser
+            val browserIntent =
+                Intent(
+                    Intent.ACTION_VIEW,
+                    "https://facebook.com/$facebookId".toUri()
+                )
+            startActivity(browserIntent)
+        }
+
         // As-you-type formatter for WhatsApp number
         lifecycleScope.launch(Dispatchers.IO) {
             // Create util and watcher on IO thread
@@ -355,7 +395,10 @@ class ProfileFragment : Fragment() {
                         PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL
                     )
                 } catch (e: NumberParseException) {
-                    Log.w(TAG, "Initial number $currentNumber is not parseable. ${e.localizedMessage}")
+                    Log.w(
+                        TAG,
+                        "Initial number $currentNumber is not parseable. ${e.localizedMessage}"
+                    )
                     // Number is invalid, so we'll just leave it as-is
                 }
             }

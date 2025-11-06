@@ -4,4 +4,5 @@ sealed class UserEligibilityState {
     object Eligible : UserEligibilityState()
     object PartnerMissingLocation : UserEligibilityState()
     object CustomerMissingPhoneNumber : UserEligibilityState()
+    object CustomerMissingSocialMedia : UserEligibilityState()
 }

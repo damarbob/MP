@@ -290,6 +290,17 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             .create()
     }
 
+    private val socialMediaDialog by lazy {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.social_media))
+            .setMessage(getString(R.string.you_must_set_at_least_one_social_media_account))
+            .setPositiveButton(R.string.profile) { _, _ ->
+                navController.navigate(R.id.action_global_profileFragment)
+            }
+            .setCancelable(false)
+            .create()
+    }
+
     private fun updateNavigationTree(startDestination: Int) {
         // Update navigation tree
         // Prevent re-setting the graph if it's already correct
@@ -474,12 +485,15 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                     // Dismiss any existing dialogs first
                     locationDialog.dismiss()
                     whatsappDialog.dismiss()
+                    socialMediaDialog.dismiss()
                     // Show the relevant dialog if needed
                     when (state) {
                         is UserEligibilityState.PartnerMissingLocation -> locationDialog.show()
                         is UserEligibilityState.CustomerMissingPhoneNumber -> whatsappDialog.show()
+                        is UserEligibilityState.CustomerMissingSocialMedia -> socialMediaDialog.show()
                         is UserEligibilityState.Eligible -> { /* Do nothing */
                         }
+
                     }
                 }
             }

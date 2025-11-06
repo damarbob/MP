@@ -160,6 +160,61 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <Space
+                style="@style/Widget.App.Space.Large" />
+
+            <TextView
+                style="@style/Widget.App.H4.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/social_media"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+            <TextView
+                style="@style/Widget.App.P"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/enter_your_social_media_id_for" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editProfileInputLayoutInstagramId"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/instagram_id"
+                app:endIconMode="custom"
+                app:endIconContentDescription="@string/instagram_id"
+                app:endIconDrawable="@drawable/open_in_new_24px"
+                app:helperText="@string/your_personal_instagram_id">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editProfileInputEditInstagramId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editProfileInputLayoutFacebookId"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/facebook_id"
+                app:endIconMode="custom"
+                app:endIconContentDescription="@string/facebook_id"
+                app:endIconDrawable="@drawable/open_in_new_24px"
+                app:helperText="@string/your_primary_personal_facebook_id">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editProfileInputEditFacebookId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Space
                 style="@style/Widget.App.Space.ExtraLarge" />
 
         </LinearLayout>
