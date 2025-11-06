@@ -25,6 +25,7 @@ import id.monpres.app.databinding.FragmentVehicleListBinding
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.VehicleAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
+import id.monpres.app.utils.dpToPx
 
 @AndroidEntryPoint
 class VehicleListFragment : BaseFragment() {
@@ -81,10 +82,10 @@ class VehicleListFragment : BaseFragment() {
             // insets are appropriate to your layout. You can also update the view padding
             // if that's more appropriate.
             (v.layoutParams as ViewGroup.MarginLayoutParams).updateMarginsRelative(
-                insets.left + 16.dpToPx(),
+                insets.left + 16.dpToPx(requireActivity()),
                 0,
-                insets.right + 16.dpToPx(),
-                insets.bottom + 16.dpToPx()
+                insets.right + 16.dpToPx(requireActivity()),
+                insets.bottom + 16.dpToPx(requireActivity())
             )
 
             // Return CONSUMED if you don't want the window insets to keep passing
@@ -294,10 +295,4 @@ class VehicleListFragment : BaseFragment() {
 
     override val progressIndicator: LinearProgressIndicator
         get() = binding.fragmentListVehicleProgressIndicator
-
-
-    private fun Int.dpToPx(): Int {
-        val density = resources.displayMetrics.density
-        return (this * density).toInt()
-    }
 }

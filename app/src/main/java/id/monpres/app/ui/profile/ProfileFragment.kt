@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateMarginsRelative
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -34,6 +35,7 @@ import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.usecase.GetColorFromAttrUseCase
+import id.monpres.app.utils.dpToPx
 import id.monpres.app.utils.markRequiredInRed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -103,6 +105,17 @@ class ProfileFragment : Fragment() {
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.editProfileButton) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            (v.layoutParams as ViewGroup.MarginLayoutParams).updateMarginsRelative(
+                insets.left + 16.dpToPx(requireActivity()),
+                0,
+                insets.right + 16.dpToPx(requireActivity()),
+                insets.bottom + 16.dpToPx(requireActivity())
+            )
             WindowInsetsCompat.CONSUMED
         }
 
