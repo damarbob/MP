@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="this_app_version_is_only_supported_in_s_your_sim_card_region_is_s">Versi aplikasi ini hanya didukung di %1$s; wilayah karu SIM Anda adalah %2$s.</string>
+    <string name="this_app_version_is_only_supported_in_s_your_sim_card_region_is_s">Versi aplikasi ini hanya didukung di %1$s; wilayah kartu SIM Anda adalah %2$s.</string>
     <string name="unsupported_region">Wilayah Tidak Didukung</string>
 
     <string name="continue_">Lanjutkan</string>
@@ -196,7 +196,7 @@
     <string name="facebook_id">Facebook ID</string>
     <string name="enter_your_social_media_id_for">Masukkan ID media sosial Anda untuk proses verifikasi.</string>
     <string name="your_primary_personal_facebook_id">ID/nama pengguna Facebook pribadi utama Anda (bukan nama tampilan Anda). Ketuk ikon untuk membuka profil Anda di browser.</string>
-    <string name="your_personal_instagram_id">ID/nama pengguna Instagram pribadi Anda tanpa simbol @. Ketuk ikon untuk membuka profil Anda di browser.</string>
+    <string name="your_personal_instagram_id">ID/nama pengguna Instagram pribadi utama Anda tanpa simbol @. Ketuk ikon untuk membuka profil Anda di browser.</string>
     <string name="profile_updated_successfully">Profil berhasil diperbarui</string>
 
     <string name="location_permission_needed">Izin lokasi diperlukan</string>
