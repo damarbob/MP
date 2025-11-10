@@ -257,4 +257,19 @@
     <string name="x_distance_m">± %1$s m</string>
     <string name="chat">Chat</string>
     <string name="there_is_no_phone_number_for_that_user">There is no WhatsApp number for that user</string>
+    <string name="select_payment_method">Select payment method</string>
+    <string name="change">Change</string>
+    <string name="cash">Cash</string>
+    <string name="qris">QRIS</string>
+    <string name="payment_guide">Payment Guide</string>
+    <string name="failed_to_save_invoice">Error: Failed to save invoice</string>
+    <string name="html_body_guide_not_available"><![CDATA[<html><body>Guide not available.</body></html>]]></string>
+    <string name="html_body_error_loading_guide"><![CDATA[<html><body>Error loading guide.</body></html>]]></string>
+    <string name="image_saved_to_gallery">Image saved to Gallery</string>
+    <string name="error_failed_to_save_x">Error: Failed to save %1$s</string>
+    <string name="please_select_a_payment_method_first">Please select a payment method first</string>
+    <string name="no_guide_available_for_this_payment_method">No guide available for this payment method</string>
+    <string name="next">Next</string>
+    <string name="not_selected">Not selected</string>
+    <string name="partner_base_location">Partner base location</string>
 </resources>

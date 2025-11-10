@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.App.SimpleCardView" parent="Widget.Material3.CardView.Filled">
+        <item name="checkedIconEnabled">false</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="checkedIcon">@android:color/transparent</item>
+        <item name="cardForegroundColor">@color/color_cardview_state</item>
+    </style>
+</resources>

@@ -7,4 +7,11 @@
     <dimen name="input_field_min_height">48dp</dimen>
     <dimen name="input_field_max_width">488dp</dimen>
     <dimen name="information_title_list_text_view_max_width">140dp</dimen>
+
+    <dimen name="radius_extra_small">4dp</dimen>
+    <dimen name="radius_small">8dp</dimen>
+    <dimen name="radius_normal">12dp</dimen>
+    <dimen name="radius_medium">16dp</dimen>
+    <dimen name="radius_large">24dp</dimen>
+    <dimen name="radius_extra_large">32dp</dimen>
 </resources>

@@ -3,6 +3,7 @@ package id.monpres.app.ui.serviceprocess
 import android.Manifest
 import android.animation.ValueAnimator
 import android.app.Activity.RESULT_OK
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
@@ -21,6 +22,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.graphics.scale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -33,6 +35,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationServices
@@ -65,11 +68,14 @@ import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
+import id.monpres.app.model.PaymentMethod
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
+import id.monpres.app.ui.payment.PaymentGuideBottomSheetFragment
+import id.monpres.app.ui.payment.PaymentMethodBottomSheetFragment
 import id.monpres.app.usecase.GoogleMapsIntentUseCase
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.usecase.NumberFormatterUseCase
@@ -86,7 +92,7 @@ class ServiceProcessFragment : BaseFragment() {
 
     companion object {
         fun newInstance() = ServiceProcessFragment()
-        const val TAG = "ServiceProcessFragment"
+        val TAG = ServiceProcessFragment::class.simpleName
         const val ARG_ORDER_SERVICE_ID = "orderServiceId"
         const val MINIMUM_DISTANCE_TO_START_SERVICE = 20
     }
@@ -103,6 +109,9 @@ class ServiceProcessFragment : BaseFragment() {
     private var price: Double? = null
     private lateinit var orderItemAdapter: OrderItemAdapter
 
+    private lateinit var paymentMethodBottomSheet: PaymentMethodBottomSheetFragment
+    private lateinit var paymentGuideBottomSheet: PaymentGuideBottomSheetFragment
+
     private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
     private val googleMapsIntentUseCase = GoogleMapsIntentUseCase()
     private val numberFormatterUseCase = NumberFormatterUseCase()
@@ -111,6 +120,7 @@ class ServiceProcessFragment : BaseFragment() {
     private var aerialDistanceToTargetInMeters: Float = 40000000f
 
     private var currentUser: MontirPresisiUser? = null
+    private var selectedPaymentMethod: PaymentMethod? = null
 
     // Permission request launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -183,8 +193,13 @@ class ServiceProcessFragment : BaseFragment() {
             OrderItemEditorFragment.REQUEST_KEY_ORDER_ITEM_EDITOR,
             viewLifecycleOwner
         ) { _, bundle ->
-            orderItems =
-                bundle.getParcelableArrayList(OrderItemEditorFragment.KEY_ORDER_ITEMS)
+            orderItems = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                bundle.getParcelableArrayList(
+                    OrderItemEditorFragment.KEY_ORDER_ITEMS,
+                    OrderItem::class.java
+                )
+            else
+                bundle.getParcelableArrayList<OrderItem>(OrderItemEditorFragment.KEY_ORDER_ITEMS)
             price = OrderService.getPriceFromOrderItems(orderItems)
             Log.d(TAG, "OrderItems: $orderItems")
             observeUiStateOneShot(
@@ -202,7 +217,6 @@ class ServiceProcessFragment : BaseFragment() {
 
         currentUser = mainGraphViewModel.getCurrentUser()
         mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
-
 
 
         if (!OrderServiceNotification.isPostPromotionEnabled(requireContext())) {
@@ -223,6 +237,26 @@ class ServiceProcessFragment : BaseFragment() {
         setupRecyclerView()
         setupObservers()
         setupListeners()
+
+        // TODO: handle preference
+        val prefs = requireActivity().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val selectedPaymentId =
+            prefs.getString("payment_method_id", PaymentMethod.CASH_ID) ?: PaymentMethod.CASH_ID
+
+        selectedPaymentMethod =
+            PaymentMethod.getDefaultPaymentMethodById(requireContext(), selectedPaymentId)
+
+        // Bottom sheet initializer
+        paymentMethodBottomSheet = PaymentMethodBottomSheetFragment.newInstance(
+            selectedPaymentMethod?.id ?: PaymentMethod.CASH_ID // TODO: change to real id
+        )
+        paymentGuideBottomSheet = PaymentGuideBottomSheetFragment.newInstance(
+            guideResId = selectedPaymentMethod?.guideRes,
+        )
+
+        updatePaymentMethodUI()
+
+        handlePaymentMethodResult()
     }
 
     @RequiresApi(Build.VERSION_CODES.BAKLAVA)
@@ -287,6 +321,16 @@ class ServiceProcessFragment : BaseFragment() {
             UserRole.CUSTOMER -> {
                 showCancelButton(status == OrderStatus.ORDER_PLACED)
                 showActionButton(false) // Customer never sees the main action button
+
+                TransitionManager.beginDelayedTransition(binding.root, AutoTransition())
+                // Show/hide payment section based on status
+                if (orderService.status == OrderStatus.WAITING_FOR_PAYMENT) {
+                    binding.fragmentServiceProcessLinearLayoutPaymentMethodContainer.visibility =
+                        View.VISIBLE
+                } else {
+                    binding.fragmentServiceProcessLinearLayoutPaymentMethodContainer.visibility =
+                        View.GONE
+                }
             }
 
             UserRole.PARTNER -> {
@@ -306,6 +350,16 @@ class ServiceProcessFragment : BaseFragment() {
         }
 
         showCompleteStatus(isClosed)
+
+        // Dismiss bottom sheet if status is not waiting for payment
+        if (status != OrderStatus.WAITING_FOR_PAYMENT) {
+            if (paymentMethodBottomSheet.isAdded) {
+                paymentMethodBottomSheet.dismiss()
+            }
+            if (paymentGuideBottomSheet.isAdded) {
+                paymentGuideBottomSheet.dismiss()
+            }
+        }
     }
 
     private fun observePartnerLiveLocation() {
@@ -353,7 +407,7 @@ class ServiceProcessFragment : BaseFragment() {
     private fun getInitialDistance(targetLoc: Location): Float {
         return orderService.partner?.locationLat?.let { lat ->
             orderService.partner?.locationLng?.let { lng ->
-                val initialPartnerLoc = Location("initialPartner").apply {
+                val initialPartnerLoc = Location(getString(R.string.partner_base_location)).apply {
                     latitude = lat.toDouble()
                     longitude = lng.toDouble()
                 }
@@ -413,9 +467,11 @@ class ServiceProcessFragment : BaseFragment() {
                     ?: "-" else if (currentUser?.role == UserRole.PARTNER) orderService.user?.displayName
                     ?: "-" else "-"
             fragmentServiceProcessTextViewUserDetail.text =
-                if (currentUser?.role == UserRole.CUSTOMER) getString(R.string.partner) else if (currentUser?.role == UserRole.PARTNER) getString(
-                    R.string.customer
-                ) else ""
+                when (currentUser?.role) {
+                    UserRole.CUSTOMER -> getString(R.string.partner)
+                    UserRole.PARTNER -> getString(R.string.customer)
+                    else -> ""
+                }
 
             fragmentServiceProcessOrderId.text = orderService.id ?: "-"
             fragmentServiceProcessLocation.text =
@@ -566,9 +622,11 @@ class ServiceProcessFragment : BaseFragment() {
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
+
                             shouldShowRequestPermissionRationale() -> {
                                 showPermissionRationale()
                             }
+
                             else -> requestLocationPermission()
                         }
 
@@ -627,6 +685,41 @@ class ServiceProcessFragment : BaseFragment() {
                 )
             }
         }
+
+        binding.fragmentServiceProcessButtonChangePaymentMethod.setOnClickListener {
+            paymentMethodBottomSheet = PaymentMethodBottomSheetFragment.newInstance(
+                selectedPaymentMethod?.id ?: PaymentMethod.CASH_ID // TODO: change to real id
+            )
+
+            paymentMethodBottomSheet.show(
+                parentFragmentManager,
+                PaymentMethodBottomSheetFragment.TAG
+            )
+        }
+
+        binding.fragmentServiceProcessButtonPaymentGuide.setOnClickListener {
+            if (selectedPaymentMethod == null) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.please_select_a_payment_method_first),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+            if (selectedPaymentMethod?.guideRes == null) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.no_guide_available_for_this_payment_method),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            paymentGuideBottomSheet = PaymentGuideBottomSheetFragment.newInstance(
+                guideResId = selectedPaymentMethod?.guideRes
+            )
+            paymentGuideBottomSheet.show(parentFragmentManager, PaymentGuideBottomSheetFragment.TAG)
+        }
     }
 
     private fun updateOrderStatus(view: SlideToActView) {
@@ -668,7 +761,7 @@ class ServiceProcessFragment : BaseFragment() {
             text =
                 orderService.status?.serviceNextProcess()?.getServiceActionLabel(requireContext())
                     ?.capitalizeWords()
-                    ?: "Next"
+                    ?: requireContext().getString(R.string.next)
         }
     }
 
@@ -842,6 +935,39 @@ class ServiceProcessFragment : BaseFragment() {
     private fun openLocationSettings() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
         startActivity(intent)
+    }
+
+    private fun handlePaymentMethodResult() {
+        parentFragmentManager.setFragmentResultListener(
+            PaymentMethodBottomSheetFragment.REQUEST_KEY,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                bundle.getParcelable(
+                    PaymentMethodBottomSheetFragment.KEY_PAYMENT_METHOD,
+                    PaymentMethod::class.java
+                )
+            } else {
+                bundle.getParcelable(PaymentMethodBottomSheetFragment.KEY_PAYMENT_METHOD)
+            }
+            if (result != null) {
+                selectedPaymentMethod = result
+                updatePaymentMethodUI()
+
+                // Save the selected payment method ID to preferences
+                val prefs =
+                    requireActivity().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                prefs.edit { putString("payment_method_id", result.id) }
+
+                // TODO: Also update the OrderService object on the backend (Firestore)
+                // viewModel.updateOrderPaymentMethod(orderService.id, result.id)
+            }
+        }
+    }
+
+    private fun updatePaymentMethodUI() {
+        binding.fragmentServiceProcessTextViewPaymentMethod.text =
+            selectedPaymentMethod?.name ?: getString(R.string.not_selected)
     }
 
     override fun onDestroyView() {

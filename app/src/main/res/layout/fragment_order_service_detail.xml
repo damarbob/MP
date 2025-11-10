@@ -37,6 +37,7 @@
                     android:layout_height="wrap_content"
                     android:divider="@drawable/divider_gap_16"
                     android:gravity="center_horizontal"
+                    android:background="?colorSurfaceContainer"
                     android:maxWidth="@dimen/input_field_max_width"
                     android:orientation="vertical"
                     android:paddingHorizontal="16dp"

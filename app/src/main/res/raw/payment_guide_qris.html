@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: sans-serif;
+                color: #333; /* Default text color for light mode */
+                background-color: transparent;
+            }
+            /* Style for dark mode */
+            @media (prefers-color-scheme: dark) {
+                body { color: #EEE; } /* Light text for dark mode */
+            }
+            li { margin-bottom: 8px; }
+            img.guide-image {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+                max-width: 100%;
+                height: auto;
+                border-radius: 8px; /* Optional: adds rounded corners */
+                margin-top: 10px;
+            }
+            a.button-link {
+                display: block;
+                padding: 16px 16px;
+                text-decoration: none;
+                background-color: #007bff;
+                color: #fff;
+                border-radius: 8px;
+                margin-top: 16px;
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            @media (prefers-color-scheme: dark) {
+                a.button-link {
+                    background-color: #0056b3;
+                }
+            }
+        </style>
+        <title>QRIS Payment Guide</title>
+    </head>
+    <body>
+        <h3>QRIS Payment Guide</h3>
+        <ol>
+            <li>Inform the partner that you wish to pay with QRIS.</li>
+            <li>The partner will show you a QR code.</li>
+            <li>Open your preferred banking or e-wallet application (e.g., GoPay, OVO, Dana,
+                M-BCA).
+            </li>
+            <li>
+                Scan the QR code provided by the partner.
+                <br>
+                <!-- THIS IS THE NEWLY ADDED IMAGE -->
+                <img
+                        src="file:///android_res/drawable/mp_marker.png"
+                        alt="QRIS Logo"
+                        class="guide-image" />
+            </li>
+            <li>Enter the correct payment amount and confirm the transaction with your PIN.</li>
+            <li>Show the successful transaction proof to the partner.</li>
+
+        </ol>
+        <a
+                href="app:save_image_qris"
+                class="button-link">Download QRIS Logo to Gallery
+        </a>
+    </body>
+</html>

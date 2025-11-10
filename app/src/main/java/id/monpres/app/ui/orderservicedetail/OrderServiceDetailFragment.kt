@@ -1,24 +1,14 @@
 package id.monpres.app.ui.orderservicedetail
 
-import android.Manifest
-import android.content.ContentValues
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
-import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
 import androidx.core.view.ViewCompat
@@ -26,11 +16,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.insets.GradientProtection
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
+import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
 import id.monpres.app.enums.UserRole
@@ -39,12 +30,14 @@ import id.monpres.app.model.OrderService
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
+import id.monpres.app.usecase.SaveImageToGalleryUseCase
 import id.monpres.app.utils.toDateTimeDisplayString
+import kotlinx.coroutines.launch
 import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
 import java.text.DateFormat
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class OrderServiceDetailFragment : Fragment() {
 
     companion object {
@@ -61,51 +54,10 @@ class OrderServiceDetailFragment : Fragment() {
     private lateinit var orderService: OrderService
     private var currentUser: MontirPresisiUser? = null
 
+    @Inject
+    lateinit var saveImageToGalleryUseCase: SaveImageToGalleryUseCase
+
     private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
-
-    private val permissionQueue: MutableList<String> =
-        mutableListOf() // Queue for individual permissions
-    private lateinit var currentPermission: String
-
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            when {
-                isGranted -> {
-                    processNextPermission()
-                }
-
-                shouldShowRequestPermissionRationale(currentPermission) -> {
-                    if (currentPermission == Manifest.permission.READ_MEDIA_IMAGES && Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
-                        showPermissionRationale(currentPermission)
-                    } else if (currentPermission != Manifest.permission.READ_MEDIA_IMAGES) {
-                        showPermissionRationale(currentPermission)
-                    } else processNextPermission()
-                }
-
-                else -> {
-                    if (currentPermission == Manifest.permission.READ_MEDIA_IMAGES && Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
-                        showPermissionSettingsDialog(currentPermission)
-                    } else if (currentPermission != Manifest.permission.READ_MEDIA_IMAGES) {
-                        showPermissionSettingsDialog(currentPermission)
-                    } else processNextPermission()
-                }
-            }
-        }
-
-    // Add permissions to the queue and start processing
-    private fun checkPermissions(permissions: List<String>) {
-        permissionQueue.clear()
-        permissionQueue.addAll(permissions)
-        processNextPermission()
-    }
-
-    // Process the next permission in the queue
-    private fun processNextPermission() {
-        if (permissionQueue.isNotEmpty()) {
-            currentPermission = permissionQueue.removeAt(0)
-            requestPermissionLauncher.launch(currentPermission)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,38 +98,42 @@ class OrderServiceDetailFragment : Fragment() {
     }
 
     private fun saveInvoice() {
-        if (hasReadMediaImagesPermission()) {
-            // get the bitmap of the view using
-            // getScreenShotFromView method it is
-            // implemented below
-            val bitmap =
-                getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
+        val bitmap =
+            getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
 
-            // if bitmap is not null then
-            // save it to gallery
-            if (bitmap != null) {
-                saveMediaToStorage(bitmap)
+        if (bitmap != null) {
+            // Use the UseCase within a coroutine scope
+            viewLifecycleOwner.lifecycleScope.launch {
+                // Generating a file name
+                val filename = "${getString(R.string.app_name)}-${System.currentTimeMillis()}.jpg"
+
+                val result = saveImageToGalleryUseCase(bitmap, filename)
+
+                result.onSuccess {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.invoice_saved_to_gallery),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }.onFailure {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.failed_to_save_invoice), Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-        } else {
-            checkPermissions(getMediaPermissions().toList())
         }
     }
 
     private fun shareInvoice() {
-        if (hasReadMediaImagesPermission()) {
-            // get the bitmap of the view using
-            // getScreenShotFromView method it is
-            // implemented below
-            val bitmap =
-                getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
 
-            // if bitmap is not null then
-            // save it to gallery
-            if (bitmap != null) {
-                shareBitmap(bitmap)
-            }
-        } else {
-            checkPermissions(getMediaPermissions().toList())
+        val bitmap =
+            getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
+
+        // if bitmap is not null then
+        // save it to gallery
+        if (bitmap != null) {
+            shareBitmap(bitmap)
         }
 
     }
@@ -200,56 +156,6 @@ class OrderServiceDetailFragment : Fragment() {
         }
         // return the bitmap
         return screenshot
-    }
-
-
-    // this method saves the image to gallery
-    private fun saveMediaToStorage(bitmap: Bitmap) {
-        // Generating a file name
-        val filename = "${getString(R.string.app_name)}-${System.currentTimeMillis()}.jpg"
-
-        // Output stream
-        var fos: OutputStream? = null
-
-        // For devices running android >= Q
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // getting the contentResolver
-            requireActivity().contentResolver?.also { resolver ->
-
-                // Content resolver will process the contentvalues
-                val contentValues = ContentValues().apply {
-
-                    // putting file information in content values
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-                }
-
-                // Inserting the contentValues to
-                // contentResolver and getting the Uri
-                val imageUri: Uri? =
-                    resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-                // Opening an outputstream with the Uri that we got
-                fos = imageUri?.let { resolver.openOutputStream(it) }
-            }
-        } else {
-            // These for devices running on android < Q
-            val imagesDir =
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            val image = File(imagesDir, filename)
-            fos = FileOutputStream(image)
-        }
-
-        fos?.use {
-            // Finally writing the bitmap to the output stream that we opened
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.invoice_saved_to_gallery),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
     }
 
     fun shareBitmap(bitmap: Bitmap) {
@@ -309,8 +215,10 @@ class OrderServiceDetailFragment : Fragment() {
                 when (currentUser?.role) {
                     UserRole.CUSTOMER -> orderService.partner?.displayName
                         ?: "-"
+
                     UserRole.PARTNER -> orderService.user?.displayName
                         ?: "-"
+
                     else -> "-"
                 }
             fragmentOrderServiceDetailTextViewUserDetail.text =
@@ -319,6 +227,7 @@ class OrderServiceDetailFragment : Fragment() {
                     UserRole.PARTNER -> getString(
                         R.string.customer
                     )
+
                     else -> ""
                 }
 
@@ -357,96 +266,6 @@ class OrderServiceDetailFragment : Fragment() {
             fragmentOrderServiceDetailButtonSave.setOnClickListener {
                 saveInvoice()
             }
-        }
-    }
-
-    private fun showPermissionRationale(permission: String) {
-        val permissionName = extractPermissionName(permission)
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(resources.getString(R.string.x_permission_required, permissionName))
-            .setMessage(getString(R.string.please_grant_permission))
-            .setPositiveButton(resources.getString(R.string.okay)) { _, _ ->
-                requestPermissionLauncher.launch(permission)
-            }
-            .setNegativeButton(resources.getString(R.string.cancel)) { _, _ ->
-                processNextPermission()
-            }
-            .create()
-            .show()
-    }
-
-    private fun showPermissionSettingsDialog(permission: String) {
-        val permissionName = extractPermissionName(permission)
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.x_permission_is_not_granted, permissionName))
-            .setMessage(getString(R.string.this_permission_is_disabled))
-            .setPositiveButton(getString(R.string.go_to_settings)) { _, _ ->
-                openAppSettings()
-            }
-            .setNegativeButton(resources.getString(R.string.cancel)) { _, _ ->
-
-            }
-            .create()
-            .show()
-    }
-
-    private fun extractPermissionName(permission: String): String {
-        return when (permission) {
-            Manifest.permission.CAMERA -> {
-                getString(R.string.camera)
-            }
-
-            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED, Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                getString(R.string.gallery)
-            }
-
-            Manifest.permission.POST_NOTIFICATIONS -> {
-                getString(R.string.notification)
-            }
-
-            else -> {
-                ""
-            }
-        }
-    }
-
-    private fun openAppSettings() {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        val uri: Uri = Uri.fromParts("package", requireActivity().packageName, null)
-        intent.data = uri
-        startActivity(intent)
-    }
-
-    fun hasReadMediaImagesPermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.READ_MEDIA_IMAGES
-            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
-            ) == PackageManager.PERMISSION_GRANTED
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.READ_MEDIA_IMAGES
-            ) == PackageManager.PERMISSION_GRANTED
-        } else ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    fun getMediaPermissions(): Array<String> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            arrayOf(
-                Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
-            )
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
-        } else {
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
     }
 }

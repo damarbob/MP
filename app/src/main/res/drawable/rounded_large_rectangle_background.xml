@@ -4,7 +4,7 @@
     <item>
         <shape>
             <solid android:color="?colorSurface" /> <!-- Background color -->
-            <corners android:radius="@dimen/large_rounding" />   <!-- Rounded corners -->
+            <corners android:radius="@dimen/radius_large" />   <!-- Rounded corners -->
         </shape>
     </item>
 </ripple>

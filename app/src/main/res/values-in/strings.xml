@@ -252,4 +252,19 @@
     <string name="x_distance_m">± %1$s m</string>
     <string name="chat">Hubungi</string>
     <string name="there_is_no_phone_number_for_that_user">Tidak ada nomor WhatsApp pada user tersebut</string>
+    <string name="select_payment_method">Pilih metode pembayaran</string>
+    <string name="change">Ubah</string>
+    <string name="cash">Tunai</string>
+    <string name="qris">QRIS</string>
+    <string name="payment_guide">Petunjuk pembayaran</string>
+    <string name="failed_to_save_invoice">Error: gagal menyimpan faktur</string>
+    <string name="html_body_guide_not_available"><![CDATA[<html><body>Maaf, petunjuk tidak tersedia.</body></html>]]></string>
+    <string name="html_body_error_loading_guide"><![CDATA[<html><body>Maaf, gagal memuat petunjuk.</body></html>]]></string>
+    <string name="image_saved_to_gallery">Gambar tersimpan di galeri</string>
+    <string name="error_failed_to_save_x">Error: gagal menyimpan %1$s</string>
+    <string name="please_select_a_payment_method_first">Mohon pilih metode pembayaran terlebih dahulu</string>
+    <string name="no_guide_available_for_this_payment_method">Maaf, tidak ada petunjuk tersedia untuk pembayaran ini</string>
+    <string name="next">Selanjutnya</string>
+    <string name="not_selected">Belum terpilih</string>
+    <string name="partner_base_location">Lokasi mitra</string>
 </resources>
