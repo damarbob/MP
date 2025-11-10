@@ -151,7 +151,7 @@
     <fragment
         android:id="@+id/orderServiceDetailFragment"
         android:name="id.monpres.app.ui.orderservicedetail.OrderServiceDetailFragment"
-        android:label="@string/invoice"
+        android:label=""
         tools:layout="@layout/fragment_order_service_detail">
         <argument
             android:name="orderService"

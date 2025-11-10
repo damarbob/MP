@@ -272,4 +272,8 @@
     <string name="next">Next</string>
     <string name="not_selected">Not selected</string>
     <string name="partner_base_location">Partner base location</string>
+    <string name="save_invoice_as_image">Save invoice as image</string>
+    <string name="save_invoice_as_pdf">Save invoice as PDF</string>
+    <string name="share_invoice_as_pdf">Share invoice as PDF</string>
+    <string name="share_invoice_as_image">Share invoice as image</string>
 </resources>

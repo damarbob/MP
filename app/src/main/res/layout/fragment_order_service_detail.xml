@@ -25,6 +25,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:paddingBottom="64dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -35,50 +36,64 @@
                     android:id="@+id/fragmentOrderServiceDetailLinearLayoutDetailContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="?colorSurfaceContainer"
                     android:divider="@drawable/divider_gap_16"
                     android:gravity="center_horizontal"
-                    android:background="?colorSurfaceContainer"
                     android:maxWidth="@dimen/input_field_max_width"
                     android:orientation="vertical"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="32dp"
                     android:showDividers="middle">
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/fragmentOrderServiceDetailImageViewImage"
-                        android:layout_width="96dp"
-                        android:layout_height="96dp"
-                        android:background="?colorPrimary"
-                        android:src="@drawable/check_24px"
-                        android:tint="?colorOnPrimary"
-                        app:contentPadding="16dp"
-                        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.ExtraExtraLarge" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical">
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/fragmentOrderServiceDetailTitle"
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/fragmentOrderServiceDetailImageViewImage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:scaleType="centerCrop"
+                            android:src="@mipmap/ic_launcher_mp_foreground" />
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:autoSizeTextType="uniform"
-                            android:textAlignment="center"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?colorOnSurface"
-                            tools:targetApi="26" />
+                            android:orientation="vertical">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/fragmentOrderServiceDetailDate"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:autoSizeTextType="uniform"
-                            android:textAlignment="center"
-                            android:textAppearance="?attr/textAppearanceBodyMedium"
-                            android:textColor="?colorOnSurface"
-                            tools:targetApi="26" />
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autoSizeTextType="uniform"
+                                android:textAlignment="textStart"
+                                style="@style/Widget.App.H1.Bold.Primary"
+                                android:textColor="?colorOnSurface"
+                                android:text="@string/invoice"
+                                tools:targetApi="26" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/fragmentOrderServiceDetailTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autoSizeTextType="uniform"
+                                android:textAlignment="textStart"
+                                android:textAppearance="?attr/textAppearanceTitleMedium"
+                                android:textColor="?colorOnSurface"
+                                tools:targetApi="26" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/fragmentOrderServiceDetailDate"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:autoSizeTextType="uniform"
+                                android:textAlignment="textStart"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="?colorOnSurface"
+                                tools:targetApi="26" />
+                        </LinearLayout>
+
                     </LinearLayout>
 
                     <com.google.android.material.textview.MaterialTextView
@@ -112,7 +127,7 @@
                             android:src="@drawable/person_24px"
                             android:tint="?colorOnSecondaryContainer"
                             app:contentPadding="8dp"
-                            app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent"/>
+                            app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -126,10 +141,10 @@
                                 style="@style/Widget.App.H5.Bold.Primary"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:ellipsize="end"
                                 android:gravity="center_vertical"
                                 android:maxLines="1"
                                 android:text="@string/title"
-                                android:ellipsize="end"
                                 android:textAppearance="?attr/textAppearanceTitleLarge" />
 
                             <TextView
@@ -493,6 +508,7 @@
                     android:divider="@drawable/divider_gap_8"
                     android:gravity="fill|center_vertical"
                     android:paddingHorizontal="16dp"
+                    android:visibility="gone"
                     android:showDividers="middle">
 
                     <com.google.android.material.button.MaterialButton
@@ -519,5 +535,68 @@
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingtoolbar.FloatingToolbarLayout
+        android:id="@+id/fragmentOrderServiceDetailFloatingToolbarLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        style="@style/Widget.Material3.FloatingToolbar.Vibrant"
+        app:layout_behavior="com.google.android.material.behavior.HideViewOnScrollBehavior"
+        android:layout_margin="16dp">
+
+        <!-- floating toolbar sample content -->
+        <com.google.android.material.overflow.OverflowLinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/fragmentOrderServiceDetailButtonSaveAsImage"
+                style="?attr/materialButtonStyle"
+                android:text="@string/save_invoice_as_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/save_invoice_as_image"
+                app:icon="@drawable/save_24px"
+                app:layout_overflowText="@string/save_invoice_as_image"
+                app:layout_overflowIcon="@drawable/save_24px" />
+
+            <Button
+                android:id="@+id/fragmentOrderServiceDetailButtonSaveAsPdf"
+                style="?attr/materialButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/save_invoice_as_pdf"
+                android:contentDescription="@string/save_invoice_as_pdf"
+                app:icon="@drawable/save_24px"
+                app:layout_overflowText="@string/save_invoice_as_pdf"
+                app:layout_overflowIcon="@drawable/save_24px" />
+
+            <Button
+                android:id="@+id/fragmentOrderServiceDetailButtonShareAsImage"
+                style="?attr/materialButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/share_invoice_as_image"
+                android:contentDescription="@string/share_invoice_as_image"
+                app:icon="@drawable/share_24px"
+                app:layout_overflowText="@string/share_invoice_as_image"
+                app:layout_overflowIcon="@drawable/share_24px" />
+
+            <Button
+                android:id="@+id/fragmentOrderServiceDetailButtonShareAsPdf"
+                style="?attr/materialButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/share_invoice_as_pdf"
+                android:contentDescription="@string/share_invoice_as_pdf"
+                app:icon="@drawable/share_24px"
+                app:layout_overflowText="@string/share_invoice_as_pdf"
+                app:layout_overflowIcon="@drawable/share_24px" />
+        </com.google.android.material.overflow.OverflowLinearLayout>
+
+    </com.google.android.material.floatingtoolbar.FloatingToolbarLayout>
 
 </androidx.core.view.insets.ProtectionLayout>

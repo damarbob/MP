@@ -267,4 +267,8 @@
     <string name="next">Selanjutnya</string>
     <string name="not_selected">Belum terpilih</string>
     <string name="partner_base_location">Lokasi mitra</string>
+    <string name="save_invoice_as_image">Simpan nota sebagai gambar</string>
+    <string name="save_invoice_as_pdf">Simpan nota sebagai PDF</string>
+    <string name="share_invoice_as_pdf">Bagikan nota sebagai PDF</string>
+    <string name="share_invoice_as_image">Bagikan nota sebagai image</string>
 </resources>

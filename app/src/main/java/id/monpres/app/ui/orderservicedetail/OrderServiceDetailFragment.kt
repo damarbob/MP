@@ -3,6 +3,8 @@ package id.monpres.app.ui.orderservicedetail
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.pdf.PdfDocument
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -31,9 +33,11 @@ import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.usecase.SaveImageToGalleryUseCase
+import id.monpres.app.usecase.SavePdfToDownloadsUseCase
 import id.monpres.app.utils.toDateTimeDisplayString
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import java.text.DateFormat
 import javax.inject.Inject
 
@@ -56,6 +60,9 @@ class OrderServiceDetailFragment : Fragment() {
 
     @Inject
     lateinit var saveImageToGalleryUseCase: SaveImageToGalleryUseCase
+
+    @Inject
+    lateinit var savePdfToDownloadsUseCase: SavePdfToDownloadsUseCase
 
     private val indonesianCurrencyFormatter = IndonesianCurrencyFormatter()
 
@@ -97,7 +104,7 @@ class OrderServiceDetailFragment : Fragment() {
         return binding.root
     }
 
-    private fun saveInvoice() {
+    private fun saveInvoiceAsImage() {
         val bitmap =
             getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
 
@@ -125,7 +132,7 @@ class OrderServiceDetailFragment : Fragment() {
         }
     }
 
-    private fun shareInvoice() {
+    private fun shareInvoiceAsImage() {
 
         val bitmap =
             getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
@@ -156,6 +163,82 @@ class OrderServiceDetailFragment : Fragment() {
         }
         // return the bitmap
         return screenshot
+    }
+
+    /**
+     * Captures the view as a bitmap and saves it as a PDF file to the device's public Downloads directory.
+     */
+    private fun saveInvoiceAsPdf() {
+        val bitmap = getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
+        if (bitmap == null) {
+            Toast.makeText(requireContext(), "Failed to capture invoice.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val filename = "Invoice-${orderService.id?.take(8)}.pdf"
+            val result = savePdfToDownloadsUseCase(bitmap, filename)
+
+            result.onSuccess {
+                Toast.makeText(requireContext(), "PDF saved to Downloads folder", Toast.LENGTH_SHORT).show()
+            }.onFailure { error ->
+                Log.e(TAG, "Failed to save PDF", error)
+                Toast.makeText(requireContext(), "Error: Failed to save PDF.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * Captures the view as a bitmap, saves it as a temporary PDF in the app's cache,
+     * and triggers the system's share sheet.
+     */
+    private fun shareInvoiceAsPdf() {
+        val bitmap = getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
+        if (bitmap == null) {
+            Toast.makeText(requireContext(), "Failed to capture invoice.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // 1. Create a PDF document
+        val pdfDocument = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+        page.canvas.drawBitmap(bitmap, 0f, 0f, null)
+        pdfDocument.finishPage(page)
+
+        // 2. Save the PDF to a temporary file in the app's cache directory
+        val pdfFile = File(requireContext().cacheDir, "invoice_to_share.pdf")
+        try {
+            FileOutputStream(pdfFile).use {
+                pdfDocument.writeTo(it)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing temporary PDF for sharing", e)
+            Toast.makeText(requireContext(), "Could not prepare PDF for sharing.", Toast.LENGTH_SHORT).show()
+            pdfDocument.close()
+            return
+        }
+        pdfDocument.close() // Always close the document
+
+        // 3. Get a content URI using FileProvider
+        val uri: Uri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.provider",
+            pdfFile
+        )
+
+        // 4. Create the share intent
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf" // Set the MIME type to PDF
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "Invoice for Order #${orderService.id?.take(8)}")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        // 5. Launch the chooser
+        requireContext().startActivity(
+            Intent.createChooser(shareIntent, getString(R.string.share))
+        )
     }
 
     fun shareBitmap(bitmap: Bitmap) {
@@ -204,7 +287,7 @@ class OrderServiceDetailFragment : Fragment() {
                 getString(R.string.x_x, orderService.name, orderService.status?.name)
             fragmentOrderServiceDetailDate.text =
                 orderService.updatedAt.toDateTimeDisplayString(
-                    dateStyle = DateFormat.FULL,
+                    dateStyle = DateFormat.MEDIUM,
                     timeStyle = DateFormat.LONG
                 )
 
@@ -259,13 +342,21 @@ class OrderServiceDetailFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        with(binding) {
-            fragmentOrderServiceDetailButtonShare.setOnClickListener {
-                shareInvoice()
+        binding.apply {
+            fragmentOrderServiceDetailButtonShareAsImage.setOnClickListener {
+                shareInvoiceAsImage()
             }
-            fragmentOrderServiceDetailButtonSave.setOnClickListener {
-                saveInvoice()
+            fragmentOrderServiceDetailButtonSaveAsImage.setOnClickListener {
+                saveInvoiceAsImage()
             }
+
+            fragmentOrderServiceDetailButtonShareAsPdf.setOnClickListener {
+                shareInvoiceAsPdf()
+            }
+            fragmentOrderServiceDetailButtonSaveAsPdf.setOnClickListener {
+                saveInvoiceAsPdf()
+            }
+
         }
     }
 }

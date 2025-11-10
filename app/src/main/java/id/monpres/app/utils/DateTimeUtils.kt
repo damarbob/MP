@@ -4,59 +4,132 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.google.firebase.Timestamp
 import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
+import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Date
 import java.util.Locale
 
-fun Timestamp?.toDisplayString(locale: Locale = Locale.getDefault()): String {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        formatDateWithLocalizedStyle(
-            LocalDateTime.ofInstant(
-                this?.toInstant(),
-                ZoneId.systemDefault()
-            ), locale
-        )
-    } else {
-        formatDateAndroidNougat(this?.toDate(), locale)
+/**
+ * Formats a Firebase Timestamp into a localized display string for both date and time.
+ *
+ * @param dateStyle The style for the date part (e.g., DateFormat.MEDIUM).
+ * @param timeStyle The style for the time part (e.g., DateFormat.SHORT).
+ * @return A formatted string like "Oct 29, 2025, 10:30 AM".
+ */
+fun Timestamp?.toDateTimeDisplayString(
+    dateStyle: Int = DateFormat.MEDIUM,
+    timeStyle: Int = DateFormat.SHORT,
+    locale: Locale = Locale.getDefault()
+): String {
+    // For Android O+, we can use the modern API which is more powerful.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        return formatModern(this?.toInstant(), dateStyle, timeStyle, locale, includeDate = true, includeTime = true)
     }
+    // For older versions, use the legacy DateFormat.
+    return formatLegacy(this?.toDate(), dateStyle, timeStyle, locale, includeDate = true, includeTime = true)
 }
 
-fun Timestamp?.toDateTimeDisplayString(locale: Locale = Locale.getDefault(), dateStyle: Int = DateFormat.MEDIUM, timeStyle: Int = DateFormat.SHORT): String {
-    return formatDateWithLocaleAndStyle(this?.toDate(), locale, dateStyle, timeStyle)
-}
-fun Timestamp?.toTimeDisplayString(locale: Locale = Locale.getDefault(), timeStyle: Int = DateFormat.SHORT): String {
-    return formatDateToTimeString(this?.toDate(), locale, timeStyle)
-}
-fun Timestamp?.toDateDisplayString(locale: Locale = Locale.getDefault(), dateStyle: Int = DateFormat.MEDIUM): String {
-    return formatDateToDateString(this?.toDate(), locale, dateStyle)
+/**
+ * Formats a Firebase Timestamp into a localized display string for the date part only.
+ *
+ * @param dateStyle The style for the date part (e.g., DateFormat.MEDIUM).
+ * @return A formatted string like "Oct 29, 2025".
+ */
+fun Timestamp?.toDateDisplayString(
+    dateStyle: Int = DateFormat.MEDIUM,
+    locale: Locale = Locale.getDefault()
+): String {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        return formatModern(this?.toInstant(), dateStyle, null, locale, includeDate = true, includeTime = false)
+    }
+    return formatLegacy(this?.toDate(), dateStyle, null, locale, includeDate = true, includeTime = false)
 }
 
-private fun formatDateAndroidNougat(date: Date?, locale: Locale): String {
-    val formatter = SimpleDateFormat("dd MMMM yyyy", locale)
-    return if (date == null) "" else formatter.format(date)
+/**
+ * Formats a Firebase Timestamp into a localized display string for the time part only.
+ *
+ * @param timeStyle The style for the time part (e.g., DateFormat.SHORT).
+ * @return A formatted string like "10:30 AM".
+ */
+fun Timestamp?.toTimeDisplayString(
+    timeStyle: Int = DateFormat.SHORT,
+    locale: Locale = Locale.getDefault()
+): String {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        return formatModern(this?.toInstant(), null, timeStyle, locale, includeDate = false, includeTime = true)
+    }
+    return formatLegacy(this?.toDate(), null, timeStyle, locale, includeDate = false, includeTime = true)
 }
 
+
+// --- PRIVATE CORE FUNCTIONS ---
+
+/**
+ * Core formatter for modern Android (API 26+).
+ * It can format date, time, or both.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
-private fun formatDateWithLocalizedStyle(date: LocalDateTime?, locale: Locale): String {
-    val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
-    return if (date == null) "" else date.format(formatter)
+private fun formatModern(
+    instant: Instant?,
+    dateStyle: Int?, // <-- Now accepts Int?
+    timeStyle: Int?, // <-- Now accepts Int?
+    locale: Locale,
+    includeDate: Boolean,
+    includeTime: Boolean
+): String {
+    if (instant == null) return ""
+    val zdt = instant.atZone(ZoneId.systemDefault())
+
+    // ***FIX:*** Use the mapper to convert from Int to FormatStyle.
+    val modernDateStyle = dateStyle?.toFormatStyle()
+    val modernTimeStyle = timeStyle?.toFormatStyle()
+
+    val formatter = when {
+        includeDate && includeTime -> DateTimeFormatter.ofLocalizedDateTime(modernDateStyle, modernTimeStyle)
+        includeDate -> DateTimeFormatter.ofLocalizedDate(modernDateStyle)
+        includeTime -> DateTimeFormatter.ofLocalizedTime(modernTimeStyle)
+        else -> return "" // Should not happen
+    }.withLocale(locale)
+
+    return zdt.format(formatter)
 }
 
-fun formatDateWithLocaleAndStyle(date: Date?, locale: Locale, dateStyle: Int, timeStyle: Int): String {
-    val formatter = DateFormat.getDateTimeInstance(dateStyle, timeStyle, locale)
-    return if (date == null) "" else formatter.format(date)
+/**
+ * Core formatter for legacy Android (< API 26).
+ * It can format date, time, or both.
+ */
+private fun formatLegacy(
+    date: Date?,
+    dateStyle: Int?,
+    timeStyle: Int?,
+    locale: Locale,
+    includeDate: Boolean,
+    includeTime: Boolean
+): String {
+    if (date == null) return ""
+
+    val formatter = when {
+        includeDate && includeTime -> DateFormat.getDateTimeInstance(dateStyle!!, timeStyle!!, locale)
+        includeDate -> DateFormat.getDateInstance(dateStyle!!, locale)
+        includeTime -> DateFormat.getTimeInstance(timeStyle!!, locale)
+        else -> return "" // Should not happen
+    }
+    return formatter.format(date)
 }
 
-fun formatDateToDateString(date: Date?, locale: Locale, dateStyle: Int): String {
-    val formatter = DateFormat.getDateInstance(dateStyle, locale)
-    return if (date == null) "" else formatter.format(date)
-}
-
-fun formatDateToTimeString(date: Date?, locale: Locale, timeStyle: Int): String {
-    val formatter = DateFormat.getTimeInstance(timeStyle, locale)
-    return if (date == null) "" else formatter.format(date)
+/**
+ * ***NEW:*** A private mapper function to convert DateFormat Int constants
+ * to the modern java.time.format.FormatStyle enum.
+ */
+@RequiresApi(Build.VERSION_CODES.O)
+private fun Int.toFormatStyle(): FormatStyle {
+    return when (this) {
+        DateFormat.FULL -> FormatStyle.FULL
+        DateFormat.LONG -> FormatStyle.LONG
+        DateFormat.MEDIUM -> FormatStyle.MEDIUM
+        DateFormat.SHORT -> FormatStyle.SHORT
+        else -> FormatStyle.MEDIUM // Default fallback
+    }
 }
