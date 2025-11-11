@@ -13,6 +13,9 @@ import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.NavigationGraphState
+import id.monpres.app.state.NavigationGraphState.Admin
+import id.monpres.app.state.NavigationGraphState.Customer
+import id.monpres.app.state.NavigationGraphState.Partner
 import id.monpres.app.state.UserEligibilityState
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
@@ -200,10 +203,18 @@ class MainViewModel @Inject constructor(
     }
 
     private fun determineNavigationGraph(user: MontirPresisiUser) {
-        if (user.role == UserRole.PARTNER) {
-            _navigationGraphState.value = NavigationGraphState.Partner(R.navigation.nav_main)
-        } else if (user.role == UserRole.CUSTOMER) {
-            _navigationGraphState.value = NavigationGraphState.Customer(R.navigation.nav_main)
+        when (user.role) {
+            UserRole.ADMIN -> {
+                _navigationGraphState.value = Admin(R.navigation.nav_main)
+            }
+            UserRole.PARTNER -> {
+                _navigationGraphState.value = Partner(R.navigation.nav_main)
+            }
+            UserRole.CUSTOMER -> {
+                _navigationGraphState.value = Customer(R.navigation.nav_main)
+            }
+
+            null -> _navigationGraphState.value = Customer(R.navigation.nav_main)
         }
     }
 

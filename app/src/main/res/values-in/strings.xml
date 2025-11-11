@@ -271,4 +271,10 @@
     <string name="save_invoice_as_pdf">Simpan nota sebagai PDF</string>
     <string name="share_invoice_as_pdf">Bagikan nota sebagai PDF</string>
     <string name="share_invoice_as_image">Bagikan nota sebagai image</string>
+
+    <string name="hello_x">Halo, %1$s!</string>
+
+    <string name="manage_new_users">Kelola Pengguna Baru</string>
+    <string name="verify_and_approve_new_user_registrations">Verifikasi dan setujui pendaftaran pengguna baru</string>
+    <string name="new_users">Pengguna Baru</string>
 </resources>

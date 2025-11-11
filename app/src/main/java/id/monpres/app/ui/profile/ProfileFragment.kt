@@ -284,6 +284,8 @@ class ProfileFragment : Fragment() {
         // Show for specific roles
         binding.editProfileCheckBoxHoliday.visibility =
             if (userProfile?.role === UserRole.PARTNER) View.VISIBLE else View.GONE
+        binding.editProfileLayoutSocialMedia.visibility =
+            if (userProfile?.role !== UserRole.CUSTOMER) View.GONE else View.VISIBLE
 
         // Fill input fields
         binding.editProfileInputEditFullName.setText(user?.displayName)

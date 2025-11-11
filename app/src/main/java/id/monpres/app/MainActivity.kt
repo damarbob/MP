@@ -378,7 +378,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             }
 
             // Profile menu visibility
-            if (destination.id != R.id.homeFragment && destination.id != R.id.partnerHomeFragment) {
+            if (destination.id != R.id.homeFragment && destination.id != R.id.partnerHomeFragment && destination.id != R.id.adminHomeFragment) {
                 optionsMenu?.findItem(R.id.menu_profile)?.isVisible = false
             } else {
                 optionsMenu?.findItem(R.id.menu_profile)?.isVisible = true
@@ -471,6 +471,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                         is NavigationGraphState.Loading -> { /* Handled by mainLoadingState */
                         }
 
+                        is NavigationGraphState.Admin -> updateNavigationTree(startDestination = R.id.adminHomeFragment)
                         is NavigationGraphState.Partner -> updateNavigationTree(startDestination = R.id.partnerHomeFragment)
                         is NavigationGraphState.Customer -> updateNavigationTree(startDestination = R.id.homeFragment)
                     }

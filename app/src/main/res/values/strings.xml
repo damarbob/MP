@@ -276,4 +276,10 @@
     <string name="save_invoice_as_pdf">Save invoice as PDF</string>
     <string name="share_invoice_as_pdf">Share invoice as PDF</string>
     <string name="share_invoice_as_image">Share invoice as image</string>
+
+    <string name="hello_x">Hello, %1$s!</string>
+
+    <string name="manage_new_users">Manage New Users</string>
+    <string name="verify_and_approve_new_user_registrations">Verify and approve new user registrations</string>
+    <string name="new_users">New Users</string>
 </resources>

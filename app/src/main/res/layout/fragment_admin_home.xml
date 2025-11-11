@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.adminhome.AdminHomeFragment">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/fragmentHomeNestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:isScrollContainer="true"
+        android:overScrollMode="always">
+
+        <LinearLayout
+            android:id="@+id/fragmentHomeLinearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:divider="@drawable/divider_gap_8"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="16dp"
+            android:showDividers="middle">
+
+            <TextView
+                android:id="@+id/fragmentAdminHomeTextViewHello"
+                style="@style/Widget.App.H4.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hello_x"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentAdminHomeRecyclerViewMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:padding="1dp" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

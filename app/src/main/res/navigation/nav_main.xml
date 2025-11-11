@@ -223,4 +223,18 @@
             android:name="orderService"
             app:argType="id.monpres.app.model.OrderService" />
     </fragment>
+    <fragment
+        android:id="@+id/adminHomeFragment"
+        android:name="id.monpres.app.ui.adminhome.AdminHomeFragment"
+        android:label="@string/app_name"
+        tools:layout="@layout/fragment_admin_home" >
+        <action
+            android:id="@+id/action_adminHomeFragment_to_adminNewUsersFragment"
+            app:destination="@id/adminNewUsersFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/adminNewUsersFragment"
+        android:name="id.monpres.app.ui.adminnewusers.AdminNewUsersFragment"
+        android:label="@string/new_users"
+        tools:layout="@layout/fragment_admin_new_users" />
 </navigation>
