@@ -3,6 +3,7 @@ package id.monpres.app.ui.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import id.monpres.app.R
 import id.monpres.app.databinding.ItemUserBinding
 import id.monpres.app.model.MontirPresisiUser
 import java.text.SimpleDateFormat
@@ -57,7 +58,7 @@ class UserAdapter(
 
             binding.apply {
                 itemUserTextViewTitle.text = user.displayName
-                itemUserTextViewSubtitle.text = "$formattedDate"
+                itemUserTextViewSubtitle.text = root.context.getString(R.string.joined_at_x, formattedDate)
 
                 // Set click listener on root view of item layout
                 root.setOnClickListener {

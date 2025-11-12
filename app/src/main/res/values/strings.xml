@@ -282,4 +282,12 @@
     <string name="manage_new_users">Manage New Users</string>
     <string name="verify_and_approve_new_user_registrations">Verify and approve new user registrations</string>
     <string name="new_users">New Users</string>
+    <string name="joined_at_x">Joined at %1$s</string>
+    <string name="no_whatsapp_number">No WhatsApp number</string>
+    <string name="no_instagram_id">No Instagram ID</string>
+    <string name="no_facebook_id">No Facebook ID</string>
+    <string name="x_whatsapp">%1$s (WhatsApp)</string>
+    <string name="x_instagram">%1$s (Instagram)</string>
+    <string name="x_facebook">%1$s (Facebook)</string>
+    <string name="reject">Reject</string>
 </resources>

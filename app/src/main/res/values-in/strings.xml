@@ -277,4 +277,12 @@
     <string name="manage_new_users">Kelola Pengguna Baru</string>
     <string name="verify_and_approve_new_user_registrations">Verifikasi dan setujui pendaftaran pengguna baru</string>
     <string name="new_users">Pengguna Baru</string>
+    <string name="joined_at_x">Bergabung pada %1$s</string>
+    <string name="no_whatsapp_number">Tidak ada nomor WhatsApp</string>
+    <string name="no_instagram_id">Tidak ada ID Instagram</string>
+    <string name="no_facebook_id">Tidak ada ID Facebook</string>
+    <string name="x_whatsapp">%1$s (WhatsApp)</string>
+    <string name="x_instagram">%1$s (Instagram)</string>
+    <string name="x_facebook">%1$s (Facebook)</string>
+    <string name="reject">Tolak</string>
 </resources>

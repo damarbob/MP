@@ -1,29 +1,35 @@
 package id.monpres.app.ui.adminnewuser
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.google.i18n.phonenumbers.PhoneNumberUtil
+import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminNewUserBinding
 import id.monpres.app.model.MontirPresisiUser
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@AndroidEntryPoint
 class AdminNewUserFragment : DialogFragment() {
 
     companion object {
-        private const val ARG_USER = "user" // Use a constant for the key
+        private const val ARG_USER = "user" // Key must match SavedStateHandle
         val TAG = AdminNewUserFragment::class.simpleName
-        fun newInstance() = AdminNewUserFragment()
 
-        /**
-         * Creates a new instance of AdminNewUserFragment with the provided user data.
-         * @param user The User object to be passed to the fragment.
-         * @return A new instance of AdminNewUserFragment.
-         */
         fun newInstance(user: MontirPresisiUser): AdminNewUserFragment {
             val fragment = AdminNewUserFragment()
             val args = Bundle().apply {
@@ -37,38 +43,146 @@ class AdminNewUserFragment : DialogFragment() {
     private val viewModel: AdminNewUserViewModel by viewModels()
 
     /* UI */
-    private lateinit var binding: FragmentAdminNewUserBinding
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // TODO: Use the ViewModel
-    }
+    // Use nullable binding to handle onDestroyView
+    private var _binding: FragmentAdminNewUserBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentAdminNewUserBinding.inflate(inflater, container, false)
+        _binding = FragmentAdminNewUserBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        //
-        val user = arguments?.getParcelable<MontirPresisiUser>("user")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        val userCreatedAtTimestamp = user?.createdAt
+        // Setup UI (marquee, etc.)
+        setupMarquee()
 
-        // Format the timestamp to a user-readable date string
+        // Setup button click listeners
+        setupClickListeners()
+
+        // Setup observers to listen to the ViewModel
+        setupObservers()
+    }
+
+    private fun setupClickListeners() {
+        binding.fragmentAdminNewUserButtonAccept.setOnClickListener {
+            viewModel.onAcceptClicked()
+        }
+        binding.fragmentAdminNewUserButtonReject.setOnClickListener {
+            viewModel.onRejectClicked()
+        }
+        binding.fragmentAdminNewUserButtonDelete.setOnClickListener {
+            viewModel.onDeleteClicked()
+        }
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+
+                // 1. Observe the user data
+                launch {
+                    viewModel.user.collect { user ->
+                        user?.let { bindUserData(it) }
+                    }
+                }
+
+                // 2. Observe the loading state
+                launch {
+                    viewModel.isLoading.collect { isLoading ->
+                        // Disable buttons when loading
+                        binding.fragmentAdminNewUserButtonAccept.isEnabled = !isLoading
+                        binding.fragmentAdminNewUserButtonReject.isEnabled = !isLoading
+                        binding.fragmentAdminNewUserButtonDelete.isEnabled = !isLoading
+                    }
+                }
+
+                // 3. Observe one-time events
+                launch {
+                    viewModel.eventFlow.collect { event ->
+                        when (event) {
+                            is AdminNewUserEvent.ActionSuccess -> {
+                                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                                dismiss() // Close the dialog on success
+                            }
+                            is AdminNewUserEvent.ShowToast -> {
+                                Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper function to bind user data to the UI.
+     */
+    private fun bindUserData(user: MontirPresisiUser) {
+        val userCreatedAtTimestamp = user.createdAt
         val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
         val createdAtDate = userCreatedAtTimestamp?.let { Date(it.toLong()) }
         val formattedDate = createdAtDate?.let { sdf.format(it) } ?: "N/A"
 
-        binding.apply {
-            fragmentAdminNewUserTextViewTitle.text = user?.displayName
-            fragmentAdminNewUserTextViewSubtitle.text = formattedDate
-            fragmentAdminNewUserTextViewPhone.text = user?.phoneNumber
-            fragmentAdminNewUserTextViewInstagramId.text = user?.instagramId
-            fragmentAdminNewUserTextViewFacebookId.text = user?.facebookId
+        // Set WhatsApp link
+        val phoneUtil = PhoneNumberUtil.getInstance()
+        var whatsappNumber = user.phoneNumber
+        try {
+            val numberProto = phoneUtil.parse(whatsappNumber, "ID")
+            whatsappNumber = "" + numberProto.countryCode + numberProto.nationalNumber
+        } catch (e: Exception) {
+            // Keep original number if parsing fails
         }
+        val whatsappLink = "https://wa.me/$whatsappNumber"
 
-        return binding.root
+        binding.apply {
+            fragmentAdminNewUserTextViewTitle.text = user.displayName
+            fragmentAdminNewUserTextViewSubtitle.text = getString(R.string.joined_at_x, formattedDate)
+            fragmentAdminNewUserTextViewPhone.text = if (!user.phoneNumber.isNullOrBlank()) getString(R.string.x_whatsapp, user.phoneNumber) else getString(R.string.no_whatsapp_number)
+            fragmentAdminNewUserTextViewInstagramId.text = if (!user.instagramId.isNullOrBlank()) getString(R.string.x_instagram, user.instagramId) else getString(R.string.no_instagram_id)
+            fragmentAdminNewUserTextViewFacebookId.text = if (!user.facebookId.isNullOrBlank()) getString(R.string.x_facebook, user.facebookId) else getString(R.string.no_facebook_id)
+
+            setCardClickListener(fragmentAdminNewUserCardViewPhone, user.phoneNumber, whatsappLink)
+            setCardClickListener(fragmentAdminNewUserCardViewInstagramId, user.instagramId, "https://www.instagram.com/${user.instagramId}")
+            setCardClickListener(fragmentAdminNewUserCardViewFacebookId, user.facebookId, "https://www.facebook.com/${user.facebookId}")
+        }
+    }
+
+    /**
+     * Helper to set a card's click listener only if the data is not empty.
+     */
+    private fun setCardClickListener(card: View, data: String?, url: String) {
+        if (!data.isNullOrEmpty()) {
+            card.setOnClickListener {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse(url)
+                startActivity(intent)
+            }
+        } else {
+            card.setOnClickListener(null)
+            card.isClickable = false
+        }
+    }
+
+    private fun setupMarquee() {
+        val phoneTextView = binding.fragmentAdminNewUserTextViewPhone
+        val instagramTextView = binding.fragmentAdminNewUserTextViewInstagramId
+        val facebookTextView = binding.fragmentAdminNewUserTextViewFacebookId
+
+        listOf(phoneTextView, instagramTextView, facebookTextView).forEach { textView ->
+            textView.isSelected = true
+            textView.isSingleLine = true
+            textView.ellipsize = TextUtils.TruncateAt.MARQUEE
+            textView.marqueeRepeatLimit = -1 // marquee_forever
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null // Clean up binding to avoid memory leaks
     }
 }

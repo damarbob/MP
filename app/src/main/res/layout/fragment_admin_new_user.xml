@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -40,6 +41,8 @@
                 android:text="@string/date" />
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/fragmentAdminNewUserCardViewPhone"
+                style="@style/Widget.Material3.CardView.Elevated"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -59,9 +62,10 @@
                     <TextView
                         android:id="@+id/fragmentAdminNewUserTextViewPhone"
                         style="@style/Widget.App.P"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
                         android:text="@string/whatsapp_number" />
 
                 </LinearLayout>
@@ -69,6 +73,8 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/fragmentAdminNewUserCardViewInstagramId"
+                style="@style/Widget.Material3.CardView.Elevated"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -88,9 +94,10 @@
                     <TextView
                         android:id="@+id/fragmentAdminNewUserTextViewInstagramId"
                         style="@style/Widget.App.P"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
                         android:text="@string/instagram_id" />
 
                 </LinearLayout>
@@ -98,6 +105,8 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/fragmentAdminNewUserCardViewFacebookId"
+                style="@style/Widget.Material3.CardView.Elevated"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -117,14 +126,55 @@
                     <TextView
                         android:id="@+id/fragmentAdminNewUserTextViewFacebookId"
                         style="@style/Widget.App.P"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
                         android:text="@string/facebook_id" />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentAdminNewUserButtonAccept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/accept"
+                    android:text="@string/accept"
+                    app:icon="@drawable/check_24px" />
+
+                <!-- spacer that pushes the second button to the right -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentAdminNewUserButtonReject"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/reject"
+                    android:text="@string/reject"
+                    app:backgroundTint="?attr/colorSecondary"
+                    app:icon="@drawable/block_24px" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentAdminNewUserButtonDelete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/delete"
+                    android:text="@string/delete"
+                    android:visibility="gone"
+                    app:backgroundTint="?attr/colorSecondary"
+                    app:icon="@drawable/delete_24px" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
