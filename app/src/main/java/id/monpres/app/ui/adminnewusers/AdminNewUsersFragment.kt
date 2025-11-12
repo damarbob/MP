@@ -59,12 +59,8 @@ class AdminNewUsersFragment : Fragment() {
 
                 adapter.setOnItemClickListener(object : UserAdapter.OnItemClickListener {
                     override fun onMenuClicked(user: MontirPresisiUser?) {
-                        val bundle = Bundle()
-                        bundle.putParcelable("user", user)
-
-                        val dialog = AdminNewUserFragment()
-                        dialog.arguments = bundle
-                        dialog.show(parentFragmentManager, "AdminNewUserFragment")
+                        val dialog = user?.let { AdminNewUserFragment.newInstance(it) }
+                        dialog?.show(parentFragmentManager, AdminNewUserFragment.TAG)
                     }
                 })
             }.onFailure { exception ->

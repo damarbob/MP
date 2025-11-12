@@ -15,7 +15,23 @@ import java.util.Locale
 class AdminNewUserFragment : DialogFragment() {
 
     companion object {
+        private const val ARG_USER = "user" // Use a constant for the key
+        val TAG = AdminNewUserFragment::class.simpleName
         fun newInstance() = AdminNewUserFragment()
+
+        /**
+         * Creates a new instance of AdminNewUserFragment with the provided user data.
+         * @param user The User object to be passed to the fragment.
+         * @return A new instance of AdminNewUserFragment.
+         */
+        fun newInstance(user: MontirPresisiUser): AdminNewUserFragment {
+            val fragment = AdminNewUserFragment()
+            val args = Bundle().apply {
+                putParcelable(ARG_USER, user)
+            }
+            fragment.arguments = args
+            return fragment
+        }
     }
 
     private val viewModel: AdminNewUserViewModel by viewModels()
