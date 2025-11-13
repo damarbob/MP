@@ -1,7 +1,10 @@
 package id.monpres.app.usecase
 
 import android.util.Log
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
@@ -18,26 +21,44 @@ class GetNewUsersUseCase @Inject constructor(
         private val TAG = GetNewUsersUseCase::class.java.simpleName
     }
 
-    // In your Repository or ViewModel
     operator fun invoke(onResult: (Result<List<MontirPresisiUser>>) -> Unit) {
-        firestore
+        // Firestore's whereIn doesn't support null. We need to do two separate queries.
+        val pendingQuery = firestore
             .collection(MontirPresisiUser.COLLECTION)
-            .whereEqualTo("role", UserRole.CUSTOMER)
-            .whereEqualTo("verificationStatus", UserVerificationStatus.PENDING)
+            .where(
+                Filter.and(
+                    Filter.equalTo("role", UserRole.CUSTOMER),
+                    Filter.equalTo("verificationStatus", UserVerificationStatus.PENDING)
+                )
+            )
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
-            .addOnSuccessListener { querySnapshot ->
-                val users = ArrayList<MontirPresisiUser>()
-                querySnapshot.map { document ->
-                    val partner = document.toObject(MontirPresisiUser::class.java)
 
-                    users.add(partner)
+        val nullQuery = firestore
+            .collection(MontirPresisiUser.COLLECTION)
+            .where(
+                Filter.and(
+                    Filter.equalTo("role", UserRole.CUSTOMER),
+                    Filter.equalTo("verificationStatus", null)
+                )
+            )
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get()
+
+        // Combine the results of both queries
+        Tasks.whenAllSuccess<Any>(pendingQuery, nullQuery)
+            .addOnSuccessListener { results ->
+                val users = mutableSetOf<MontirPresisiUser>()
+                results.forEach { result ->
+                    (result as? com.google.firebase.firestore.QuerySnapshot)?.documents?.forEach { document ->
+                        users.add(document.toObject(MontirPresisiUser::class.java)!!)
+                    }
                 }
+                val userList = users.sortedByDescending { it.createdAt }
                 Log.d(TAG, "New users: $users")
-                newUserRepository.setRecords(users, true)
+                newUserRepository.setRecords(userList, true)
                 onResult(Result.success(newUserRepository.getRecords()))
             }
-            .addOnFailureListener { exception ->
-                onResult(Result.failure(exception))
-            }
+            .addOnFailureListener { onResult(Result.failure(it)) }
     }
 }
