@@ -1,12 +1,16 @@
 package id.monpres.app.model
 
 import android.os.Parcelable
+import com.google.firebase.firestore.DocumentId
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class MontirPresisiUser(
+    @DocumentId
+    val id: String? = null,
+
     var userId: String? = null,
     var displayName: String? = null,
     var role: UserRole? = null,

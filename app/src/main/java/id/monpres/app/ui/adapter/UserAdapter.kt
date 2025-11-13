@@ -2,6 +2,8 @@ package id.monpres.app.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import id.monpres.app.R
 import id.monpres.app.databinding.ItemUserBinding
@@ -10,11 +12,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class UserAdapter(
-    private val users: List<MontirPresisiUser>?
-) : RecyclerView.Adapter<UserAdapter.ServiceViewHolder>() {
+// 1. REMOVE constructor list, and extend ListAdapter
+class UserAdapter :
+    ListAdapter<MontirPresisiUser, UserAdapter.ServiceViewHolder>(UserDiffCallback()) {
 
-    // Click listener interface for service selection
+    // Click listener interface (no change needed)
     interface OnItemClickListener {
         fun onMenuClicked(user: MontirPresisiUser?)
     }
@@ -37,16 +39,17 @@ class UserAdapter(
     )
 
     override fun onBindViewHolder(holder: ServiceViewHolder, position: Int) {
-        users?.getOrNull(position)?.let { user ->
-            holder.bind(user)
-        }
+        // 2. Get the item using ListAdapter's method
+        val user = getItem(position)
+        holder.bind(user)
     }
 
-    override fun getItemCount(): Int = users?.size ?: 0
+    // 3. REMOVE getItemCount() - ListAdapter handles this automatically.
 
     inner class ServiceViewHolder(val binding: ItemUserBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        // The bind method logic is perfect, no changes needed
         fun bind(user: MontirPresisiUser) {
 
             val userCreatedAtTimestamp = user.createdAt
@@ -58,13 +61,35 @@ class UserAdapter(
 
             binding.apply {
                 itemUserTextViewTitle.text = user.displayName
-                itemUserTextViewSubtitle.text = root.context.getString(R.string.joined_at_x, formattedDate)
+                itemUserTextViewSubtitle.text =
+                    root.context.getString(R.string.joined_at_x, formattedDate)
 
-                // Set click listener on root view of item layout
+                // Your click listener setup is fine
                 root.setOnClickListener {
                     menuClickListener?.onMenuClicked(user)
                 }
             }
+        }
+    }
+
+    // 4. ADD this DiffCallback class inside UserAdapter
+    class UserDiffCallback : DiffUtil.ItemCallback<MontirPresisiUser>() {
+        override fun areItemsTheSame(
+            oldItem: MontirPresisiUser,
+            newItem: MontirPresisiUser
+        ): Boolean {
+            // This checks if the items represent the same object
+            // You MUST have a unique ID in your model (see note below)
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(
+            oldItem: MontirPresisiUser,
+            newItem: MontirPresisiUser
+        ): Boolean {
+            // This checks if the item's contents have changed
+            // This works perfectly if MontirPresisiUser is a data class
+            return oldItem == newItem
         }
     }
 }

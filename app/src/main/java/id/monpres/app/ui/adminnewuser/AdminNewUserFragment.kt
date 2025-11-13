@@ -1,18 +1,19 @@
 package id.monpres.app.ui.adminnewuser
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.R
@@ -70,28 +71,47 @@ class AdminNewUserFragment : DialogFragment() {
 
     private fun setupClickListeners() {
         binding.fragmentAdminNewUserButtonAccept.setOnClickListener {
-            viewModel.onAcceptClicked()
+            showConfirmationDialog(
+                title = getString(R.string.accept_user),
+                message = getString(R.string.are_you_sure),
+                positiveButtonText = getString(R.string.accept)
+            ) {
+                viewModel.onAcceptClicked()
+            }
         }
         binding.fragmentAdminNewUserButtonReject.setOnClickListener {
-            viewModel.onRejectClicked()
+            showConfirmationDialog(
+                title = getString(R.string.reject_user),
+                message = getString(R.string.are_you_sure),
+                positiveButtonText = getString(R.string.reject)
+            ) {
+                viewModel.onRejectClicked()
+            }
         }
         binding.fragmentAdminNewUserButtonDelete.setOnClickListener {
-            viewModel.onDeleteClicked()
+            showConfirmationDialog(
+                title = getString(R.string.delete_user),
+                message = getString(R.string.are_you_sure),
+                positiveButtonText = getString(R.string.delete)
+            ) {
+                viewModel.onDeleteClicked()
+            }
         }
     }
+
 
     private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-                // 1. Observe the user data
+                // Observe the user data
                 launch {
                     viewModel.user.collect { user ->
                         user?.let { bindUserData(it) }
                     }
                 }
 
-                // 2. Observe the loading state
+                // Observe the loading state
                 launch {
                     viewModel.isLoading.collect { isLoading ->
                         // Disable buttons when loading
@@ -101,7 +121,7 @@ class AdminNewUserFragment : DialogFragment() {
                     }
                 }
 
-                // 3. Observe one-time events
+                // Observe one-time events
                 launch {
                     viewModel.eventFlow.collect { event ->
                         when (event) {
@@ -159,7 +179,7 @@ class AdminNewUserFragment : DialogFragment() {
         if (!data.isNullOrEmpty()) {
             card.setOnClickListener {
                 val intent = Intent(Intent.ACTION_VIEW)
-                intent.data = Uri.parse(url)
+                intent.data = url.toUri()
                 startActivity(intent)
             }
         } else {
@@ -178,6 +198,24 @@ class AdminNewUserFragment : DialogFragment() {
             textView.isSingleLine = true
             textView.ellipsize = TextUtils.TruncateAt.MARQUEE
             textView.marqueeRepeatLimit = -1 // marquee_forever
+        }
+    }
+
+    private fun showConfirmationDialog(
+        title: String,
+        message: String,
+        positiveButtonText: String,
+        onConfirm: () -> Unit
+    ) {
+        context?.let {
+            MaterialAlertDialogBuilder(it)
+                .setTitle(title)
+                .setMessage(message)
+                .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .setPositiveButton(positiveButtonText) { _, _ -> onConfirm() }
+                .show()
         }
     }
 

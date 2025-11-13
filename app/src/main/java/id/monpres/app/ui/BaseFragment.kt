@@ -71,6 +71,8 @@ abstract class BaseFragment : Fragment() {
                             showLoading(false)
                             onEmpty()
                         }
+
+                        is UiState.Error -> {}
                     }
                 }
             }
@@ -115,9 +117,11 @@ abstract class BaseFragment : Fragment() {
                         showLoading(false)
                         onEmpty()
                         // We don't call onComplete here as it's typically for success with data.
-                        // You could add an onEmpty lambda if needed for one-shot operations.
+                        // Add an onEmpty lambda if needed for one-shot operations.
                         return@collect // Stop collecting.
                     }
+
+                    is UiState.Error -> {}
                 }
             }
         }

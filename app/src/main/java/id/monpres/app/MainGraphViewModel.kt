@@ -16,6 +16,10 @@ import id.monpres.app.repository.UserRepository
 import id.monpres.app.repository.VehicleRepository
 import id.monpres.app.service.OrderServiceLocationTrackingService
 import id.monpres.app.state.UiState
+import id.monpres.app.state.UiState.Empty
+import id.monpres.app.state.UiState.Error
+import id.monpres.app.state.UiState.Loading
+import id.monpres.app.state.UiState.Success
 import id.monpres.app.utils.takeUntilSignal
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,22 +49,22 @@ class MainGraphViewModel @Inject constructor(
     }
 
     private val _userOrderServicesState =
-        MutableStateFlow<UiState<List<OrderService>>>(UiState.Loading)
+        MutableStateFlow<UiState<List<OrderService>>>(Loading)
     val userOrderServicesState: StateFlow<UiState<List<OrderService>>> =
         _userOrderServicesState.asStateFlow()
 
     private val _partnerOrderServicesState =
-        MutableStateFlow<UiState<List<OrderService>>>(UiState.Loading)
+        MutableStateFlow<UiState<List<OrderService>>>(Loading)
     val partnerOrderServicesState: StateFlow<UiState<List<OrderService>>> =
         _partnerOrderServicesState.asStateFlow()
 
-    private val _openedOrderServiceState = MutableStateFlow<UiState<OrderService>>(UiState.Loading)
+    private val _openedOrderServiceState = MutableStateFlow<UiState<OrderService>>(Loading)
     val openedOrderServiceState: StateFlow<UiState<OrderService>> =
         _openedOrderServiceState.asStateFlow()
 
     private var openedOrderJob: Job? = null // To manage the collector coroutine
 
-    private val _userVehiclesState = MutableStateFlow<UiState<List<Vehicle>>>(UiState.Loading)
+    private val _userVehiclesState = MutableStateFlow<UiState<List<Vehicle>>>(Loading)
     val userVehiclesState: StateFlow<UiState<List<Vehicle>>> = _userVehiclesState.asStateFlow()
     private val _userVehicles = MutableStateFlow<List<Vehicle>>(emptyList())
     val userVehicles: StateFlow<List<Vehicle>> = _userVehicles.asStateFlow()
@@ -102,7 +106,7 @@ class MainGraphViewModel @Inject constructor(
         viewModelScope.launch {
             orderServiceRepository.observeOrderServicesByUserId()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
-                .onStart { _userOrderServicesState.value = UiState.Loading }
+                .onStart { _userOrderServicesState.value = Loading }
                 .catch { e ->
                     // If the exception is for cancellation, re-throw it to stop the coroutine gracefully.
                     if (e is CancellationException) {
@@ -114,12 +118,12 @@ class MainGraphViewModel @Inject constructor(
                     // On failure, emit the error as a one-time event
                     _errorEvent.emit(e)
                     // Set the UI state to Empty or keep the last successful state
-                    _userOrderServicesState.value = UiState.Empty
+                    _userOrderServicesState.value = Empty
                 }
                 .collect { orders ->
                     // The repository gives us clean data.
                     _userOrderServicesState.value =
-                        if (orders.isEmpty()) UiState.Empty else UiState.Success(orders)
+                        if (orders.isEmpty()) Empty else Success(orders)
                 }
         }
     }
@@ -128,7 +132,7 @@ class MainGraphViewModel @Inject constructor(
         viewModelScope.launch {
             orderServiceRepository.observeOrderServicesByPartnerId()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
-                .onStart { _partnerOrderServicesState.value = UiState.Loading }
+                .onStart { _partnerOrderServicesState.value = Loading }
                 .catch { e ->
                     // If the exception is for cancellation, re-throw it to stop the coroutine gracefully.
                     if (e is CancellationException) {
@@ -139,11 +143,11 @@ class MainGraphViewModel @Inject constructor(
                     // On failure, emit the error as a one-time event
                     _errorEvent.emit(e)
                     // Set the UI state to Empty or keep the last successful state
-                    _partnerOrderServicesState.value = UiState.Empty
+                    _partnerOrderServicesState.value = Empty
                 }
                 .collect { orders ->
                     _partnerOrderServicesState.value =
-                        if (orders.isEmpty()) UiState.Empty else UiState.Success(orders)
+                        if (orders.isEmpty()) Empty else Success(orders)
                 }
         }
     }
@@ -160,24 +164,26 @@ class MainGraphViewModel @Inject constructor(
         }
 
         if (masterListFlow == null) {
-            _openedOrderServiceState.value = UiState.Empty // Or an error state
+            _openedOrderServiceState.value = Empty // Or an error state
             return
         }
 
         openedOrderJob = viewModelScope.launch {
             masterListFlow.collect { listState ->
                 when (listState) {
-                    is UiState.Loading -> _openedOrderServiceState.value = UiState.Loading
-                    is UiState.Empty -> _openedOrderServiceState.value = UiState.Empty
-                    is UiState.Success -> {
+                    is Loading -> _openedOrderServiceState.value = Loading
+                    is Empty -> _openedOrderServiceState.value = Empty
+                    is Success -> {
                         val orderService = listState.data.find { it.id == orderId }
                         if (orderService != null) {
-                            _openedOrderServiceState.value = UiState.Success(orderService)
+                            _openedOrderServiceState.value = Success(orderService)
                         } else {
                             // The order was not found in the master list.
-                            _openedOrderServiceState.value = UiState.Empty
+                            _openedOrderServiceState.value = Empty
                         }
                     }
+
+                    is Error -> {}
                 }
             }
         }
@@ -193,7 +199,7 @@ class MainGraphViewModel @Inject constructor(
             vehicleRepository.getVehiclesByUserIdFlow(this)
                 .takeUntilSignal(sessionManager.externalSignOutSignal) // Stop observation on logout
                 .onStart {
-                    _userVehiclesState.value = UiState.Loading
+                    _userVehiclesState.value = Loading
                 }
                 .catch { e ->
                     if (e is CancellationException) {
@@ -203,14 +209,14 @@ class MainGraphViewModel @Inject constructor(
                         throw e
                     }
                     Log.e(TAG, "Error in vehicles flow collection", e)
-                    _userVehiclesState.value = UiState.Empty
+                    _userVehiclesState.value = Empty
                     _errorEvent.emit(e)
                 }
                 .collect { vehicles ->
                     Log.d(TAG, "User vehicles: $vehicles")
                     Log.d(TAG, "User vehicles state: ${_userVehiclesState.value}")
                     _userVehiclesState.value =
-                        if (vehicles.isEmpty()) UiState.Empty else UiState.Success(vehicles)
+                        if (vehicles.isEmpty()) Empty else Success(vehicles)
                     _userVehicles.value = vehicles
                 }
         }
@@ -229,7 +235,7 @@ class MainGraphViewModel @Inject constructor(
             val trackedOrderIds = mutableSetOf<String>()
 
             orderFlow?.collect { uiState ->
-                if (uiState is UiState.Success) {
+                if (uiState is Success) {
                     val allOrders = uiState.data
                     val onTheWayOrderIds = allOrders
                         .filter { it.status == OrderStatus.ON_THE_WAY }
@@ -254,7 +260,7 @@ class MainGraphViewModel @Inject constructor(
                             trackedOrderIds.add(orderId)
                         }
                     }
-                } else if (uiState is UiState.Empty) {
+                } else if (uiState is Empty) {
                     // If the whole list fails or is empty, stop all tracking
                     trackedOrderIds.forEach { stopTrackingForOrder(it) }
                     trackedOrderIds.clear()
@@ -283,34 +289,5 @@ class MainGraphViewModel @Inject constructor(
         Log.d(TAG, "ViewModel requested to STOP Location Service.")
     }
 
-    // Call this from your Activity after handling intent extras
-    fun setOpenedFromNotification(orderId: String?) {
-        justOpenedFromNotificationForOrderId = orderId
-        Log.d(TAG, "ViewModel informed: opened from notification for order $orderId")
-    }
-
     fun getCurrentUser() = userRepository.getCurrentUserRecord()
-
-    fun getNotifiedOrderStatusMap() = notifiedOrderStatusMap
-    fun getJustOpenedFromNotificationOrderId() = justOpenedFromNotificationForOrderId
-    fun setJustOpenedFromNotificationOrderId(orderId: String?) {
-        justOpenedFromNotificationForOrderId = orderId
-    }
-
-    fun clearJustOpenedFromNotificationOrderId() {
-        justOpenedFromNotificationForOrderId = null
-    }
-
-    fun clearNotifiedOrderStatusMap() {
-        notifiedOrderStatusMap.clear()
-    }
-
-    fun setNotifiedOrderStatusMap(map: MutableMap<String, OrderStatus>) {
-        notifiedOrderStatusMap.clear()
-        notifiedOrderStatusMap.putAll(map)
-    }
-
-    fun removeNotifiedOrderStatus(orderId: String) {
-        notifiedOrderStatusMap.remove(orderId)
-    }
 }

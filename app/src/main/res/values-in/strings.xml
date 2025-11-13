@@ -285,4 +285,7 @@
     <string name="x_instagram">%1$s (Instagram)</string>
     <string name="x_facebook">%1$s (Facebook)</string>
     <string name="reject">Tolak</string>
+    <string name="accept_user">Terima Pengguna</string>
+    <string name="reject_user">Tolak Pengguna</string>
+    <string name="delete_user">Hapus Pengguna</string>
 </resources>
