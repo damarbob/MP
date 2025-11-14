@@ -50,6 +50,8 @@ import com.lottiefiles.dotlottie.core.model.Config
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
+import id.monpres.app.enums.UserRole
+import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.notification.OrderServiceNotification
@@ -66,6 +68,7 @@ import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -259,6 +262,22 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 //        })
     }
 
+    private val accountVerificationDialog by lazy {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.verification))
+            .setNegativeButton(getString(R.string.refresh)) { _, _ ->
+                restartActivity() // Restart activity to re-check
+            }
+            .setNeutralButton(getString(R.string.sign_out)) { _, _ ->
+                onLogoutClicked() // Sign out
+            }
+            .setCancelable(false)
+            .create()
+            .apply {
+                setCanceledOnTouchOutside(false) // Prevent dismissing
+            }
+    }
+
     private val locationDialog by lazy {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.location)
@@ -378,6 +397,18 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     }
 
     private fun setupObservers() {
+        // --- ACCOUNT VERIFICATION ---
+        // Observe user ACCOUNT verification status (PENDING, APPROVED, REJECTED)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // We use filterNotNull to only react once the status is loaded
+                viewModel.userVerificationStatus.filterNotNull().collect { status ->
+                    Log.d(TAG, "UserVerificationStatus: $status")
+                    handleUserVerificationStatus(status)
+                }
+            }
+        }
+        // --- NEW OBSERVER FOR ERROR EVENTS ---
         // Observer for network connection
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -608,6 +639,12 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private fun handleVerificationStatus(isVerified: Boolean) {
         if (isVerified) {
             Log.d(TAG, "Email is verified")
+
+            // Once email is verified, dismiss any account verification dialog
+            // to allow the userVerificationStatus flow to show the correct one.
+            if (accountVerificationDialog.isShowing) {
+                accountVerificationDialog.dismiss()
+            }
         } else {
             // Show confirmation dialog
             MaterialAlertDialogBuilder(this)
@@ -651,6 +688,63 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                     setCanceledOnTouchOutside(false) // Prevent dismissing by clicking outside
                 }
                 .show()
+        }
+    }
+
+    // --- HANDLE ACCOUNT VERIFICATION (BY ADMIN) ---
+    private fun handleUserVerificationStatus(status: UserVerificationStatus) {
+        // This function handles ACCOUNT (admin) verification
+        // It should only run AFTER email verification is successful.
+
+        // Ensure email verification dialog isn't showing
+        // (Though ViewModel logic should prevent this, it's a safe check)
+        if (viewModel.isUserVerified.value != true) {
+            return
+        }
+
+        // --- Get the current user's role ---
+        val userRole = viewModel.getCurrentUser()?.role
+
+        // Dismiss any existing dialog first to avoid duplicates
+        if (accountVerificationDialog.isShowing) {
+            accountVerificationDialog.dismiss()
+        }
+
+        when (status) {
+            UserVerificationStatus.VERIFIED -> {
+                // User is approved, do nothing. The app should function normally.
+                Log.d(TAG, "User account is VERIFIED.")
+            }
+
+            UserVerificationStatus.PENDING -> {
+                // --- Only block if user is a CUSTOMER ---
+                if (userRole == UserRole.CUSTOMER) {
+                    // User is pending, show a waiting dialog.
+                    accountVerificationDialog.setMessage(getString(R.string.your_account_is_awaiting_admin_approval))
+                    accountVerificationDialog.show()
+                } else {
+                    // User is a PARTNER/ADMIN, don't block them for PENDING status
+                    Log.d(
+                        TAG,
+                        "User is $userRole and PENDING. Allowing access (blocking is for CUSTOMERs only)."
+                    )
+                }
+            }
+
+            UserVerificationStatus.REJECTED -> {
+                // --- Only block if user is a CUSTOMER ---
+                if (userRole == UserRole.CUSTOMER) {
+                    // User is rejected, show a rejection dialog.
+                    accountVerificationDialog.setMessage(getString(R.string.your_account_has_been_rejected))
+                    accountVerificationDialog.show()
+                } else {
+                    // User is a PARTNER/ADMIN, don't block them for REJECTED status
+                    Log.d(
+                        TAG,
+                        "User is $userRole and REJECTED. Allowing access (blocking is for CUSTOMERs only)."
+                    )
+                }
+            }
         }
     }
 

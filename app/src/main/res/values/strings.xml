@@ -293,6 +293,11 @@
     <string name="accept_user">Accept User</string>
     <string name="reject_user">Reject User</string>
     <string name="delete_user">Delete User</string>
+    <string name="lorem_ipsum_dolor_sit_amet" translatable="false">Lorem ipsum dolor sit amet</string>
+    <string name="no_new_users_found">No new users found.</string>
+
+    <string name="your_account_is_awaiting_admin_approval">Your account is awaiting admin approval</string>
+    <string name="your_account_has_been_rejected">Your account has been rejected</string>
 
     <string name="follow_system">Follow system</string>
     <string name="language">Language</string>

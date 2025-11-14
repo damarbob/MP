@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.enums.UserRole
+import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserIdentityRepository
@@ -21,6 +22,7 @@ import id.monpres.app.state.UserEligibilityState
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
+import id.monpres.app.usecase.GetUserVerificationStatusUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +49,8 @@ class MainViewModel @Inject constructor(
     private val userIdentityRepository: UserIdentityRepository,
     private val orderServiceRepository: OrderServiceRepository,
     appPreferences: AppPreferences,
-    private val networkConnectivityObserver: NetworkConnectivityObserver
+    private val networkConnectivityObserver: NetworkConnectivityObserver,
+    private val getUserVerificationStatusUseCase: GetUserVerificationStatusUseCase,
 ) : ViewModel() {
     companion object {
         private val TAG = MainViewModel::class.simpleName
@@ -63,6 +66,11 @@ class MainViewModel @Inject constructor(
     val userEligibilityState: SharedFlow<UserEligibilityState> =
         _userEligibilityState.asSharedFlow()
 
+    // --- FLOW FOR ACCOUNT VERIFICATION ---
+    private val _userVerificationStatus =
+        MutableStateFlow<UserVerificationStatus?>(null)
+    val userVerificationStatus: StateFlow<UserVerificationStatus?> =
+        _userVerificationStatus.asStateFlow()
 
     private val _mainLoadingState = MutableStateFlow(true)
     val mainLoadingState = _mainLoadingState.asStateFlow()
@@ -163,6 +171,13 @@ class MainViewModel @Inject constructor(
             Log.d(TAG, "Email verification result: $isVerified")
 
             if (isVerified) {
+                // Start collecting the admin verification status as soon as email is verified
+                launch {
+                    getUserVerificationStatusUseCase().collect { status ->
+                        _userVerificationStatus.value = status
+                    }
+                }
+
                 // Once verified, proceed with session initialization.
                 initializeSession()
             } else {
