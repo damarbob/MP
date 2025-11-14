@@ -289,4 +289,7 @@
     <string name="reject_user">Tolak Pengguna</string>
     <string name="delete_user">Hapus Pengguna</string>
     <string name="no_new_users_found">Tidak ada pengguna baru yang ditemukan.</string>
+
+    <string name="your_account_is_awaiting_admin_approval">Akun Anda sedang menunggu persetujuan admin</string>
+    <string name="your_account_has_been_rejected">Akun Anda telah ditolak</string>
 </resources>

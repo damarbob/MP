@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.enums.UserRole
+import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserIdentityRepository
@@ -20,6 +21,7 @@ import id.monpres.app.state.UserEligibilityState
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
+import id.monpres.app.usecase.GetUserVerificationStatusUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,6 +44,7 @@ class MainViewModel @Inject constructor(
     private val getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase,
     private val userIdentityRepository: UserIdentityRepository,
     private val orderServiceRepository: OrderServiceRepository,
+    private val getUserVerificationStatusUseCase: GetUserVerificationStatusUseCase,
 ) : ViewModel() {
     companion object {
         private val TAG = MainViewModel::class.simpleName
@@ -54,8 +57,14 @@ class MainViewModel @Inject constructor(
 
     private val _userEligibilityState =
         MutableSharedFlow<UserEligibilityState>()
-    val userEligibilityState: SharedFlow<UserEligibilityState> = _userEligibilityState.asSharedFlow()
+    val userEligibilityState: SharedFlow<UserEligibilityState> =
+        _userEligibilityState.asSharedFlow()
 
+    // --- FLOW FOR ACCOUNT VERIFICATION ---
+    private val _userVerificationStatus =
+        MutableStateFlow<UserVerificationStatus?>(null)
+    val userVerificationStatus: StateFlow<UserVerificationStatus?> =
+        _userVerificationStatus.asStateFlow()
 
     private val _mainLoadingState = MutableLiveData(true)
     val mainLoadingState: MutableLiveData<Boolean> = _mainLoadingState
@@ -116,6 +125,13 @@ class MainViewModel @Inject constructor(
             val isVerified = _isUserVerified.filterNotNull().first()
 
             if (isVerified) {
+                // Start collecting the admin verification status as soon as email is verified
+                launch {
+                    getUserVerificationStatusUseCase().collect { status ->
+                        _userVerificationStatus.value = status
+                    }
+                }
+
                 // Once verified, proceed with session initialization.
                 initializeSession()
             } else {
@@ -207,9 +223,11 @@ class MainViewModel @Inject constructor(
             UserRole.ADMIN -> {
                 _navigationGraphState.value = Admin(R.navigation.nav_main)
             }
+
             UserRole.PARTNER -> {
                 _navigationGraphState.value = Partner(R.navigation.nav_main)
             }
+
             UserRole.CUSTOMER -> {
                 _navigationGraphState.value = Customer(R.navigation.nav_main)
             }
@@ -229,12 +247,14 @@ class MainViewModel @Inject constructor(
             user.role == UserRole.CUSTOMER &&
                     (user.instagramId.isNullOrBlank() && user.facebookId.isNullOrBlank())
 
-        _userEligibilityState.emit(when {
-            isPartnerMissingLocation -> UserEligibilityState.PartnerMissingLocation
-            isCustomerMissingPhone -> UserEligibilityState.CustomerMissingPhoneNumber
-            isCustomerMissingSocialMedia -> UserEligibilityState.CustomerMissingSocialMedia
-            else -> UserEligibilityState.Eligible
-        })
+        _userEligibilityState.emit(
+            when {
+                isPartnerMissingLocation -> UserEligibilityState.PartnerMissingLocation
+                isCustomerMissingPhone -> UserEligibilityState.CustomerMissingPhoneNumber
+                isCustomerMissingSocialMedia -> UserEligibilityState.CustomerMissingSocialMedia
+                else -> UserEligibilityState.Eligible
+            }
+        )
     }
 
     // You can also add a function to re-check eligibility when needed
