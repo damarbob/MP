@@ -293,4 +293,6 @@
     <string name="accept_user">Accept User</string>
     <string name="reject_user">Reject User</string>
     <string name="delete_user">Delete User</string>
+    <string name="lorem_ipsum_dolor_sit_amet" translatable="false">Lorem ipsum dolor sit amet</string>
+    <string name="no_new_users_found">No new users found.</string>
 </resources>

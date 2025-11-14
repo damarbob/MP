@@ -40,8 +40,13 @@ class AdminNewUsersViewModel @Inject constructor(
                     _uiState.value = UiState.Error(e.message ?: "Unknown error")
                 }
                 .collect { users ->
-                    // On success, update the state
-                    _uiState.value = UiState.Success(users)
+                    if (users.isEmpty()) {
+                        // On success but empty, update the state to Empty
+                        _uiState.value = UiState.Empty
+                    } else {
+                        // On success, update the state
+                        _uiState.value = UiState.Success(users)
+                    }
                 }
         }
     }

@@ -6,6 +6,33 @@
     android:layout_height="match_parent"
     tools:context=".ui.adminnewusers.AdminNewUsersFragment">
 
+    <LinearLayout
+        android:id="@+id/fragmentAdminNewUsersLinearLayoutInfo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="16dp">
+
+        <ImageView
+            android:id="@+id/fragmentAdminNewUsersImageViewInfo"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:alpha="0.5"
+            android:src="@drawable/info_24px" />
+
+        <TextView
+            android:id="@+id/fragmentAdminNewUsersTextViewInfo"
+            style="@style/Widget.App.H1.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.5"
+            android:text="@string/lorem_ipsum_dolor_sit_amet"
+            android:textAlignment="center" />
+
+    </LinearLayout>
+
     <androidx.core.widget.NestedScrollView
         android:id="@+id/fragmentAdminNewUsersNestedScrollView"
         android:layout_width="match_parent"
@@ -30,7 +57,7 @@
                 android:id="@+id/fragmentAdminNewUsersTextViewError"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Lorem ipsum dolor sit amet"
+                android:text="@string/lorem_ipsum_dolor_sit_amet"
                 android:textColor="?attr/colorSecondary" />
 
             <androidx.recyclerview.widget.RecyclerView

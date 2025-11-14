@@ -11,15 +11,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminNewUsersBinding
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.state.UiState
 import id.monpres.app.ui.adapter.UserAdapter
 import id.monpres.app.ui.adminnewuser.AdminNewUserFragment
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
-// No longer need to inject UseCase here
-// import id.monpres.app.usecase.GetNewUsersUseCase
-// import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -34,7 +32,22 @@ class AdminNewUsersFragment : Fragment() {
     /* UI */
     private var _binding: FragmentAdminNewUsersBinding? = null
     private val binding get() = _binding!!
-    private lateinit var adapter: UserAdapter // Assume this is a ListAdapter
+
+    // Use 'lazy' to create the adapter and its listener only ONCE.
+    // This survives view recreation and avoids listener setup issues.
+    private val userAdapter: UserAdapter by lazy {
+        UserAdapter().apply {
+            setOnItemClickListener(object : UserAdapter.OnItemClickListener {
+                override fun onMenuClicked(user: MontirPresisiUser?) {
+                    // Use 'let' for cleaner null-checking
+                    user?.let { validUser ->
+                        AdminNewUserFragment.newInstance(validUser)
+                            .show(parentFragmentManager, AdminNewUserFragment.TAG)
+                    }
+                }
+            })
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,71 +59,61 @@ class AdminNewUsersFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         observeViewModel()
     }
 
     private fun setupRecyclerView() {
-        // Create the adapter ONCE
-        adapter = UserAdapter()
-
-        adapter.setOnItemClickListener(object : UserAdapter.OnItemClickListener {
-            override fun onMenuClicked(user: MontirPresisiUser?) {
-                val dialog = user?.let { AdminNewUserFragment.newInstance(it) }
-                dialog?.show(parentFragmentManager, AdminNewUserFragment.TAG)
-            }
-        })
-
         binding.fragmentAdminNewUsersRecyclerViewNewUsers.apply {
-            this.adapter = this@AdminNewUsersFragment.adapter
+            // 2. OPTIMIZATION: Use the single, lazy-initialized adapter
+            adapter = userAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            // Add decoration only once
-            addItemDecoration(SpacingItemDecoration(2))
+
+            // 3. OPTIMIZATION: Only add item decoration if it hasn't been added before.
+            // This prevents stacking decorations on view re-creation.
+            if (itemDecorationCount == 0) {
+                addItemDecoration(SpacingItemDecoration(2))
+            }
         }
     }
 
     private fun observeViewModel() {
-        // Use viewLifecycleOwner.lifecycleScope to tie collection to the Fragment's view
         viewLifecycleOwner.lifecycleScope.launch {
-            // repeatOnLifecycle ensures we only collect when the fragment is STARTED
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    // Handle the different states
-                    when (state) {
-                        is UiState.Loading -> {
-                            // Show loading
-                            binding.fragmentAdminNewUsersLinearProgressIndicator.visibility =
-                                View.VISIBLE
+                    // 4. OPTIMIZATION: Use 'binding.apply' for a much cleaner
+                    // "hide all, show one" state management pattern.
+                    binding.apply {
+                        // Default state: Hide all mutually exclusive views
+                        fragmentAdminNewUsersLinearProgressIndicator.visibility = View.GONE
+                        fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.GONE
+                        fragmentAdminNewUsersTextViewError.visibility = View.GONE
+                        fragmentAdminNewUsersLinearLayoutInfo.visibility = View.GONE
 
-                            // Hide RecyclerView and error message
-                            binding.fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.GONE
-                            binding.fragmentAdminNewUsersTextViewError.visibility = View.GONE
+                        // Now, show only the view for the current state
+                        when (state) {
+                            is UiState.Loading -> {
+                                fragmentAdminNewUsersLinearProgressIndicator.visibility =
+                                    View.VISIBLE
+                            }
+
+                            is UiState.Success -> {
+                                fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.VISIBLE
+                                // Submit the list to our single adapter instance
+                                userAdapter.submitList(state.data)
+                            }
+
+                            is UiState.Error -> {
+                                fragmentAdminNewUsersTextViewError.visibility = View.VISIBLE
+                                fragmentAdminNewUsersTextViewError.text = state.message
+                            }
+
+                            is UiState.Empty -> {
+                                fragmentAdminNewUsersLinearLayoutInfo.visibility = View.VISIBLE
+                                fragmentAdminNewUsersTextViewInfo.text =
+                                    getString(R.string.no_new_users_found)
+                            }
                         }
-
-                        is UiState.Success -> {
-                            // Hide loading, show RecyclerView
-                            binding.fragmentAdminNewUsersLinearProgressIndicator.visibility =
-                                View.GONE
-                            binding.fragmentAdminNewUsersRecyclerViewNewUsers.visibility =
-                                View.VISIBLE
-
-                            // Submit the new list. The adapter handles the diffing.
-                            adapter.submitList(state.data)
-                        }
-
-                        is UiState.Error -> {
-                            // Hide loading and RecyclerView
-                            binding.fragmentAdminNewUsersLinearProgressIndicator.visibility =
-                                View.GONE
-                            binding.fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.GONE
-
-                            // Show error message
-                            binding.fragmentAdminNewUsersTextViewError.visibility = View.VISIBLE
-                            binding.fragmentAdminNewUsersTextViewError.text = state.message
-                        }
-
-                        is UiState.Empty -> {}
                     }
                 }
             }
@@ -119,7 +122,7 @@ class AdminNewUsersFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Null out the binding to prevent memory leaks
+        // Good practice: null out binding to prevent memory leaks
         _binding = null
     }
 }
