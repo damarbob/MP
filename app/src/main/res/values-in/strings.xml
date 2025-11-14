@@ -288,4 +288,40 @@
     <string name="accept_user">Terima Pengguna</string>
     <string name="reject_user">Tolak Pengguna</string>
     <string name="delete_user">Hapus Pengguna</string>
+
+    <string name="follow_system">Ikuti sistem</string>
+    <string name="language">Bahasa</string>
+    <string name="dark_mode">Mode gelap</string>
+    <string name="light_mode">Mode terang</string>
+
+    <string name="car">Mobil</string>
+    <string name="motorcycle">Motor</string>
+    <string name="no_internet_connection">Tidak ada koneksi internet</string>
+    <string name="operation_postponed_until_online">Operasi ditunda sampai online kembali</string>
+
+    <!-- Firebase Auth Errors -->
+    <string name="error_invalid_email">Masukkan alamat email yang valid</string>
+    <string name="error_wrong_password">Kata sandi salah. Silakan coba lagi</string>
+    <string name="error_user_not_found">Tidak ada akun yang ditemukan dengan email ini</string>
+    <string name="error_user_disabled">Akun ini telah dinonaktifkan</string>
+    <string name="error_email_in_use">Email ini sudah terdaftar</string>
+    <string name="error_weak_password">Kata sandi terlalu lemah. Gunakan minimal 6 karakter</string>
+    <string name="error_auth_generic">Autentikasi gagal. Silakan coba lagi</string>
+
+    <!-- Firestore Errors -->
+    <string name="error_document_not_found">Data tidak ditemukan</string>
+    <string name="error_permission_denied">Anda tidak memiliki izin untuk mengakses data ini</string>
+    <string name="error_firestore_generic">Gagal memuat data. Silakan coba lagi</string>
+    <string name="error_unauthenticated">Pengguna belum terautentikasi</string>
+
+    <!-- Storage Errors -->
+    <string name="error_storage_permission">Izin penyimpanan diperlukan untuk menyimpan file</string>
+    <string name="error_file_not_found">File tidak ditemukan</string>
+    <string name="error_storage_full">Penyimpanan penuh. Silakan kosongkan ruang penyimpanan</string>
+    <string name="error_storage_generic">Gagal menyimpan file. Silakan coba lagi</string>
+
+    <!-- Generic Errors -->
+    <string name="error_network">Error jaringan. Periksa koneksi Anda</string>
+    <string name="error_timeout">Waktu permintaan telah habis. Periksa koneksi Anda dan silakan coba lagi</string>
+    <string name="error_unknown">Terjadi kesalahan. Silakan coba lagi</string>
 </resources>

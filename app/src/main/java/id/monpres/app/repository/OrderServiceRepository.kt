@@ -65,9 +65,10 @@ class OrderServiceRepository @Inject constructor(
      * Best Practice: This is a one-shot write operation. It should be a simple suspend function.
      * It will throw an exception on failure, which the ViewModel will catch.
      */
-    suspend fun updateOrderService(orderService: OrderService) {
+    suspend fun updateOrderService(orderService: OrderService): OrderService {
         val id = orderService.id ?: throw IllegalArgumentException("OrderService ID cannot be null")
         updateDataByIdUseCase(id, OrderService.COLLECTION, orderService)
+        return orderService
     }
 
     /*fun observeOrderServicesByUserId(): Flow<UiState<List<OrderService>>> =

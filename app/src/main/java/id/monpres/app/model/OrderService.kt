@@ -42,7 +42,7 @@ data class OrderService(
     var issueDescription: String? = null,
     var imageAttachmentUris: List<String>? = null,
 
-    var orderItems: List<OrderItem>? = null
+    var orderItems: List<OrderItem>? = null,
 ) : IOrder, Parcelable {
     companion object {
         const val COLLECTION = "orderServices"

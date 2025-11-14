@@ -7,7 +7,7 @@ import com.google.firebase.auth.FirebaseUser
 class ResendVerificationEmailUseCase {
     operator fun invoke(
         onSuccess: (Boolean) -> Unit,
-        onFailure: (String) -> Unit
+        onFailure: (Exception?) -> Unit
     ) {
         val user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
         user?.sendEmailVerification()?.addOnCompleteListener { task: Task<Void?> ->
@@ -15,7 +15,7 @@ class ResendVerificationEmailUseCase {
                 onSuccess(true)
             } else {
                 val errorMessage = task.exception?.localizedMessage ?: "Failed to send the verification email."
-                onFailure(errorMessage)
+                onFailure(task.exception)
             }
         }
     }

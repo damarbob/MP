@@ -1,7 +1,8 @@
 package id.monpres.app.model
 
+import android.content.Context
 import android.os.Parcelable
-import com.google.firebase.firestore.DocumentSnapshot
+import id.monpres.app.R
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -10,28 +11,19 @@ data class VehicleType(
     var name: String? = null,
 ) : Parcelable {
     companion object {
-        // Convert Firestore DocumentSnapshot to VehicleType object
-        fun fromDocumentSnapshot(document: DocumentSnapshot): VehicleType? {
-            return document.toObject(VehicleType::class.java)?.apply {
-                id = document.id
-            }
-        }
+        const val CAR_ID = "CAR"
+        const val MOTORCYCLE_ID = "MOTORCYCLE"
+        const val OTHER_ID = "OTHER"
 
         // Generate sample list of vehicles
-        fun getSampleList(): List<VehicleType> {
+        fun getSampleList(context: Context): List<VehicleType> {
             return listOf(
-                VehicleType("CAR", "Car"),
-                VehicleType("MOTORCYCLE", "Motorcycle"),
-                VehicleType("HELICOPTER", "Helicopter"),
+                VehicleType(CAR_ID, context.getString(R.string.car)),
+                VehicleType(MOTORCYCLE_ID, context.getString(R.string.motorcycle)),
+                VehicleType(OTHER_ID, context.getString(R.string.other)),
+
             )
         }
-    }
-
-    // Convert VehicleType to Firestore compatible map
-    fun toFirestoreMap(): Map<String, Any?> {
-        return mapOf(
-            "name" to name,
-        )
     }
 }
 

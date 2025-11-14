@@ -49,8 +49,6 @@ class MainApplication : Application() {
             )
         }
 
-//        DynamicColors.applyToActivitiesIfAvailable(this)
-
         serviceTypes = listOf(
             ServiceType(
                 "internal",

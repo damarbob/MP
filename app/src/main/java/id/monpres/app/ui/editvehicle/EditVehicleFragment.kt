@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -16,6 +17,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
+import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentEditVehicleBinding
 import id.monpres.app.enums.VehiclePowerSource
@@ -36,6 +38,7 @@ class EditVehicleFragment : BaseFragment() {
 
     /* View models */
     private val viewModel: EditVehicleViewModel by viewModels()
+    private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* Args */
     private val args: EditVehicleFragmentArgs by navArgs()
@@ -82,14 +85,10 @@ class EditVehicleFragment : BaseFragment() {
             WindowInsetsCompat.CONSUMED
         }
 
-        /* Observe */
-        // Observe vehicle types
-        viewModel.vehicleTypes.observe(viewLifecycleOwner) {
-            vehicleTypes = it
-            setDropdownsOptions()
-            setFormsValues()
-            setupListeners()
-        }
+        vehicleTypes = VehicleType.getSampleList(requireContext())
+        setDropdownsOptions()
+        setFormsValues()
+        setupListeners()
 
         setFormMarks()
 
@@ -149,9 +148,11 @@ class EditVehicleFragment : BaseFragment() {
                 }
 
                 // Update vehicle
-                observeUiStateOneShot(viewModel.updateVehicle(editedVehicle), {
-                    it.isEnabled = true
-                }) {
+                observeUiStateOneShot(
+                    mainGraphViewModel.updateVehicle(editedVehicle),
+                    {
+                        it.isEnabled = true
+                    }) {
                     Toast.makeText(
                         requireContext(),
                         getString(R.string.vehicle_updated), Toast.LENGTH_SHORT

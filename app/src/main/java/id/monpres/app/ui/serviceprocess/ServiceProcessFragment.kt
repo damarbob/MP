@@ -120,7 +120,6 @@ class ServiceProcessFragment : BaseFragment() {
     private var aerialDistanceToTargetInMeters: Float = 40000000f
 
     private var currentUser: MontirPresisiUser? = null
-    private var selectedPaymentMethod: PaymentMethod? = null
 
     // Permission request launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -203,7 +202,7 @@ class ServiceProcessFragment : BaseFragment() {
             price = OrderService.getPriceFromOrderItems(orderItems)
             Log.d(TAG, "OrderItems: $orderItems")
             observeUiStateOneShot(
-                viewModel.updateOrderService(
+                mainGraphViewModel.updateOrderService(
                     orderService.copy(
                         status = if (orderService.status?.serviceNextProcess() == OrderStatus.WAITING_FOR_PAYMENT) OrderStatus.WAITING_FOR_PAYMENT else orderService.status,
                         updatedAt = Timestamp.now(),
@@ -243,18 +242,11 @@ class ServiceProcessFragment : BaseFragment() {
         val selectedPaymentId =
             prefs.getString("payment_method_id", PaymentMethod.CASH_ID) ?: PaymentMethod.CASH_ID
 
-        selectedPaymentMethod =
+        val selectedPaymentMethod =
             PaymentMethod.getDefaultPaymentMethodById(requireContext(), selectedPaymentId)
-
-        // Bottom sheet initializer
-        paymentMethodBottomSheet = PaymentMethodBottomSheetFragment.newInstance(
-            selectedPaymentMethod?.id ?: PaymentMethod.CASH_ID // TODO: change to real id
-        )
-        paymentGuideBottomSheet = PaymentGuideBottomSheetFragment.newInstance(
-            guideResId = selectedPaymentMethod?.guideRes,
-        )
-
-        updatePaymentMethodUI()
+        if (selectedPaymentMethod != null) {
+            viewModel.onPaymentMethodSelected(selectedPaymentMethod)
+        }
 
         handlePaymentMethodResult()
     }
@@ -305,6 +297,16 @@ class ServiceProcessFragment : BaseFragment() {
                 observePartnerLiveLocation()
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedPaymentMethod.collect { paymentMethod ->
+                    if (paymentMethod != null) {
+                        binding.fragmentServiceProcessTextViewPaymentMethod.text = paymentMethod.name
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -324,7 +326,7 @@ class ServiceProcessFragment : BaseFragment() {
 
                 TransitionManager.beginDelayedTransition(binding.root, AutoTransition())
                 // Show/hide payment section based on status
-                if (orderService.status == OrderStatus.WAITING_FOR_PAYMENT) {
+                if (status == OrderStatus.WAITING_FOR_PAYMENT) {
                     binding.fragmentServiceProcessLinearLayoutPaymentMethodContainer.visibility =
                         View.VISIBLE
                 } else {
@@ -337,7 +339,7 @@ class ServiceProcessFragment : BaseFragment() {
                 showCancelButton(status == OrderStatus.ORDER_PLACED)
                 showActionButton(!isClosed)
 
-                if (orderService.status == OrderStatus.ON_THE_WAY) {
+                if (status == OrderStatus.ON_THE_WAY) {
                     checkLocationSettingsAndStartService()
                 }
             }
@@ -353,12 +355,21 @@ class ServiceProcessFragment : BaseFragment() {
 
         // Dismiss bottom sheet if status is not waiting for payment
         if (status != OrderStatus.WAITING_FOR_PAYMENT) {
-            if (paymentMethodBottomSheet.isAdded) {
+            if (::paymentMethodBottomSheet.isInitialized && paymentMethodBottomSheet.isAdded) {
                 paymentMethodBottomSheet.dismiss()
             }
-            if (paymentGuideBottomSheet.isAdded) {
+            if (::paymentGuideBottomSheet.isInitialized && paymentGuideBottomSheet.isAdded) {
                 paymentGuideBottomSheet.dismiss()
             }
+        }
+
+        // Disable button if order is on the way and distance is greater than minimum
+        if (role == UserRole.PARTNER && status == OrderStatus.ON_THE_WAY && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE) {
+            binding.fragmentServiceProcessActButton.isLocked = true
+            binding.fragmentServiceProcessTextViewWarningMessage.visibility = View.VISIBLE
+        } else {
+            binding.fragmentServiceProcessActButton.isLocked = false
+            binding.fragmentServiceProcessTextViewWarningMessage.visibility = View.GONE
         }
     }
 
@@ -401,6 +412,8 @@ class ServiceProcessFragment : BaseFragment() {
 
         binding.fragmentServiceProcessTextViewCurrentDistance.text =
             getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance))
+
+        binding.fragmentServiceProcessTextViewWarningMessage.text = getString(R.string.haven_t_arrived_at_the_location_yet, numberFormatterUseCase(aerialDistanceToTargetInMeters))
     }
 
     // New helper functions for distance calculation
@@ -578,7 +591,7 @@ class ServiceProcessFragment : BaseFragment() {
 
         binding.fragmentServiceProcessButtonCancel.setOnClickListener {
             observeUiStateOneShot(
-                viewModel.updateOrderService(
+                mainGraphViewModel.updateOrderService(
                     orderService.copy(
                         updatedAt = Timestamp.now(),
                         status = OrderStatus.CANCELLED
@@ -687,8 +700,9 @@ class ServiceProcessFragment : BaseFragment() {
         }
 
         binding.fragmentServiceProcessButtonChangePaymentMethod.setOnClickListener {
+            val currentSelectedPaymentMethod = viewModel.selectedPaymentMethod.value
             paymentMethodBottomSheet = PaymentMethodBottomSheetFragment.newInstance(
-                selectedPaymentMethod?.id ?: PaymentMethod.CASH_ID // TODO: change to real id
+                currentSelectedPaymentMethod?.id ?: PaymentMethod.CASH_ID // TODO: change to real id
             )
 
             paymentMethodBottomSheet.show(
@@ -698,7 +712,8 @@ class ServiceProcessFragment : BaseFragment() {
         }
 
         binding.fragmentServiceProcessButtonPaymentGuide.setOnClickListener {
-            if (selectedPaymentMethod == null) {
+            val currentSelectedPaymentMethod = viewModel.selectedPaymentMethod.value
+            if (currentSelectedPaymentMethod == null) {
                 Toast.makeText(
                     requireContext(),
                     getString(R.string.please_select_a_payment_method_first),
@@ -706,7 +721,7 @@ class ServiceProcessFragment : BaseFragment() {
                 ).show()
                 return@setOnClickListener
             }
-            if (selectedPaymentMethod?.guideRes == null) {
+            if (currentSelectedPaymentMethod.guideRes == null) {
                 Toast.makeText(
                     requireContext(),
                     getString(R.string.no_guide_available_for_this_payment_method),
@@ -716,7 +731,7 @@ class ServiceProcessFragment : BaseFragment() {
             }
 
             paymentGuideBottomSheet = PaymentGuideBottomSheetFragment.newInstance(
-                guideResId = selectedPaymentMethod?.guideRes
+                guideResId = currentSelectedPaymentMethod.guideRes
             )
             paymentGuideBottomSheet.show(parentFragmentManager, PaymentGuideBottomSheetFragment.TAG)
         }
@@ -724,15 +739,18 @@ class ServiceProcessFragment : BaseFragment() {
 
     private fun updateOrderStatus(view: SlideToActView) {
         observeUiStateOneShot(
-            viewModel.updateOrderService(
+            mainGraphViewModel.updateOrderService(
                 orderService.copy(
                     updatedAt = Timestamp.now(),
                     status = orderService.status?.serviceNextProcess(),
                     orderItems = orderItems,
                     price = price
                 )
-            )
+            ), onEmpty = {
+                view.isLocked = true
+            }
         ) {
+            view.isLocked = false
             // This block runs after the ViewModel update is successful.
             // You might want to navigate away or show a success message.
             // For now, we just reset the slider on success.
@@ -951,8 +969,7 @@ class ServiceProcessFragment : BaseFragment() {
                 bundle.getParcelable(PaymentMethodBottomSheetFragment.KEY_PAYMENT_METHOD)
             }
             if (result != null) {
-                selectedPaymentMethod = result
-                updatePaymentMethodUI()
+                viewModel.onPaymentMethodSelected(result)
 
                 // Save the selected payment method ID to preferences
                 val prefs =
@@ -963,11 +980,6 @@ class ServiceProcessFragment : BaseFragment() {
                 // viewModel.updateOrderPaymentMethod(orderService.id, result.id)
             }
         }
-    }
-
-    private fun updatePaymentMethodUI() {
-        binding.fragmentServiceProcessTextViewPaymentMethod.text =
-            selectedPaymentMethod?.name ?: getString(R.string.not_selected)
     }
 
     override fun onDestroyView() {

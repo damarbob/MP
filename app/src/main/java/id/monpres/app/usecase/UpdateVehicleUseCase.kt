@@ -13,5 +13,4 @@ class UpdateVehicleUseCase @Inject constructor(private val firestore: FirebaseFi
         val vehicleCollection = firestore.collection(Vehicle.COLLECTION)
         vehicleCollection.document(vehicle.id).set(vehicle, SetOptions.merge()).await()
     }
-
 }

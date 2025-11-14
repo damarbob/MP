@@ -37,6 +37,7 @@ abstract class BaseFragment : Fragment() {
         flow: Flow<UiState<T>>,
         lifecycleState: Lifecycle.State = Lifecycle.State.STARTED,
         onEmpty: () -> Unit = {},
+        onError: () -> Unit = {},
         onSuccess: (data: T) -> Unit,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -72,7 +73,14 @@ abstract class BaseFragment : Fragment() {
                             onEmpty()
                         }
 
-                        is UiState.Error -> {}
+                        is UiState.Error -> {
+                            if (thisFlowIsLoading == true) {
+                                activeLoaders.decrementAndGet()
+                            }
+                            thisFlowIsLoading = false
+                            showLoading(false)
+                            onError()
+                        }
                     }
                 }
             }
@@ -90,6 +98,7 @@ abstract class BaseFragment : Fragment() {
     protected fun <T> observeUiStateOneShot(
         flow: Flow<UiState<T>>,
         onEmpty: () -> Unit = {},
+        onError: () -> Unit = {},
         onComplete: (data: T) -> Unit
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -121,7 +130,12 @@ abstract class BaseFragment : Fragment() {
                         return@collect // Stop collecting.
                     }
 
-                    is UiState.Error -> {}
+                    is UiState.Error -> {
+                        activeLoaders.decrementAndGet()
+                        showLoading(false)
+                        onError()
+                        return@collect // Stop collecting.
+                    }
                 }
             }
         }

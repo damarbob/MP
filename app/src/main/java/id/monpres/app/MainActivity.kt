@@ -39,18 +39,19 @@ import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.bumptech.glide.Glide
 import com.dotlottie.dlplayer.Mode
+import com.faltenreich.skeletonlayout.Skeleton
+import com.faltenreich.skeletonlayout.createSkeleton
+import com.google.android.material.color.DynamicColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
-import com.google.gson.Gson
 import com.lottiefiles.dotlottie.core.model.Config
-import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.libraries.ActivityRestartable
-import id.monpres.app.model.OrderService
+import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
@@ -58,15 +59,14 @@ import id.monpres.app.service.OrderServiceLocationTrackingService
 import id.monpres.app.state.NavigationGraphState
 import id.monpres.app.state.UserEligibilityState
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
-import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetOrderServicesUseCase
-import id.monpres.app.usecase.ResendVerificationEmailUseCase
+import id.monpres.app.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.io.IOException
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -92,9 +92,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private val mainGraphViewModel: MainGraphViewModel by viewModels()
 
     /* Use cases */
-    private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
-    private val resendVerificationEmailUseCase = ResendVerificationEmailUseCase()
-
     @Inject
     lateinit var getOrderServicesUseCase: GetOrderServicesUseCase
     private val getColorFromAttrUseCase = GetColorFromAttrUseCase()
@@ -111,9 +108,11 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private var optionsMenu: Menu? = null
     val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
+    private lateinit var skeleton: Skeleton
 
-    /* Variables */
-    private lateinit var serviceOrders: List<OrderService>
+    /* Others */
+    @Inject
+    lateinit var networkConnectivityObserver: NetworkConnectivityObserver
 
     /* Permissions */
     private val permissionQueue: MutableList<String> =
@@ -165,21 +164,13 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        networkConnectivityObserver.registerNetworkCallback()
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             v.setPadding(insets.left, 0, insets.right, 0)
-            windowInsets
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainAppBarLayout) { v, windowInsets ->
-            val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            v.setPadding(
-                insets.left,
-                insets.top,
-                insets.right,
-                0
-            )
             windowInsets
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.navHostFragmentActivityMain) { v, windowInsets ->
@@ -214,17 +205,17 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         setupNavControllerListeners()
 
         /* Testing. TODO: Remove on production */
-        getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
-            result.onSuccess { orders ->
-                for (order in orders) {
-                    val orderJson = Gson().toJson(order.vehicle)
-                    Log.d(TAG, "Order: $orderJson")
-                }
-            }
-                .onFailure { t ->
-                    Log.e(TAG, t.localizedMessage ?: t.message ?: "Unknown error")
-                }
-        }
+//        getOrderServicesUseCase("q0qvQRf8CoboX31463nS0nZVIqF3") { result ->
+//            result.onSuccess { orders ->
+//                for (order in orders) {
+//                    val orderJson = Gson().toJson(order.vehicle)
+//                    Log.d(TAG, "Order: $orderJson")
+//                }
+//            }
+//                .onFailure { t ->
+//                    Log.e(TAG, t.localizedMessage ?: t.message ?: "Unknown error")
+//                }
+//        }
     }
 
     private fun setupLottie() {
@@ -241,31 +232,31 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
 //            .themeId("darkTheme") // Set initial theme
 //            .layout(Fit.FIT, LayoutUtil.Alignment.Center) // Set layout configuration
             .build()
-        binding.activityMainLoadingLottieView.load(config)
-        binding.activityMainLoadingLottieView.addEventListener(object : DotLottieEventListener {
-            override fun onLoad() {
-                super.onLoad()
-                binding.activityMainLoadingLottieView.visibility = View.VISIBLE
-                binding.activityMainLoadingLottieView.play()
-            }
-
-            override fun onLoadError() {
-                super.onLoadError()
-                binding.activityMainLoadingLottieView.visibility = View.GONE
-            }
-
-            override fun onError(error: Throwable) {
-                super.onError(error)
-                Log.e(TAG, "Lottie error: $error")
-                binding.activityMainLoadingLottieView.visibility = View.GONE
-            }
-
-            override fun onLoadError(error: Throwable) {
-                super.onLoadError(error)
-                Log.e(TAG, "Lottie error: $error")
-                binding.activityMainLoadingLottieView.visibility = View.GONE
-            }
-        })
+//        binding.activityMainLoadingLottieView.load(config)
+//        binding.activityMainLoadingLottieView.addEventListener(object : DotLottieEventListener {
+//            override fun onLoad() {
+//                super.onLoad()
+//                binding.activityMainLoadingLottieView.visibility = View.VISIBLE
+//                binding.activityMainLoadingLottieView.play()
+//            }
+//
+//            override fun onLoadError() {
+//                super.onLoadError()
+//                binding.activityMainLoadingLottieView.visibility = View.GONE
+//            }
+//
+//            override fun onError(error: Throwable) {
+//                super.onError(error)
+//                Log.e(TAG, "Lottie error: $error")
+//                binding.activityMainLoadingLottieView.visibility = View.GONE
+//            }
+//
+//            override fun onLoadError(error: Throwable) {
+//                super.onLoadError(error)
+//                Log.e(TAG, "Lottie error: $error")
+//                binding.activityMainLoadingLottieView.visibility = View.GONE
+//            }
+//        })
     }
 
     private val locationDialog by lazy {
@@ -387,14 +378,29 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     }
 
     private fun setupObservers() {
-        // --- NEW OBSERVER FOR ERROR EVENTS ---
+        // Observer for network connection
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isConnected.collect {
+                    Log.d(TAG, "isConnected: $it")
+                    TransitionManager.beginDelayedTransition(binding.root, AutoTransition().apply {
+                        duration = 150L
+                    })
+                    binding.activityMainLinearLayoutConnectionError.visibility = if (it) View.GONE else View.VISIBLE
+                    handleConnectionChange(it)
+                }
+            }
+        }
+
+        // Observer for error events
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // This collector will run whenever the activity is started
                 // and stop when it's stopped, preventing background UI work.
-                viewModel.errorEvent.collect { errorMessage ->
+                viewModel.errorEvent.collect { exception ->
+                    val message = ErrorLocalizer.getLocalizedError(this@MainActivity, exception)
                     // Show the error message in a Toast or a Snackbar
-                    Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -402,13 +408,11 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // This collector will run whenever the activity is started
                 // and stop when it's stopped, preventing background UI work.
-                mainGraphViewModel.errorEvent.collect { exception ->
+                mainGraphViewModel.errorEvent.collect { throwable ->
                     // Show a Toast, Snackbar, or Dialog
-                    val errorMessage = when (exception) {
-                        is IOException -> "Network error. Please check your connection."
-                        else -> "An unexpected error occurred."
-                    }
-                    Log.e(TAG, errorMessage, exception)
+                    val errorMessage =
+                        ErrorLocalizer.getLocalizedError(this@MainActivity, throwable)
+                    Log.e(TAG, errorMessage, throwable)
                     Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
@@ -450,15 +454,22 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             }
         }
 
-        viewModel.mainLoadingState.observe(this) {
-            TransitionManager.beginDelayedTransition(binding.root, AutoTransition().apply {
-                duration = 300L
-            })
-            binding.apply {
-                navHostFragmentActivityMain.visibility = if (it) View.GONE else View.VISIBLE
-                activityMainLoadingStateLayout.visibility = if (it) View.VISIBLE else View.GONE
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.mainLoadingState.collect {
+                    Log.d(TAG, "mainLoadingState: $it")
+                    TransitionManager.beginDelayedTransition(binding.root, AutoTransition().apply {
+                        duration = 150L
+                    })
+//                    binding.apply {
+//                        navHostFragmentActivityMain.visibility = if (it) View.GONE else View.VISIBLE
+//                        activityMainLoadingStateLayout.visibility =
+//                            if (it) View.VISIBLE else View.GONE
+//                    }
+                    if (it) skeleton.showSkeleton() else skeleton.showOriginal()
+                    handleNotificationIntent(intent)
+                }
             }
-            handleNotificationIntent(intent)
         }
 
         // --- NEW OBSERVERS FOR REFACTORED LOGIC ---
@@ -520,6 +531,8 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
             auth.currentUser?.displayName
         navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainEmail).text =
             auth.currentUser?.email
+
+        skeleton = binding.navHostFragmentActivityMain.createSkeleton()
     }
 
     private fun setupUIListeners() {
@@ -888,5 +901,36 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
         application.startService(intent)
         Log.d(TAG, "MainActivity requested to STOP all Location Services.")
+    }
+
+    private fun handleConnectionChange(isConnected: Boolean) {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainAppBarLayout) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(
+                insets.left,
+                if (isConnected) insets.top else 0,
+                insets.right,
+                0
+            )
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.activityMainLinearLayoutConnectionError) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, insets.top, insets.right, 0)
+            windowInsets
+        }
+        ViewCompat.requestApplyInsets(binding.activityMainAppBarLayout)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        networkConnectivityObserver.cleanup()
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        networkConnectivityObserver.registerNetworkCallback()
     }
 }

@@ -147,19 +147,30 @@ class OrderServiceDetailFragment : Fragment() {
 
     private fun getScreenShotFromView(v: View): Bitmap? {
         // create a bitmap object
-        var screenshot: Bitmap? = null
+        var screenshot: Bitmap?
         try {
-            // inflate screenshot object
-            // with Bitmap.createBitmap it
-            // requires three parameters
-            // width and height of the view and
-            // the background color
-            screenshot = createBitmap(v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888)
+            // Use the view's actual width and height, not the measured ones ---
+            // measuredWidth can sometimes be 0 if the view is not yet laid out.
+            screenshot = createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
+
             // Now draw this bitmap on a canvas
             val canvas = Canvas(screenshot)
+
+            // Draw the window's background color first ---
+            // Get the theme's surface color to use as a base to avoid pure white/black.
+            val bgColor = MaterialColors.getColor(v.context, com.google.android.material.R.attr.colorSurface, 0)
+            canvas.drawColor(bgColor)
+
+            // Draw the view's own background (e.g., rounded corners shape) ---
+            v.background?.draw(canvas)
+
+            // Draw the view's content (text, children, etc.) on top ---
             v.draw(canvas)
+
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to capture screenshot because:" + e.message)
+            Log.e(TAG, "Failed to capture screenshot because: " + e.message)
+            // Return null explicitly on failure
+            return null
         }
         // return the bitmap
         return screenshot

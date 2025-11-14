@@ -106,6 +106,7 @@ dependencies {
     // Room
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.preference)
     ksp(libs.androidx.room.compiler)
 
     // Hilt (DI)
@@ -150,4 +151,11 @@ dependencies {
     implementation(libs.libphonenumber)
 
     implementation(libs.play.services.location)
+
+    // Preference
+    implementation(libs.androidx.preference.ktx)
+    implementation(libs.androidx.datastore.preferences)
+
+    // Skeleton layout
+    implementation(libs.skeletonlayout)
 }

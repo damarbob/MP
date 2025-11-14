@@ -9,7 +9,8 @@
     android:clipToPadding="false"
     tools:context=".MainActivity">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <RelativeLayout
+        android:id="@+id/activityMainParentLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -18,7 +19,9 @@
             android:id="@+id/activityMainAppBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipToPadding="false">
+            android:clipToPadding="false"
+            android:layout_below="@id/activityMainLinearLayoutConnectionError"
+            app:layout_dodgeInsetEdges="top">
 
             <!-- Toolbar button (for menu) -->
             <com.google.android.material.appbar.MaterialToolbar
@@ -37,37 +40,57 @@
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:defaultNavHost="true"
             android:clipToPadding="false"
-            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
+            app:defaultNavHost="true"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+            android:layout_below="@id/activityMainAppBarLayout"/>
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/activityMainLoadingStateLayout"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:divider="@drawable/divider_gap_16"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical"-->
+<!--            android:showDividers="middle"-->
+<!--            app:layout_dodgeInsetEdges="top">-->
+
+<!--            <com.lottiefiles.dotlottie.core.widget.DotLottieAnimation-->
+<!--                android:id="@+id/activityMainLoadingLottieView"-->
+<!--                android:layout_width="256dp"-->
+<!--                android:layout_height="256dp"-->
+<!--                app:dotLottie_autoplay="true"-->
+<!--                app:dotLottie_loop="true"-->
+<!--                app:dotLottie_speed="1.0"-->
+<!--                app:dotLottie_src="@raw/car" />-->
+
+<!--            <com.google.android.material.textview.MaterialTextView-->
+<!--                style="@style/Widget.App.H5.Bold"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="@string/loading" />-->
+<!--        </LinearLayout>-->
 
         <LinearLayout
-            android:id="@+id/activityMainLoadingStateLayout"
+            android:id="@+id/activityMainLinearLayoutConnectionError"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:divider="@drawable/divider_gap_16"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:background="?colorError"
             android:gravity="center"
-            android:showDividers="middle">
-
-            <com.lottiefiles.dotlottie.core.widget.DotLottieAnimation
-                android:id="@+id/activityMainLoadingLottieView"
-                android:layout_width="256dp"
-                android:layout_height="256dp"
-                app:dotLottie_autoplay="true"
-                app:dotLottie_loop="true"
-                app:dotLottie_speed="1.0"
-                app:dotLottie_src="@raw/car"
-                />
+            android:padding="2dp"
+            app:layout_insetEdge="top">
 
             <com.google.android.material.textview.MaterialTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                style="@style/Widget.App.H5.Bold"
-                android:text="@string/loading"/>
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/no_internet_connection"
+                android:textColor="?colorOnError" />
         </LinearLayout>
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </RelativeLayout>
 
     <!-- Container for contents of drawer - use NavigationView to make configuration easier -->
     <com.google.android.material.navigation.NavigationView

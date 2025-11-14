@@ -29,6 +29,7 @@ import id.monpres.app.databinding.FragmentHomeBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
+import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.Vehicle
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
@@ -58,6 +59,7 @@ class HomeFragment : BaseFragment() {
     private lateinit var orderServiceAdapter: OrderServiceAdapter
 
     private var vehicles: List<Vehicle> = emptyList()
+    private var currentUser: MontirPresisiUser? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,7 +132,15 @@ class HomeFragment : BaseFragment() {
             }
 
             fragmentHomeButtonAddVehicle.setOnClickListener {
-                findNavController().navigate(R.id.action_homeFragment_to_insertVehicleFragment)
+                if (currentUser != null) {
+                    findNavController().navigate(R.id.action_homeFragment_to_insertVehicleFragment)
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.error_network),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
 
             fragmentHomeButtonSeeAllHistory.setOnClickListener {
@@ -158,9 +168,7 @@ class HomeFragment : BaseFragment() {
                 when (serviceId) {
                     // Quick Service (temp id) TODO: Finalize ID
                     "1" -> {
-                        if (vehicles.isEmpty()) {
-                            handleNoVehicle()
-                        } else {
+                        handleServiceClicked {
                             findNavController().navigate(
                                 HomeFragmentDirections.actionHomeFragmentToQuickServiceFragment(
                                     serviceId
@@ -169,15 +177,14 @@ class HomeFragment : BaseFragment() {
                         }
                     }
                     // Scheduled Service (temp id) TODO: Finalize ID
-                    "2" ->
-                        if (vehicles.isEmpty()) {
-                            handleNoVehicle()
-                        } else {
+                    "2" -> {
+                        handleServiceClicked {
                             findNavController().navigate(
                                 R.id.action_homeFragment_to_scheduledServiceFragment,
                                 bundleOf(Pair("serviceId", serviceId))
                             )
                         }
+                    }
                     // Component Replacement (temp id) TODO: Finalize ID
                     "3" ->
                         Toast.makeText(
@@ -185,6 +192,19 @@ class HomeFragment : BaseFragment() {
                             getString(R.string.coming_soon),
                             Toast.LENGTH_SHORT
                         ).show()
+                }
+            }
+
+            private fun handleServiceClicked(action: () -> Unit) {
+                when {
+                    currentUser == null -> Toast.makeText(
+                        requireContext(),
+                        getString(R.string.error_network),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    vehicles.isEmpty() -> handleNoVehicle()
+
+                    else -> action()
                 }
             }
         })
@@ -242,6 +262,14 @@ class HomeFragment : BaseFragment() {
                 if (vehicles.isNotEmpty()) View.VISIBLE else View.GONE
             binding.fragmentHomeLinearLayoutVehicleEmptyState.visibility =
                 if (vehicles.isNotEmpty()) View.GONE else View.VISIBLE
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainGraphViewModel.currentUser.collect { currentUser ->
+                    this@HomeFragment.currentUser = currentUser
+                }
+            }
         }
     }
 

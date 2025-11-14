@@ -7,7 +7,7 @@ import com.google.firebase.auth.auth
 class CheckEmailVerificationUseCase {
     operator fun invoke(
         onEmailVerified: (Boolean) -> Unit,
-        onFailure: (String) -> Unit
+        onFailure: (Exception?) -> Unit
     ) {
         val user: FirebaseUser? = Firebase.auth.currentUser
         user?.reload()?.addOnCompleteListener { task ->
@@ -15,8 +15,7 @@ class CheckEmailVerificationUseCase {
                 val isVerified = user.isEmailVerified
                 onEmailVerified(isVerified)
             } else {
-                val errorMessage = task.exception?.localizedMessage ?: "Failed to check the user’s email verification status."
-                onFailure(errorMessage)
+                onFailure(task.exception)
             }
         }
     }

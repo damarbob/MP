@@ -9,12 +9,14 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.MainActivity
+import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentInsertVehicleBinding
 import id.monpres.app.enums.VehiclePowerSource
@@ -34,6 +36,7 @@ class InsertVehicleFragment : BaseFragment() {
 
     /* View models */
     private val viewModel: InsertVehicleViewModel by viewModels()
+    private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* Bindings */
     private lateinit var binding: FragmentInsertVehicleBinding
@@ -74,12 +77,8 @@ class InsertVehicleFragment : BaseFragment() {
             WindowInsetsCompat.CONSUMED
         }
 
-        /* Observe */
-        // Observe vehicle types
-        viewModel.vehicleTypes.observe(viewLifecycleOwner) {
-            vehicleTypes = it
-            setDropdownsOptions()
-        }
+        vehicleTypes = VehicleType.getSampleList(requireContext())
+        setDropdownsOptions()
 
         setupListeners()
         setFormMarks()
@@ -133,8 +132,8 @@ class InsertVehicleFragment : BaseFragment() {
                             fragmentInsertVehicleTextInputLayoutVehiclePowerOutput.editText?.text.toString()
                         seat =
                             fragmentInsertVehicleTextInputLayoutVehicleSeat.editText?.text.toString()
-                        typeId = vehicleTypes.find {
-                            it.name.equals(
+                        typeId = vehicleTypes.find { vehicleType ->
+                            vehicleType.name.equals(
                                 fragmentInsertVehicleDropdownVehicleType.text.toString(),
                                 true
                             )
@@ -147,11 +146,13 @@ class InsertVehicleFragment : BaseFragment() {
                     }
                 }
 
-                observeUiStateOneShot(viewModel.insertVehicle(newVehicle), {
+                observeUiStateOneShot(mainGraphViewModel.insertVehicle(newVehicle), {
                     it.isEnabled = true
                 }) {
-                    Toast.makeText(requireContext(),
-                        getString(R.string.vehicle_added), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.vehicle_added), Toast.LENGTH_SHORT
+                    ).show()
                     findNavController().popBackStack()
                 }
             } else {

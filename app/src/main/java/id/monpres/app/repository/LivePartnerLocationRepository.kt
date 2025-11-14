@@ -3,10 +3,12 @@ package id.monpres.app.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import id.monpres.app.model.LivePartnerLocation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,5 +50,5 @@ class LivePartnerLocationRepository @Inject constructor(
             }
             // This is crucial: removes the listener when the Flow is cancelled.
             awaitClose { listener.remove() }
-        }
+        }.flowOn(Dispatchers.IO)
 }

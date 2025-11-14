@@ -5,9 +5,11 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.UserRole
+import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.Vehicle
@@ -15,13 +17,17 @@ import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.repository.VehicleRepository
 import id.monpres.app.service.OrderServiceLocationTrackingService
+import id.monpres.app.state.ConnectionState
 import id.monpres.app.state.UiState
 import id.monpres.app.state.UiState.Empty
 import id.monpres.app.state.UiState.Error
 import id.monpres.app.state.UiState.Loading
 import id.monpres.app.state.UiState.Success
+import id.monpres.app.utils.NetworkConnectivityObserver
 import id.monpres.app.utils.takeUntilSignal
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -31,8 +37,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -42,7 +52,9 @@ class MainGraphViewModel @Inject constructor(
     private val vehicleRepository: VehicleRepository,
     private val sessionManager: SessionManager,
     private val userRepository: UserRepository,
-    private val application: Application
+    private val application: Application,
+    private val networkConnectivityObserver: NetworkConnectivityObserver,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
     companion object {
         private val TAG = MainGraphViewModel::class.simpleName
@@ -73,23 +85,48 @@ class MainGraphViewModel @Inject constructor(
     private val _errorEvent = MutableSharedFlow<Throwable>()
     val errorEvent: SharedFlow<Throwable> = _errorEvent.asSharedFlow()
 
-    private lateinit var currentUser: MontirPresisiUser
-
-    // To keep track of orders for which notifications have been shown/updated
-    // Key: OrderID, Value: LastNotifiedStatus
-    // TODO: Remove this if not needed
-    private val notifiedOrderStatusMap = mutableMapOf<String, OrderStatus>()
-    private var justOpenedFromNotificationForOrderId: String? = null
+    private val _currentUser: MutableStateFlow<MontirPresisiUser?> = MutableStateFlow(null)
+    val currentUser: StateFlow<MontirPresisiUser?> = _currentUser.asStateFlow()
 
     init {
         // Start observing data as soon as this ViewModel is created
         Log.d(TAG, "ViewModel init")
-        viewModelScope.launch {
-            currentUser = userRepository.userRecord.filterNotNull().first()
-            observeDataByRole(currentUser)
+        viewModelScope.launch(Dispatchers.Default) {
+            networkConnectivityObserver.networkStatus.collect { status ->
+                when (status.state) {
+                    ConnectionState.Connected -> {
+                        if (auth.currentUser != null && _currentUser.value?.id != auth.currentUser?.uid) {
+                            try {
+                                _currentUser.value = withTimeout(TimeUnit.SECONDS.toMillis(10)) {
+                                    userRepository.userRecord.filterNotNull().first()
+                                }
+                                currentUser.value?.let { observeDataByRole(it) }
 
-            manageLocationServiceLifecycle()
+                                manageLocationServiceLifecycle()
+                            } catch (e: Exception) {
+                                changeStates()
+                                _errorEvent.emit(e)
+                            }
+                        }
+                    }
+
+                    ConnectionState.Disconnected -> {
+                        changeStates()
+                    }
+                }
+            }
         }
+    }
+
+    private fun changeStates() {
+        _userOrderServicesState.value =
+            if (_userOrderServicesState.value == Loading) Empty else _userOrderServicesState.value
+        _userVehiclesState.value =
+            if (_userVehiclesState.value == Loading) Empty else _userVehiclesState.value
+        _partnerOrderServicesState.value =
+            if (_partnerOrderServicesState.value == Loading) Empty else _partnerOrderServicesState.value
+        _openedOrderServiceState.value =
+            if (_openedOrderServiceState.value == Loading) Empty else _openedOrderServiceState.value
     }
 
     fun observeDataByRole(user: MontirPresisiUser) {
@@ -103,7 +140,7 @@ class MainGraphViewModel @Inject constructor(
     }
 
     private fun observeUserOrderServices() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             orderServiceRepository.observeOrderServicesByUserId()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
                 .onStart { _userOrderServicesState.value = Loading }
@@ -129,7 +166,7 @@ class MainGraphViewModel @Inject constructor(
     }
 
     private fun observePartnerOrderServices() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             orderServiceRepository.observeOrderServicesByPartnerId()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
                 .onStart { _partnerOrderServicesState.value = Loading }
@@ -168,7 +205,7 @@ class MainGraphViewModel @Inject constructor(
             return
         }
 
-        openedOrderJob = viewModelScope.launch {
+        openedOrderJob = viewModelScope.launch(Dispatchers.Default) {
             masterListFlow.collect { listState ->
                 when (listState) {
                     is Loading -> _openedOrderServiceState.value = Loading
@@ -195,7 +232,7 @@ class MainGraphViewModel @Inject constructor(
     }
 
     private fun observeUserVehicles() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             vehicleRepository.getVehiclesByUserIdFlow(this)
                 .takeUntilSignal(sessionManager.externalSignOutSignal) // Stop observation on logout
                 .onStart {
@@ -223,8 +260,8 @@ class MainGraphViewModel @Inject constructor(
     }
 
     private fun manageLocationServiceLifecycle() {
-        viewModelScope.launch {
-            val role = currentUser.role
+        viewModelScope.launch(Dispatchers.Default) {
+            val role = currentUser.value?.role
             val orderFlow = when (role) {
                 UserRole.CUSTOMER -> userOrderServicesState
                 UserRole.PARTNER -> partnerOrderServicesState
@@ -287,6 +324,124 @@ class MainGraphViewModel @Inject constructor(
         }
         application.startService(intent)
         Log.d(TAG, "ViewModel requested to STOP Location Service.")
+    }
+
+    fun updateOrderService(orderService: OrderService): Flow<UiState<OrderService>> = flow {
+        Log.d(TAG, "Updating order service: $orderService")
+        // Emit Loading state first.
+        emit(Loading)
+
+        if (!networkConnectivityObserver.isConnected()) {
+            _errorEvent.emit(IOException(ErrorLocalizer.FIREBASE_PENDING_WRITE))
+            emit(Empty)
+        }
+
+        try {
+            Log.d(TAG, "Trying to update orderService: $orderService")
+            orderServiceRepository.updateOrderService(orderService)
+
+            Log.d(TAG, "Updated orderService: $orderService")
+            // On success, emit the Success state.
+            emit(Success(orderService))
+        } catch (e: Exception) {
+            _errorEvent.emit(e)
+            Log.e(TAG, "Error updating orderService", e)
+            emit(Empty)
+        }
+    }.catch { e ->
+        Log.e(TAG, "Error updating orderService", e)
+        if (e is CancellationException) {
+            throw e
+        }
+        _errorEvent.emit(e)
+        emit(Empty)
+    }
+
+    /**
+     * Updates a vehicle.
+     * This now correctly returns a Flow that `observeUiStateOneShot` can consume.
+     * It emits Loading, then attempts the update, and emits Success or Error.
+     */
+    fun updateVehicle(vehicle: Vehicle): Flow<UiState<Vehicle>> = flow {
+        Log.d(TAG, "Updating vehicle: $vehicle")
+        // Emit Loading state first.
+        emit(Loading)
+
+        if (!networkConnectivityObserver.isConnected()) {
+            _errorEvent.emit(IOException(ErrorLocalizer.FIREBASE_PENDING_WRITE))
+            emit(Error(""))
+        }
+
+        try {
+            Log.d(TAG, "Trying to update vehicle: $vehicle")
+            // Perform the suspend function call to the repository.
+            // Make sure your repository's updateVehicle function is a 'suspend' function.
+            val updatedVehicle =
+                vehicleRepository.updateVehicle(vehicle.copy(userId = currentUser.value?.id))
+
+            Log.d(TAG, "Updated vehicle: $updatedVehicle")
+            // On success, emit the Success state.
+            emit(Success(updatedVehicle))
+        } catch (e: Exception) {
+            _errorEvent.emit(e)
+            Log.e(TAG, "Error updating vehicle", e)
+            emit(Empty)
+        }
+    }.catch { e ->
+        Log.e(TAG, "Error updating vehicle", e)
+        if (e is CancellationException) {
+            throw e
+        }
+        _errorEvent.emit(e)
+        // If the repository call fails, the catch block will execute.
+        // We emit the error to be handled by a separate error observer in the Fragment.
+        // For observeUiStateOneShot, we can just let it end or emit Empty.
+        // In this case, not emitting anything in catch is fine, as the flow will just end on an exception.
+        // Or you could emit an empty state if your helper handles it.
+        // Let's assume the error is handled by a global error SharedFlow and this flow just terminates.
+        emit(Empty)
+//        throw e // Re-throwing ensures the flow completes with an error, which can be caught elsewhere.
+    }
+
+    fun insertVehicle(vehicle: Vehicle): Flow<UiState<Vehicle>> = flow {
+        Log.d(TAG, "Insert vehicle: $vehicle")
+        // Emit Loading state first.
+        emit(Loading)
+
+        if (!networkConnectivityObserver.isConnected()) {
+            _errorEvent.emit(IOException(ErrorLocalizer.FIREBASE_PENDING_WRITE))
+            emit(Error(""))
+        }
+
+        try {
+            Log.d(TAG, "Trying to insert vehicle: $vehicle")
+            // Perform the suspend function call to the repository.
+            // Make sure your repository's updateVehicle function is a 'suspend' function.
+            val newVehicle =
+                vehicleRepository.insertVehicle(vehicle)
+
+            Log.d(TAG, "New vehicle: $newVehicle")
+            // On success, emit the Success state.
+            emit(Success(newVehicle))
+        } catch (e: Exception) {
+            _errorEvent.emit(e)
+            Log.e(TAG, "Error insert vehicle", e)
+            emit(Empty)
+        }
+    }.catch { e ->
+        Log.e(TAG, "Error Insert vehicle", e)
+        if (e is CancellationException) {
+            throw e
+        }
+        _errorEvent.emit(e)
+        // If the repository call fails, the catch block will execute.
+        // We emit the error to be handled by a separate error observer in the Fragment.
+        // For observeUiStateOneShot, we can just let it end or emit Empty.
+        // In this case, not emitting anything in catch is fine, as the flow will just end on an exception.
+        // Or you could emit an empty state if your helper handles it.
+        // Let's assume the error is handled by a global error SharedFlow and this flow just terminates.
+        emit(Empty)
+//        throw e // Re-throwing ensures the flow completes with an error, which can be caught elsewhere.
     }
 
     fun getCurrentUser() = userRepository.getCurrentUserRecord()

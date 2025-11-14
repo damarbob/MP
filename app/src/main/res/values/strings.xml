@@ -293,4 +293,39 @@
     <string name="accept_user">Accept User</string>
     <string name="reject_user">Reject User</string>
     <string name="delete_user">Delete User</string>
+
+    <string name="follow_system">Follow system</string>
+    <string name="language">Language</string>
+    <string name="dark_mode">Dark mode</string>
+    <string name="light_mode">Light mode</string>
+    <string name="car">Car</string>
+    <string name="motorcycle">Motorcycles</string>
+    <string name="no_internet_connection">No internet connection</string>
+    <string name="operation_postponed_until_online">Operation postponed until online</string>
+
+    <!-- Firebase Auth Errors -->
+    <string name="error_invalid_email">Please enter a valid email address</string>
+    <string name="error_wrong_password">Incorrect password. Please try again</string>
+    <string name="error_user_not_found">No account found with this email</string>
+    <string name="error_user_disabled">This account has been disabled</string>
+    <string name="error_email_in_use">This email is already registered</string>
+    <string name="error_weak_password">Password is too weak. Use at least 6 characters</string>
+    <string name="error_auth_generic">Authentication failed. Please try again</string>
+
+    <!-- Firestore Errors -->
+    <string name="error_document_not_found">Data not found</string>
+    <string name="error_permission_denied">You don\'t have permission to access this data</string>
+    <string name="error_firestore_generic">Failed to load data. Please try again</string>
+    <string name="error_unauthenticated">User not authenticated</string>
+
+    <!-- Storage Errors -->
+    <string name="error_storage_permission">Storage permission required to save files</string>
+    <string name="error_file_not_found">File not found</string>
+    <string name="error_storage_full">Storage is full. Please free up some space</string>
+    <string name="error_storage_generic">Failed to save file. Please try again</string>
+
+    <!-- Generic Errors -->
+    <string name="error_network">Network error. Please check your connection</string>
+    <string name="error_timeout">Request timed out. Please try again</string>
+    <string name="error_unknown">Something went wrong. Please try again</string>
 </resources>
