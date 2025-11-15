@@ -2,6 +2,7 @@ package id.monpres.app.ui.adapter
 
 import android.util.SparseBooleanArray
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.util.isEmpty
 import androidx.core.util.isNotEmpty
@@ -9,6 +10,7 @@ import androidx.core.util.size
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import id.monpres.app.R
 import id.monpres.app.databinding.ItemTwoLineBinding
 import id.monpres.app.model.Vehicle
 
@@ -22,12 +24,12 @@ import id.monpres.app.model.Vehicle
  * @property onItemSelected Lambda to be invoked when an item's selection state changes.
  */
 class VehicleAdapter(
-    private val onItemClick: (Vehicle) -> Unit, // Regular click
+    private val onItemClick: (Vehicle, View) -> Unit, // Regular click
     private val onSelectionModeChanged: (Boolean) -> Unit, // To notify Fragment about CAB
     private val onItemSelected: (Vehicle) -> Unit // To notify when an item is selected/deselected
 ) : ListAdapter<Vehicle, VehicleAdapter.ViewHolder>(VehicleDiffCallback()) {
 
-    constructor(onItemClick: (Vehicle) -> Unit) : this(onItemClick, {}, {}) {
+    constructor(onItemClick: (Vehicle, View) -> Unit) : this(onItemClick, {}, {}) {
         this.activateLongClickListener = false
     }
 
@@ -57,6 +59,7 @@ class VehicleAdapter(
                 isCheckable = true
                 isChecked = isSelected // Use state_checked
             }
+            binding.root.transitionName = binding.root.resources.getString(R.string.transition_name_item, vehicle.id)
 
             binding.root.setOnClickListener {
                 val position = absoluteAdapterPosition
@@ -65,7 +68,7 @@ class VehicleAdapter(
                     if (isInSelectionMode) {
                         toggleSelection(position, vehicle)
                     } else {
-                        onItemClick(vehicle)
+                        onItemClick(vehicle, binding.root)
                     }
                 }
             }

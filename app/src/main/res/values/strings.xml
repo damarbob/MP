@@ -333,4 +333,8 @@
     <string name="error_network">Network error. Please check your connection</string>
     <string name="error_timeout">Request timed out. Please try again</string>
     <string name="error_unknown">Something went wrong. Please try again</string>
+    <string name="transition_name_item" translatable="false">transition_name_item_%1$s</string>
+    <string name="edit_vehicle_transition_name" translatable="false">edit_vehicle_transition_name</string>
+    <string name="service_process_transition_name" translatable="false">service_process_transition_name</string>
+    <string name="order_detail_transition_name" translatable="false">order_detail_transition_name</string>
 </resources>

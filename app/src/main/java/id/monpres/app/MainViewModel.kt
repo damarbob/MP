@@ -1,7 +1,9 @@
 package id.monpres.app
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -37,6 +39,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,6 +54,7 @@ class MainViewModel @Inject constructor(
     appPreferences: AppPreferences,
     private val networkConnectivityObserver: NetworkConnectivityObserver,
     private val getUserVerificationStatusUseCase: GetUserVerificationStatusUseCase,
+    private val application: Application
 ) : ViewModel() {
     companion object {
         private val TAG = MainViewModel::class.simpleName
@@ -317,44 +321,42 @@ class MainViewModel @Inject constructor(
     }
 
     fun signOut() {
-        val userId = auth.currentUser?.uid
-        if (userId == null) {
-            performSignOut() // If no user, just sign out
-            return
-        }
-
-        // Clear the local record
-        userRepository.clearRecord()
-        orderServiceRepository.clearRecord()
-        _isUserVerified.value = null
-
-        // Get the current FCM token
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                Log.d(TAG, "Removing FCM token: $token for user: $userId")
-                userRepository.removeFcmToken(token, {
-                    performSignOut()
-                }, {
-                    performSignOut() // If error, just sign out
-                })
-            } else {
-                Log.w(
-                    TAG,
-                    "Could not get FCM token for removal, signing out anyway.",
-                    task.exception
-                )
-                performSignOut()
-            }
-        }
-    }
-
-    private fun performSignOut() {
         viewModelScope.launch {
-            sessionManager.triggerSignOut()
-            _signOutEvent.emit(Unit)  // Signal to UI
+
+            try {
+                // Get FCM token and remove it from the repository and database
+                Log.d(TAG, "Attempting to get FCM token for removal...")
+                val token = FirebaseMessaging.getInstance().token.await()
+                Log.d(TAG, "Got FCM token. Removing from repository...")
+                userRepository.removeFcmToken(token)
+                Log.d(TAG, "FCM token removed.")
+
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not get/remove FCM token, signing out anyway.", e)
+            }
+
+            try {
+                val credentialManager = CredentialManager.create(application)
+                credentialManager.clearCredentialState(ClearCredentialStateRequest())
+            } catch (e: Exception) {
+                _errorEvent.emit(e)
+                Log.e(TAG, "Error clearing credential state", e)
+            }
+
+            // Clear the local record
+            userRepository.clearRecord()
+            orderServiceRepository.clearRecord()
+            _isUserVerified.value = null
+
+            // Perform the final sign-out actions ---
+            Log.d(TAG, "Triggering session manager and signing out from Firebase...")
+            sessionManager.triggerSignOut() // For other collectors to stop
+            auth.signOut()                 // Firebase sign-out
+
+            // Signal to the UI that all cleanup is complete ---
+            Log.d(TAG, "Sign-out process complete. Emitting event to UI.")
+            _signOutEvent.emit(Unit)       // This tells MainActivity it's safe to navigate
         }
-        auth.signOut()  // Firebase sign-out (no context needed)
     }
 
     fun getCurrentUser() = userRepository.getCurrentUserRecord()

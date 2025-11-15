@@ -1,9 +1,7 @@
 package id.monpres.app.ui.partnerhome
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.activityViewModels
@@ -17,12 +15,13 @@ import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.HeroCarouselStrategy
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainGraphViewModel
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentPartnerHomeBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
-import id.monpres.app.model.OrderService
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
@@ -32,7 +31,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PartnerHomeFragment : BaseFragment() {
+class PartnerHomeFragment : BaseFragment(R.layout.fragment_partner_home) {
 
     companion object {
         fun newInstance() = PartnerHomeFragment()
@@ -43,7 +42,7 @@ class PartnerHomeFragment : BaseFragment() {
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* UI */
-    private lateinit var binding: FragmentPartnerHomeBinding
+    private val binding by viewBinding(FragmentPartnerHomeBinding::bind)
 
     /* Repositories */
     @Inject
@@ -51,17 +50,8 @@ class PartnerHomeFragment : BaseFragment() {
 
     private lateinit var orderServiceAdapter: OrderServiceAdapter
 
-    private var orderServices: List<OrderService> = emptyList()
-    private var ongoingOrders: List<OrderService> = emptyList()
-    private var completedOrders: List<OrderService> = emptyList()
-
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentPartnerHomeBinding.inflate(inflater, container, false)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentPartnerHomeNestedScrollView) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -76,8 +66,6 @@ class PartnerHomeFragment : BaseFragment() {
 
         /* Observers */
         setupObservers()
-
-        return binding.root
     }
 
     private fun setupUI() {
@@ -119,7 +107,7 @@ class PartnerHomeFragment : BaseFragment() {
     }
 
     private fun setupOrderServiceRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService ->
+        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService, root ->
             when (orderService.status) {
                 in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
                     // The status is closed (completed, cancelled, returned, failed)

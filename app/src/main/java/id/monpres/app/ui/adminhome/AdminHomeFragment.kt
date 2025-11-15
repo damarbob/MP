@@ -12,6 +12,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminHomeBinding
 import id.monpres.app.model.Menu
@@ -20,7 +21,7 @@ import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class AdminHomeFragment : Fragment() {
+class AdminHomeFragment : Fragment(R.layout.fragment_admin_home) {
 
     companion object {
         fun newInstance() = AdminHomeFragment()
@@ -31,7 +32,7 @@ class AdminHomeFragment : Fragment() {
     /* Dependencies */
 
     /* UI */
-    private lateinit var binding: FragmentAdminHomeBinding
+    private val binding by viewBinding(FragmentAdminHomeBinding::bind)
 
     private lateinit var menuAdapter: MenuAdapter
 
@@ -45,7 +46,6 @@ class AdminHomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentAdminHomeBinding.inflate(inflater, container, false)
 
         setupUI()
 

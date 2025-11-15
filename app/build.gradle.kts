@@ -158,4 +158,10 @@ dependencies {
 
     // Skeleton layout
     implementation(libs.skeletonlayout)
+
+    // ViewBinding delegation
+    implementation(libs.vbpd)
+
+    // Memory leak check
+    debugImplementation(libs.leakcanary.android)
 }

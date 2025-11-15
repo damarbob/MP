@@ -3,9 +3,7 @@ package id.monpres.app.ui.auth.register
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -15,6 +13,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.LoginActivity
 import id.monpres.app.MainActivity
 import id.monpres.app.R
@@ -22,13 +21,13 @@ import id.monpres.app.databinding.FragmentRegisterBinding
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
 
-class RegisterFragment : Fragment() {
+class RegisterFragment : Fragment(R.layout.fragment_register) {
 
     companion object {
         private val TAG = RegisterFragment::class.simpleName
     }
 
-    private lateinit var binding: FragmentRegisterBinding
+    private val binding by viewBinding(FragmentRegisterBinding::bind)
 
     private val viewModel: RegisterViewModel by viewModels()
 
@@ -42,13 +41,8 @@ class RegisterFragment : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ false)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Inflate the layout for this fragment
-        binding = FragmentRegisterBinding.inflate(layoutInflater, container, false)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Set insets with keyboard
         val insetsWithKeyboardCallback =
             InsetsWithKeyboardCallback(requireActivity().window, 0, null)
@@ -128,8 +122,6 @@ class RegisterFragment : Fragment() {
         binding.registerSignInText.setOnClickListener {
             findNavController().popBackStack()
         }
-
-        return binding.root
     }
 
     private fun isValidated(): Boolean {

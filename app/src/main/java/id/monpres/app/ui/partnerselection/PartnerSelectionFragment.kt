@@ -2,9 +2,7 @@ package id.monpres.app.ui.partnerselection
 
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
@@ -16,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.mapbox.geojson.Point
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentPartnerSelectionBinding
 import id.monpres.app.repository.PartnerRepository
@@ -26,7 +25,7 @@ import id.monpres.app.usecase.GetPartnersUseCase
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PartnerSelectionFragment : Fragment() {
+class PartnerSelectionFragment : Fragment(R.layout.fragment_partner_selection) {
 
     companion object {
         private val TAG = PartnerSelectionFragment::class.java.simpleName
@@ -51,7 +50,7 @@ class PartnerSelectionFragment : Fragment() {
     lateinit var getPartnersUseCase: GetPartnersUseCase
 
     /* UI */
-    private lateinit var binding: FragmentPartnerSelectionBinding
+    private val binding by viewBinding(FragmentPartnerSelectionBinding::bind)
     private lateinit var partnerAdapter: PartnerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,12 +59,8 @@ class PartnerSelectionFragment : Fragment() {
         // TODO: Use the ViewModel
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentPartnerSelectionBinding.inflate(inflater, container, false)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         ViewCompat.setOnApplyWindowInsetsListener(binding.quickServiceScrollView) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -83,7 +78,6 @@ class PartnerSelectionFragment : Fragment() {
                     getString(R.string.user)
                 ), Toast.LENGTH_SHORT
             ).show()
-            return binding.root
         }
 
         // Arguments
@@ -92,9 +86,9 @@ class PartnerSelectionFragment : Fragment() {
 
         // Set current user location. Use selected location if available, otherwise use current user location.
         partnerRepository.setCurrentUserLocation(
-            selectedLocationPoint?.latitude() ?: (currentUser.locationLat?.toDoubleOrNull()
+            selectedLocationPoint?.latitude() ?: (currentUser?.locationLat?.toDoubleOrNull()
                 ?: 0.0),
-            selectedLocationPoint?.longitude() ?: (currentUser.locationLng?.toDoubleOrNull() ?: 0.0)
+            selectedLocationPoint?.longitude() ?: (currentUser?.locationLng?.toDoubleOrNull() ?: 0.0)
         )
 
         partnerAdapter = PartnerAdapter { partner ->
@@ -122,7 +116,5 @@ class PartnerSelectionFragment : Fragment() {
                 Toast.makeText(requireContext(), it.message, Toast.LENGTH_SHORT).show()
             }
         }
-
-        return binding.root
     }
 }

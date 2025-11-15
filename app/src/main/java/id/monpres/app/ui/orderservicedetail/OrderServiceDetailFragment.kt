@@ -3,13 +3,12 @@ package id.monpres.app.ui.orderservicedetail
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
@@ -22,8 +21,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.transition.MaterialSharedAxis
+import com.google.android.material.transition.MaterialContainerTransform
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
 import id.monpres.app.enums.UserRole
@@ -42,7 +42,7 @@ import java.text.DateFormat
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class OrderServiceDetailFragment : Fragment() {
+class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_detail) {
 
     companion object {
         fun newInstance() = OrderServiceDetailFragment()
@@ -53,7 +53,7 @@ class OrderServiceDetailFragment : Fragment() {
 
     private val args: OrderServiceDetailFragmentArgs by navArgs()
 
-    private lateinit var binding: FragmentOrderServiceDetailBinding
+    private val binding by viewBinding(FragmentOrderServiceDetailBinding::bind)
 
     private lateinit var orderService: OrderService
     private var currentUser: MontirPresisiUser? = null
@@ -70,18 +70,24 @@ class OrderServiceDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         // Set the transition for this fragment
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+        sharedElementEnterTransition = MaterialContainerTransform().apply {
+            drawingViewId = R.id.nav_host_fragment_activity_main
+            scrimColor = Color.TRANSPARENT
+            setAllContainerColors(
+                MaterialColors.getColor(
+                    requireContext(),
+                    com.google.android.material.R.attr.colorSurfaceContainer,
+                    resources.getColor(
+                        R.color.md_theme_surfaceContainer,
+                        requireContext().theme
+                    )
+                )
+            )
+        }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentOrderServiceDetailBinding.inflate(inflater, container, false)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceDetailNestedScrollView) { v, windowInsets ->
             val insets =
@@ -100,8 +106,6 @@ class OrderServiceDetailFragment : Fragment() {
 
         setupView()
         setupListeners()
-
-        return binding.root
     }
 
     private fun saveInvoiceAsImage() {

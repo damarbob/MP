@@ -2,9 +2,7 @@ package id.monpres.app.ui.scheduledservice
 
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -18,6 +16,7 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
@@ -32,11 +31,11 @@ import java.util.Calendar
 import java.util.Locale
 
 @AndroidEntryPoint
-class ScheduledServiceFragment : BaseServiceFragment() {
+class ScheduledServiceFragment : BaseServiceFragment(R.layout.fragment_scheduled_service) {
     private val viewModel: ScheduledServiceViewModel by viewModels()
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
-    private lateinit var fragBinding: FragmentScheduledServiceBinding
+    private val fragBinding by viewBinding(FragmentScheduledServiceBinding::bind)
     private var selectedDateMillis: Long? = null
     private val datePicker by lazy {
         MaterialDatePicker.Builder.datePicker()
@@ -46,29 +45,6 @@ class ScheduledServiceFragment : BaseServiceFragment() {
     }
 
     private val args: ScheduledServiceFragmentArgs by navArgs()
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        fragBinding = FragmentScheduledServiceBinding.inflate(inflater, container, false)
-        binding = fragBinding
-
-        // Set insets with keyboard
-        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.root) { v, windowInsets ->
-            val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
-            v.setPadding(insets.left, 0, insets.right, insets.bottom)
-            windowInsets
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.scheduledServiceScrollView) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(insets.left, 0, insets.right, insets.bottom)
-            WindowInsetsCompat.CONSUMED
-        }
-
-        return fragBinding.root
-    }
 
     override fun getBaseOrderService() = OrderService().apply {
         selectedDateMillis = this@ScheduledServiceFragment.selectedDateMillis?.toDouble()
@@ -90,6 +66,20 @@ class ScheduledServiceFragment : BaseServiceFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding = fragBinding
+
+        // Set insets with keyboard
+        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.scheduledServiceScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
         service = MainApplication.services?.find { it.id == args.serviceId }
 
         viewLifecycleOwner.lifecycleScope.launch {

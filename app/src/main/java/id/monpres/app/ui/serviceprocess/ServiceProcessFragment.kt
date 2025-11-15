@@ -7,15 +7,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
@@ -47,8 +46,8 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialFade
-import com.google.android.material.transition.MaterialSharedAxis
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
 import com.mapbox.geojson.Point
@@ -59,6 +58,7 @@ import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.ncorti.slidetoact.SlideToActView
 import com.ncorti.slidetoact.SlideToActView.OnSlideCompleteListener
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentServiceProcessBinding
@@ -88,7 +88,7 @@ import java.util.concurrent.TimeUnit
 
 
 @AndroidEntryPoint
-class ServiceProcessFragment : BaseFragment() {
+class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
 
     companion object {
         fun newInstance() = ServiceProcessFragment()
@@ -102,7 +102,7 @@ class ServiceProcessFragment : BaseFragment() {
 
     private val args: ServiceProcessFragmentArgs by navArgs()
 
-    private lateinit var binding: FragmentServiceProcessBinding
+    private val binding by viewBinding(FragmentServiceProcessBinding::bind)
 
     private lateinit var orderService: OrderService
     private var orderItems: ArrayList<OrderItem>? = null
@@ -163,18 +163,24 @@ class ServiceProcessFragment : BaseFragment() {
         super.onCreate(savedInstanceState)
 
         // Set the transition for this fragment
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+        sharedElementEnterTransition = MaterialContainerTransform().apply {
+            drawingViewId = R.id.nav_host_fragment_activity_main
+            scrimColor = Color.TRANSPARENT
+            setAllContainerColors(
+                MaterialColors.getColor(
+                    requireContext(),
+                    com.google.android.material.R.attr.colorSurfaceContainer,
+                    resources.getColor(
+                        R.color.md_theme_surfaceContainer,
+                        requireContext().theme
+                    )
+                )
+            )
+        }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentServiceProcessBinding.inflate(inflater, container, false)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentServiceProcessNestedScrollView) { v, windowInsets ->
             val insets =
@@ -228,11 +234,6 @@ class ServiceProcessFragment : BaseFragment() {
             }
         }
 
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupObservers()
         setupListeners()
@@ -809,9 +810,6 @@ class ServiceProcessFragment : BaseFragment() {
      * This is the entry point for the partner's location setup flow.
      */
     private fun checkLocationSettingsAndStartService() {
-        // This check is for the partner who needs to SEND location data.
-        if (currentUser?.role != UserRole.PARTNER) return
-
         if (ContextCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
@@ -858,7 +856,7 @@ class ServiceProcessFragment : BaseFragment() {
                         IntentSenderRequest.Builder(exception.resolution).build()
                     // The result of this dialog will be handled by 'locationSettingsRequestLauncher'.
                     locationSettingsRequestLauncher.launch(intentSenderRequest)
-                } catch (sendEx: Exception) {
+                } catch (e: Exception) {
                     // Ignore the error.
                 }
             }

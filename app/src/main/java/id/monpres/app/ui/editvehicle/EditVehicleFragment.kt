@@ -1,9 +1,8 @@
 package id.monpres.app.ui.editvehicle
 
+import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
@@ -14,9 +13,9 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.progressindicator.LinearProgressIndicator
-import com.google.android.material.transition.MaterialSharedAxis
+import com.google.android.material.transition.MaterialContainerTransform
 import dagger.hilt.android.AndroidEntryPoint
-import id.monpres.app.MainActivity
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentEditVehicleBinding
@@ -29,7 +28,7 @@ import id.monpres.app.ui.BaseFragment
 import id.monpres.app.utils.markRequiredInRed
 
 @AndroidEntryPoint
-class EditVehicleFragment : BaseFragment() {
+class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
 
     companion object {
         fun newInstance() = EditVehicleFragment()
@@ -44,7 +43,7 @@ class EditVehicleFragment : BaseFragment() {
     private val args: EditVehicleFragmentArgs by navArgs()
 
     /* Bindings */
-    private lateinit var binding: FragmentEditVehicleBinding
+    private val binding by viewBinding(FragmentEditVehicleBinding::bind)
 
     /* Variables */
     private var vehicle: Vehicle? = null
@@ -58,17 +57,28 @@ class EditVehicleFragment : BaseFragment() {
         super.onCreate(savedInstanceState)
 
         // Set the transition for this fragment
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+//        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+//        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+//        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+//        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+        sharedElementEnterTransition = MaterialContainerTransform().apply {
+            drawingViewId = R.id.nav_host_fragment_activity_main
+            scrimColor = Color.TRANSPARENT
+//            setAllContainerColors(
+//                MaterialColors.getColor(
+//                    requireContext(),
+//                    com.google.android.material.R.attr.colorSurfaceContainer,
+//                    resources.getColor(
+//                        R.color.md_theme_surfaceContainer,
+//                        requireContext().theme
+//                    )
+//                )
+//            )
+        }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentEditVehicleBinding.inflate(inflater, container, false)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Get vehicle from arguments
         vehicle = args.vehicle
 
@@ -91,22 +101,6 @@ class EditVehicleFragment : BaseFragment() {
         setupListeners()
 
         setFormMarks()
-
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        (activity as MainActivity).binding.activityMainAppBarLayout.background =
-            binding.root.background
-//        val navController = findNavController()
-//        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
-//        val appBarConfiguration =
-//            AppBarConfiguration(navController.graph, drawerLayout = drawerLayout)
-//
-//        binding.fragmentEditVehicleToolbar.setupWithNavController(
-//            navController,
-//            appBarConfiguration
-//        )
     }
 
     private fun setupListeners() {

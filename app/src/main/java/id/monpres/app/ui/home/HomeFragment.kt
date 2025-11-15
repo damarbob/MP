@@ -1,27 +1,28 @@
 package id.monpres.app.ui.home
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.HeroCarouselStrategy
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
-import id.monpres.app.MainActivity
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
@@ -40,7 +41,7 @@ import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class HomeFragment : BaseFragment() {
+class HomeFragment : BaseFragment(R.layout.fragment_home) {
 
     companion object {
         fun newInstance() = HomeFragment()
@@ -51,7 +52,7 @@ class HomeFragment : BaseFragment() {
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* Bindings */
-    private lateinit var binding: FragmentHomeBinding
+    private val binding by viewBinding(FragmentHomeBinding::bind)
 
     /* UI */
     private lateinit var serviceAdapter: ServiceAdapter
@@ -61,23 +62,10 @@ class HomeFragment : BaseFragment() {
     private var vehicles: List<Vehicle> = emptyList()
     private var currentUser: MontirPresisiUser? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Set the transition for this fragment
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-
-        binding = FragmentHomeBinding.inflate(inflater, container, false)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        postponeEnterTransition()
+        view.doOnPreDraw { startPostponedEnterTransition() }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentHomeNestedScrollView) { v, windowInsets ->
             val insets =
@@ -105,14 +93,6 @@ class HomeFragment : BaseFragment() {
         )
         carousel.layoutManager = CarouselLayoutManager(HeroCarouselStrategy())
 
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        (activity as MainActivity).binding.activityMainAppBarLayout.background =
-            binding.root.background
-
         setupServiceRecyclerView()
         setupVehicleRecyclerView()
         setupOrderServiceRecyclerView()
@@ -128,11 +108,15 @@ class HomeFragment : BaseFragment() {
     private fun setupListeners() {
         with(binding) {
             fragmentHomeButtonSeeAllVehicle.setOnClickListener {
+                exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                 findNavController().navigate(R.id.action_homeFragment_to_vehicleListFragment)
             }
 
             fragmentHomeButtonAddVehicle.setOnClickListener {
                 if (currentUser != null) {
+                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                    reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                     findNavController().navigate(R.id.action_homeFragment_to_insertVehicleFragment)
                 } else {
                     Toast.makeText(
@@ -144,6 +128,8 @@ class HomeFragment : BaseFragment() {
             }
 
             fragmentHomeButtonSeeAllHistory.setOnClickListener {
+                exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                 findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToOrderServiceListFragment())
             }
 
@@ -169,6 +155,8 @@ class HomeFragment : BaseFragment() {
                     // Quick Service (temp id) TODO: Finalize ID
                     "1" -> {
                         handleServiceClicked {
+                            exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                            reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                             findNavController().navigate(
                                 HomeFragmentDirections.actionHomeFragmentToQuickServiceFragment(
                                     serviceId
@@ -179,6 +167,8 @@ class HomeFragment : BaseFragment() {
                     // Scheduled Service (temp id) TODO: Finalize ID
                     "2" -> {
                         handleServiceClicked {
+                            exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                            reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                             findNavController().navigate(
                                 R.id.action_homeFragment_to_scheduledServiceFragment,
                                 bundleOf(Pair("serviceId", serviceId))
@@ -202,6 +192,7 @@ class HomeFragment : BaseFragment() {
                         getString(R.string.error_network),
                         Toast.LENGTH_SHORT
                     ).show()
+
                     vehicles.isEmpty() -> handleNoVehicle()
 
                     else -> action()
@@ -215,6 +206,8 @@ class HomeFragment : BaseFragment() {
             .setTitle(getString(R.string.warning))
             .setMessage(getString(R.string.no_vehicle_has_been_added_yet))
             .setPositiveButton(getString(R.string.okay)) { _, _ ->
+                exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                 findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToInsertVehicleFragment())
             }
             .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
@@ -232,10 +225,14 @@ class HomeFragment : BaseFragment() {
      */
     private fun setupVehicleRecyclerView() {
         // Create adapter with current state
-        vehicleAdapter = VehicleAdapter { vehicle ->
+        vehicleAdapter = VehicleAdapter { vehicle, root ->
+            exitTransition = MaterialElevationScale(false)
+            reenterTransition = MaterialElevationScale(true)
+            val editVehicleTransitionName = getString(R.string.edit_vehicle_transition_name)
+            val extras = FragmentNavigatorExtras(root to editVehicleTransitionName)
             val action = HomeFragmentDirections.actionHomeFragmentToEditVehicleFragment(vehicle)
             findNavController().navigate(
-                action
+                action, extras
             )
         }
 
@@ -274,22 +271,35 @@ class HomeFragment : BaseFragment() {
     }
 
     fun setupOrderServiceRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService ->
+        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService, root ->
             when (orderService.status) {
                 in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
+                    exitTransition = MaterialElevationScale(false)
+                    reenterTransition = MaterialElevationScale(true)
+                    val orderDetailTransitionName =
+                        getString(R.string.order_detail_transition_name)
+                    val extras = FragmentNavigatorExtras(root to orderDetailTransitionName)
                     // The status is closed (completed, cancelled, returned, failed)
-                    findNavController().navigate(
+                    val directions =
                         HomeFragmentDirections.actionHomeFragmentToOrderServiceDetailFragment(
                             orderService, mainGraphViewModel.getCurrentUser()
                         )
+                    findNavController().navigate(
+                        directions, extras
                     )
                 }
 
-                else -> findNavController().navigate(
-                    HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(
-                        orderService.id!!
+                else -> {
+                    exitTransition = MaterialElevationScale(false)
+                    reenterTransition = MaterialElevationScale(true)
+                    val serviceProcessTransitionName =
+                        getString(R.string.service_process_transition_name)
+                    val extras = FragmentNavigatorExtras(root to serviceProcessTransitionName)
+                    val directions = HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(orderService.id!!)
+                    findNavController().navigate(
+                        directions, extras
                     )
-                )
+                }
             }
         }
 

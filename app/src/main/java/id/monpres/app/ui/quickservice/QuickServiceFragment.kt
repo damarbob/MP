@@ -2,9 +2,7 @@ package id.monpres.app.ui.quickservice
 
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -16,6 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
@@ -26,36 +25,13 @@ import id.monpres.app.ui.baseservice.BaseServiceViewModel
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class QuickServiceFragment : BaseServiceFragment() {
+class QuickServiceFragment : BaseServiceFragment(R.layout.fragment_quick_service) {
     private val viewModel: QuickServiceViewModel by viewModels()
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
-    private lateinit var fragBinding: FragmentQuickServiceBinding
+    private val fragBinding by viewBinding(FragmentQuickServiceBinding::bind)
 
     private val args: QuickServiceFragmentArgs by navArgs()
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        fragBinding = FragmentQuickServiceBinding.inflate(inflater, container, false)
-
-        // Set insets with keyboard
-        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.root) { v, windowInsets ->
-            val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
-            v.setPadding(insets.left, 0, insets.right, insets.bottom)
-            windowInsets
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.quickServiceScrollView) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(insets.left, 0, insets.right, insets.bottom)
-            WindowInsetsCompat.CONSUMED
-        }
-
-        binding = fragBinding
-        return fragBinding.root
-    }
 
     override fun getBaseOrderService() = OrderService()
 
@@ -75,6 +51,21 @@ class QuickServiceFragment : BaseServiceFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Set insets with keyboard
+        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(fragBinding.quickServiceScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+
+        binding = fragBinding
+
         service = MainApplication.services?.find { it.id == args.serviceId }
 
         viewLifecycleOwner.lifecycleScope.launch {

@@ -62,7 +62,7 @@ import javax.inject.Inject
  * - Initialize the `binding` property with the appropriate ViewBinding instance.
  */
 @AndroidEntryPoint
-abstract class BaseServiceFragment : Fragment() {
+abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
     protected val TAG = this::class.java.simpleName
 
     /* Properties */

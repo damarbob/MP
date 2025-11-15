@@ -6,7 +6,6 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.EditText
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
@@ -21,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderItemEditorBinding
@@ -35,7 +35,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.ceil
 
-class OrderItemEditorFragment : Fragment() {
+class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
 
     companion object {
         fun newInstance() = OrderItemEditorFragment()
@@ -48,7 +48,7 @@ class OrderItemEditorFragment : Fragment() {
     private val viewModel: OrderItemEditorViewModel by viewModels()
     private val mainViewModel: MainViewModel by activityViewModels()
 
-    private lateinit var binding: FragmentOrderItemEditorBinding
+    private val binding by viewBinding(FragmentOrderItemEditorBinding::bind)
 
     private val args: OrderItemEditorFragmentArgs by navArgs()
 
@@ -68,12 +68,8 @@ class OrderItemEditorFragment : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentOrderItemEditorBinding.inflate(inflater, container, false)
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
             val insets =
@@ -96,7 +92,6 @@ class OrderItemEditorFragment : Fragment() {
 
         setupRecyclerView()
         setupListeners()
-        return binding.root
     }
 
     private fun addAdditionalItems() {
@@ -163,7 +158,7 @@ class OrderItemEditorFragment : Fragment() {
 
     private fun updateTotalPriceView() {
         binding.fragmentOrderItemEditorTextViewTotal.text =
-            "${indonesianCurrencyFormatter(OrderService.getPriceFromOrderItems(items))}"
+            indonesianCurrencyFormatter(OrderService.getPriceFromOrderItems(items))
     }
 
     private fun setupListeners() {

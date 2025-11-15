@@ -7,6 +7,7 @@ firebaseMessagingDirectboot = "25.0.1"
 glide = "4.16.0"
 googleid = "1.1.1"
 hiltAndroid = "2.57"
+leakcanaryAndroid = "2.14"
 libphonenumber = "9.0.17"
 mapbox = "11.16.2"
 firebaseBom = "34.1.0"
@@ -43,6 +44,7 @@ googleDevtoolKsp = "2.2.0-2.0.2"
 firebaseMessaging = "25.0.0"
 firebaseMessagingKtx = "24.1.2"
 preference = "1.2.1"
+vbpd = "2.0.4"
 
 [libraries]
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
@@ -56,6 +58,7 @@ glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
+leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 mapbox = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -91,6 +94,7 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 skeletonlayout = { module = "com.faltenreich:skeletonlayout", version.ref = "skeletonlayout" }
 slidetoact = { module = "com.ncorti:slidetoact", version.ref = "slidetoact" }
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
+vbpd = { module = "dev.androidbroadcast.vbpd:vbpd", version.ref = "vbpd" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

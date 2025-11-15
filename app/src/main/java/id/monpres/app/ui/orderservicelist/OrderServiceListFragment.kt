@@ -1,35 +1,36 @@
 package id.monpres.app.ui.orderservicelist
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
-import id.monpres.app.MainActivity
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainGraphViewModel
+import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceListBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.UserRole
-import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderServiceAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class OrderServiceListFragment : BaseFragment() {
+class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_list) {
 
     companion object {
         fun newInstance() = OrderServiceListFragment()
@@ -38,40 +39,18 @@ class OrderServiceListFragment : BaseFragment() {
     private val viewModel: OrderServiceListViewModel by viewModels()
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
-    private lateinit var binding: FragmentOrderServiceListBinding
+    private val binding by viewBinding(FragmentOrderServiceListBinding::bind)
 
     private lateinit var orderServiceAdapter: OrderServiceAdapter
 
-    private var orderServices: List<OrderService> = emptyList()
-    private var ongoingOrders: List<OrderService> = emptyList()
-    private var completedOrders: List<OrderService> = emptyList()
-    private var cancelledOrders: List<OrderService> = emptyList()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Set the transition for this fragment
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentOrderServiceListBinding.inflate(inflater, container, false)
-
-        setupOrderServiceListRecyclerView()
-        setupOrderServiceListObservers()
-        return binding.root
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as MainActivity).binding.activityMainAppBarLayout.background =
-            binding.root.background
+        postponeEnterTransition()
+        view.doOnPreDraw { startPostponedEnterTransition() }
+
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceListNestedScrollView) { v, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -84,28 +63,47 @@ class OrderServiceListFragment : BaseFragment() {
             windowInsets
         }
 
+        setupOrderServiceListRecyclerView()
+        setupOrderServiceListObservers()
+
         binding.fragmentOrderServiceListChipGroupOrderStatus.setOnCheckedStateChangeListener { group, checkedIds ->
             viewModel.setSelectedChipId(group.checkedChipId)
         }
     }
 
     private fun setupOrderServiceListRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService ->
+        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService, root ->
             when (orderService.status) {
                 in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
+                    exitTransition = MaterialElevationScale(false)
+                    reenterTransition = MaterialElevationScale(true)
+                    val orderDetailTransitionName =
+                        getString(R.string.order_detail_transition_name)
+                    val extras = FragmentNavigatorExtras(root to orderDetailTransitionName)
                     // The status is closed (completed, cancelled, returned, failed)
-                    findNavController().navigate(
+                    val directions =
                         OrderServiceListFragmentDirections.actionOrderServiceListFragmentToOrderServiceDetailFragment(
                             orderService, mainGraphViewModel.getCurrentUser()
                         )
+                    findNavController().navigate(
+                        directions, extras
                     )
                 }
 
-                else -> findNavController().navigate(
-                    OrderServiceListFragmentDirections.actionOrderServiceListFragmentToServiceProcessFragment(
-                        orderService.id!!
+                else -> {
+                    exitTransition = MaterialElevationScale(false)
+                    reenterTransition = MaterialElevationScale(true)
+                    val serviceProcessTransitionName =
+                        getString(R.string.service_process_transition_name)
+                    val extras = FragmentNavigatorExtras(root to serviceProcessTransitionName)
+                    val directions =
+                        OrderServiceListFragmentDirections.actionOrderServiceListFragmentToServiceProcessFragment(
+                            orderService.id!!
+                        )
+                    findNavController().navigate(
+                        directions, extras
                     )
-                )
+                }
             }
         }
 
@@ -143,7 +141,9 @@ class OrderServiceListFragment : BaseFragment() {
                 viewModel.selectedChipId.collect { chipId ->
                     // Ensure the correct chip is visually checked without triggering the listener again.
                     if (binding.fragmentOrderServiceListChipGroupOrderStatus.checkedChipId != chipId) {
-                        binding.fragmentOrderServiceListChipGroupOrderStatus.check(chipId ?: View.NO_ID)
+                        binding.fragmentOrderServiceListChipGroupOrderStatus.check(
+                            chipId ?: View.NO_ID
+                        )
                     }
                 }
             }

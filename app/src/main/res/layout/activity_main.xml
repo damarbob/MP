@@ -20,6 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
+            android:background="?colorSurfaceContainer"
             android:layout_below="@id/activityMainLinearLayoutConnectionError"
             app:layout_dodgeInsetEdges="top">
 

@@ -2,9 +2,7 @@ package id.monpres.app.ui.auth.login
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.widget.doAfterTextChanged
@@ -15,15 +13,16 @@ import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.LoginActivity
 import id.monpres.app.MainActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentLoginBinding
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 
-class LoginFragment : Fragment() {
+class LoginFragment : Fragment(R.layout.fragment_login) {
 
-    private lateinit var binding: FragmentLoginBinding
+    private val binding by viewBinding(FragmentLoginBinding::bind)
 
     private val viewModel: LoginViewModel by viewModels()
 
@@ -37,12 +36,8 @@ class LoginFragment : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ false)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Inflate the layout for this fragment
-        binding = FragmentLoginBinding.inflate(layoutInflater, container, false)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         // Set insets with keyboard
         val insetsWithKeyboardCallback =
@@ -132,8 +127,6 @@ class LoginFragment : Fragment() {
         binding.loginSignUpText.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
-
-        return binding.root
     }
 
     private fun isValidated(): Boolean {

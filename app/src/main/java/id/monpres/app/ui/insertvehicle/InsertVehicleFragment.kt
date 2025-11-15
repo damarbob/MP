@@ -1,9 +1,7 @@
 package id.monpres.app.ui.insertvehicle
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
@@ -15,7 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
-import id.monpres.app.MainActivity
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentInsertVehicleBinding
@@ -28,7 +26,7 @@ import id.monpres.app.ui.BaseFragment
 import id.monpres.app.utils.markRequiredInRed
 
 @AndroidEntryPoint
-class InsertVehicleFragment : BaseFragment() {
+class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
 
     companion object {
         fun newInstance() = InsertVehicleFragment()
@@ -39,7 +37,7 @@ class InsertVehicleFragment : BaseFragment() {
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* Bindings */
-    private lateinit var binding: FragmentInsertVehicleBinding
+    private val binding by viewBinding(FragmentInsertVehicleBinding::bind)
 
     /* Variables */
     private lateinit var vehicleTypes: List<VehicleType>
@@ -51,19 +49,16 @@ class InsertVehicleFragment : BaseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Set the transition for this fragment
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-
-        binding = FragmentInsertVehicleBinding.inflate(inflater, container, false)
 
         // Set the window insets listener (so the keyboard can be detected and views not hide by keyboard)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
@@ -82,23 +77,6 @@ class InsertVehicleFragment : BaseFragment() {
 
         setupListeners()
         setFormMarks()
-
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        (activity as MainActivity).binding.activityMainAppBarLayout.background =
-            binding.root.background
-//        val navController = findNavController()
-//        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
-//        val appBarConfiguration =
-//            AppBarConfiguration(navController.graph, drawerLayout = drawerLayout)
-//
-//        binding.fragmentInsertVehicleToolbar.setupWithNavController(
-//            navController,
-//            appBarConfiguration
-//        )
     }
 
     private fun setupListeners() {

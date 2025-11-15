@@ -1,29 +1,22 @@
 package id.monpres.app.ui.payment
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import dev.androidbroadcast.vbpd.viewBinding
+import id.monpres.app.R
 import id.monpres.app.databinding.BottomSheetPaymentMethodBinding
 import id.monpres.app.model.PaymentMethod
 import id.monpres.app.ui.adapter.PaymentMethodAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 
-class PaymentMethodBottomSheetFragment : BottomSheetDialogFragment() {
+class PaymentMethodBottomSheetFragment : BottomSheetDialogFragment(R.layout.bottom_sheet_payment_method) {
 
-    private lateinit var binding: BottomSheetPaymentMethodBinding
+    private val binding by viewBinding(BottomSheetPaymentMethodBinding::bind)
     private var selectedPaymentMethod: PaymentMethod? = null
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
-        binding = BottomSheetPaymentMethodBinding.inflate(inflater, container, false)
-        return binding.root
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

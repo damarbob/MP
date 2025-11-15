@@ -8,6 +8,7 @@ import id.monpres.app.model.MontirPresisiUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -60,27 +61,16 @@ class UserRepository @Inject constructor(
         return getRecords().find { it.userId == userId }
     }
 
-    fun removeFcmToken(token: String, onSuccess: () -> Unit, onFailure: (() -> Unit)? = null) {
+    suspend fun removeFcmToken(token: String) {
         val currentUserId = auth.currentUser?.uid
 
         if (currentUserId != null) {
             val userDocRef = firestore.collection("users").document(auth.currentUser?.uid!!)
             // Atomically remove the token from the array
             userDocRef.update("fcmTokens", FieldValue.arrayRemove(token))
-                .addOnCompleteListener { removeTask ->
-                    if (!removeTask.isSuccessful) {
-                        Log.w(
-                            TAG,
-                            "FCM token removal failed.",
-                            removeTask.exception
-                        )
-                        onFailure?.invoke()
-                    }
-                    onSuccess()
-                }
+                .await()
         } else {
             Log.w(TAG, "No user is signed in")
-            onFailure?.invoke()
         }
     }
 

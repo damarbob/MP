@@ -28,10 +28,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
                 android:paddingHorizontal="1dp"
-                android:paddingBottom="1dp"
                 android:paddingTop="16dp"
-                android:nestedScrollingEnabled="false" />
+                android:paddingBottom="1dp"
+                android:transitionGroup="true" />
 
             <Space
                 android:layout_width="match_parent"
@@ -47,12 +48,12 @@
         android:layout_height="wrap_content"
         android:indeterminate="true"
         app:hideAnimationBehavior="outward"
+        app:layout_insetEdge="top"
         app:showAnimationBehavior="inward"
         app:trackThickness="6dp"
         app:waveAmplitude="2dp"
         app:wavelength="40dp"
-        app:wavelengthIndeterminate="20dp"
-        app:layout_insetEdge="top"/>
+        app:wavelengthIndeterminate="20dp" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fragmentListVehicleFloatingActionButtonAddVehicle"

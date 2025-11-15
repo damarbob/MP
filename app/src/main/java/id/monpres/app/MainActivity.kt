@@ -23,8 +23,6 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -49,6 +47,7 @@ import com.google.firebase.auth.auth
 import com.lottiefiles.dotlottie.core.model.Config
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
@@ -66,14 +65,13 @@ import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetOrderServicesUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), ActivityRestartable {
+class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestartable {
 
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
@@ -106,7 +104,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     lateinit var getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase
 
     /* UI */
-    lateinit var binding: ActivityMainBinding
+    private val binding by viewBinding(ActivityMainBinding::bind)
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
     private var optionsMenu: Menu? = null
@@ -165,8 +163,6 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
         networkConnectivityObserver.registerNetworkCallback()
 
@@ -479,7 +475,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
                 viewModel.signOutEvent
                     .collect {
                         OrderServiceNotification.cancelAll(this@MainActivity)
-                        clearCredentialsAndNavigate()
+                        navigateToLogin()
                         stopAllTrackingOrder()
                     }
             }
@@ -866,14 +862,7 @@ class MainActivity : AppCompatActivity(), ActivityRestartable {
         }
     }
 
-    private fun clearCredentialsAndNavigate() {
-        // 1. Clear credentials (context operation)
-        val cm = CredentialManager.create(this)
-        lifecycleScope.launch(Dispatchers.IO) {
-            cm.clearCredentialState(ClearCredentialStateRequest())
-        }
-
-        // 2. Navigate immediately (don't wait for credential clearing)
+    private fun navigateToLogin() {
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }

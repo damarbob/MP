@@ -21,6 +21,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication.Companion.APP_REGION
 import id.monpres.app.MainApplication.Companion.userRegion
 import id.monpres.app.databinding.ActivityLoginBinding
@@ -29,7 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity(R.layout.activity_login) {
 
     companion object {
         private val TAG = LoginActivity::class.java.simpleName
@@ -40,14 +41,12 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var credentialManager: CredentialManager
 
     /* Views */
-    private lateinit var binding: ActivityLoginBinding
+    private val binding by viewBinding(ActivityLoginBinding::bind)
     private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(binding.navHostFragmentActivityLogin.id) as NavHostFragment
@@ -83,7 +82,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun runAuthentication() {
         /* Auth */
-        credentialManager = CredentialManager.create(this)
+        credentialManager = CredentialManager.create(application)
         auth = Firebase.auth // Initialize Firebase Auth
         val currentUser = auth.currentUser // Get current user
 
@@ -106,7 +105,7 @@ class LoginActivity : AppCompatActivity() {
             )
             .build()
 
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.Default).launch {
             try {
                 val result = credentialManager.getCredential(
                     request = request,

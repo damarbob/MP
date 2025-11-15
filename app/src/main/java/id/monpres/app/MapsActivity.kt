@@ -30,10 +30,11 @@ import com.mapbox.maps.plugin.gestures.addOnMapClickListener
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.maps.plugin.viewport.viewport
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.databinding.ActivityMapsBinding
 import id.monpres.app.model.MapsActivityExtraData
 
-class MapsActivity : AppCompatActivity(), MapLoadedCallback {
+class MapsActivity : AppCompatActivity(R.layout.activity_maps), MapLoadedCallback {
     companion object {
         private val TAG = MapsActivity::class.java.simpleName
         private val REQUIRED_PERMISSIONS = arrayOf(
@@ -59,7 +60,7 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
     private var annotation: PointAnnotation? = null
 
     /* Views */
-    private lateinit var binding: ActivityMapsBinding
+    private val binding by viewBinding(ActivityMapsBinding::bind)
 
     // Permission request launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -82,8 +83,6 @@ class MapsActivity : AppCompatActivity(), MapLoadedCallback {
         Log.d(TAG, "MapsActivity initialized")
 
         enableEdgeToEdge()
-        binding = ActivityMapsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -27,6 +26,7 @@ import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.mapbox.geojson.Point
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
@@ -44,7 +44,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class ProfileFragment : Fragment() {
+class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
 
     companion object {
         private val TAG = ProfileFragment::class.java.simpleName
@@ -68,7 +68,7 @@ class ProfileFragment : Fragment() {
     private var selectedPrimaryLocationPoint: Point? = null
 
     /* UI */
-    private lateinit var binding: FragmentEditProfileBinding
+    private val binding by viewBinding(FragmentEditProfileBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,18 +83,15 @@ class ProfileFragment : Fragment() {
             }
         Log.d(TAG, "Selected primary location point: $selectedPrimaryLocationPoint")
 
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Set the transition for this fragment
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        binding = FragmentEditProfileBinding.inflate(inflater, container, false)
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
             val insets =
@@ -218,8 +215,6 @@ class ProfileFragment : Fragment() {
                 }
             }
         }
-
-        return binding.root
     }
 
     private fun validateWhatsAppNumber(): Boolean {

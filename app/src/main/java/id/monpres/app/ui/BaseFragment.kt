@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 
-abstract class BaseFragment : Fragment() {
+abstract class BaseFragment(layoutId: Int) : Fragment(layoutId) {
 
     // Counter for active loading operations
     private val activeLoaders = AtomicInteger(0)

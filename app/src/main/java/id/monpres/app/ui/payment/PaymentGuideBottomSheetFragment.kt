@@ -3,9 +3,7 @@ package id.monpres.app.ui.payment
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -15,6 +13,7 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.R
 import id.monpres.app.databinding.BottomSheetPaymentGuideBinding
 import id.monpres.app.usecase.SaveImageToGalleryUseCase
@@ -22,19 +21,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PaymentGuideBottomSheetFragment : BottomSheetDialogFragment() {
-    private lateinit var binding: BottomSheetPaymentGuideBinding
+class PaymentGuideBottomSheetFragment : BottomSheetDialogFragment(R.layout.bottom_sheet_payment_guide) {
+    private val binding by viewBinding(BottomSheetPaymentGuideBinding::bind)
 
     @Inject
     lateinit var saveImageToGalleryUseCase: SaveImageToGalleryUseCase
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding = BottomSheetPaymentGuideBinding.inflate(inflater, container, false)
-        return binding.root
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

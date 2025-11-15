@@ -1,7 +1,6 @@
 package id.monpres.app.ui.vehiclelist
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -9,15 +8,19 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.updateMarginsRelative
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
+import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainActivity
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
@@ -28,7 +31,7 @@ import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.utils.dpToPx
 
 @AndroidEntryPoint
-class VehicleListFragment : BaseFragment() {
+class VehicleListFragment : BaseFragment(R.layout.fragment_vehicle_list) {
 
     companion object {
         fun newInstance() = VehicleListFragment()
@@ -39,28 +42,19 @@ class VehicleListFragment : BaseFragment() {
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
     /* Bindings */
-    private lateinit var binding: FragmentVehicleListBinding
+    private val binding by viewBinding(FragmentVehicleListBinding::bind)
 
     /* Variables */
     private lateinit var vehicleAdapter: VehicleAdapter
     private var actionMode: android.view.ActionMode? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        postponeEnterTransition()
+        view.doOnPreDraw { startPostponedEnterTransition() }
 
-        // Set the transition for this fragment
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-
-        binding = FragmentVehicleListBinding.inflate(inflater, container, false)
 
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentListVehicleNestedScrollView) { v, windowInsets ->
@@ -96,34 +90,22 @@ class VehicleListFragment : BaseFragment() {
         setupVehicleRecyclerView()
         setupVehiclesObservers()
         setupListeners()
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        (activity as MainActivity).binding.activityMainAppBarLayout.background =
-            binding.root.background
-//        val navController = findNavController()
-//        val drawerLayout = (requireActivity() as MainActivity).drawerLayout
-//        val appBarConfiguration =
-//            AppBarConfiguration(navController.graph, drawerLayout = drawerLayout)
-//
-//        binding.fragmentListVehicleToolbar.setupWithNavController(
-//            navController,
-//            appBarConfiguration
-//        )
     }
 
     private fun setupVehicleRecyclerView() {
         // Create adapter with current state
         vehicleAdapter = VehicleAdapter(
-            onItemClick = { vehicle ->
+            onItemClick = { vehicle, root ->
+                exitTransition = MaterialElevationScale(false)
+                reenterTransition = MaterialElevationScale(true)
+                val editVehicleTransitionName = getString(R.string.edit_vehicle_transition_name)
+                val extras = FragmentNavigatorExtras(root to editVehicleTransitionName)
                 val direction =
                     VehicleListFragmentDirections.actionVehicleListFragmentToEditVehicleFragment(
                         vehicle
                     )
                 findNavController().navigate(
-                    direction
+                    direction, extras
                 )
             },
             onSelectionModeChanged = { isInSelectionMode ->
@@ -290,7 +272,8 @@ class VehicleListFragment : BaseFragment() {
 
     private fun updateActionModeTitle() {
         val selectedCount = vehicleAdapter.getSelectedItemCount()
-        actionMode?.title = resources.getQuantityString(R.plurals.x_items_selected, selectedCount, selectedCount)
+        actionMode?.title =
+            resources.getQuantityString(R.plurals.x_items_selected, selectedCount, selectedCount)
     }
 
     override val progressIndicator: LinearProgressIndicator

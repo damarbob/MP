@@ -2,6 +2,7 @@ package id.monpres.app.ui.adapter
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.DiffUtil
@@ -15,7 +16,7 @@ import id.monpres.app.utils.toDateTimeDisplayString
 
 class OrderServiceAdapter(
     private val context: Context,
-    private val onItemClick: (OrderService) -> Unit // Regular click
+    private val onItemClick: (OrderService, View) -> Unit // Regular click
 ) : ListAdapter<OrderService, OrderServiceAdapter.ViewHolder>(OrderServiceDiffCallback()) {
 
     class OrderServiceDiffCallback : DiffUtil.ItemCallback<OrderService>() {
@@ -47,8 +48,10 @@ class OrderServiceAdapter(
             binding.itemTwoLineTextViewFirstLabel.isSelected = true
             binding.itemTwoLineTextViewSecondLabel.isSelected = true
             binding.itemTwoLineTextViewSubtitle.isSelected = true
+
+            binding.root.transitionName = context.getString(R.string.transition_name_item, orderService.id)
             binding.root.setOnClickListener {
-                onItemClick(orderService)
+                onItemClick(orderService, binding.root)
             }
         }
     }

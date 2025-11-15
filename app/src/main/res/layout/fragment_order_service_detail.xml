@@ -19,531 +19,544 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingVertical="16dp">
 
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Material3.CardView.Elevated"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingBottom="64dp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:gravity="center"
+                android:transitionName="@string/order_detail_transition_name"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_max="@dimen/input_field_max_width">
 
                 <LinearLayout
-                    android:id="@+id/fragmentOrderServiceDetailLinearLayoutDetailContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="?colorSurfaceContainer"
-                    android:divider="@drawable/divider_gap_16"
-                    android:gravity="center_horizontal"
-                    android:maxWidth="@dimen/input_field_max_width"
                     android:orientation="vertical"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="32dp"
-                    android:showDividers="middle">
+                    android:paddingBottom="64dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintWidth_max="@dimen/input_field_max_width">
 
                     <LinearLayout
+                        android:id="@+id/fragmentOrderServiceDetailLinearLayoutDetailContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="bottom"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.imageview.ShapeableImageView
-                            android:id="@+id/fragmentOrderServiceDetailImageViewImage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:scaleType="centerCrop"
-                            android:src="@mipmap/ic_launcher_mp_foreground" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textStart"
-                                style="@style/Widget.App.H1.Bold.Primary"
-                                android:textColor="?colorOnSurface"
-                                android:text="@string/invoice"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailTitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceTitleMedium"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailDate"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceBodyMedium"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/fragmentOrderServiceDetailPrice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:autoSizeTextType="uniform"
-                        android:textAlignment="center"
-                        android:textAppearance="?attr/textAppearanceHeadlineMediumEmphasized"
-                        android:textColor="?colorOnSurface"
-                        tools:targetApi="26" />
-
-                    <LinearLayout
-                        android:id="@+id/fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/rounded_large_rectangle_background"
                         android:divider="@drawable/divider_gap_16"
-                        android:orientation="horizontal"
-                        android:padding="16dp"
+                        android:gravity="center_horizontal"
+                        android:maxWidth="@dimen/input_field_max_width"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="32dp"
                         android:showDividers="middle">
 
-                        <com.google.android.material.imageview.ShapeableImageView
-                            android:id="@+id/fragmentOrderServiceDetailImageViewUser"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:layout_gravity="center_vertical"
-                            android:background="?colorSecondaryContainer"
-                            android:minWidth="48dp"
-                            android:minHeight="48dp"
-                            android:src="@drawable/person_24px"
-                            android:tint="?colorOnSecondaryContainer"
-                            app:contentPadding="8dp"
-                            app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
-
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:layout_weight="7"
-                            android:orientation="vertical">
+                            android:gravity="bottom"
+                            android:orientation="horizontal">
 
-                            <TextView
-                                android:id="@+id/fragmentOrderServiceDetailTextViewUserName"
-                                style="@style/Widget.App.H5.Bold.Primary"
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/fragmentOrderServiceDetailImageViewImage"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:ellipsize="end"
-                                android:gravity="center_vertical"
-                                android:maxLines="1"
-                                android:text="@string/title"
-                                android:textAppearance="?attr/textAppearanceTitleLarge" />
+                                android:scaleType="centerCrop"
+                                android:src="@mipmap/ic_launcher_mp_foreground" />
 
-                            <TextView
-                                android:id="@+id/fragmentOrderServiceDetailTextViewUserDetail"
-                                style="@style/Widget.App.P"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/subtitle" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- General details -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/rounded_large_rectangle_background"
-                        android:divider="@drawable/divider_gap_8"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:showDividers="middle">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="fill"
-                            android:showDividers="middle">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/invoice_number"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailInvoiceNumber"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="end"
-                                android:layout_weight="1"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textEnd"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="fill"
-                            android:showDividers="middle">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/payment_method"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailPaymentMethod"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="end"
-                                android:layout_weight="1"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textEnd"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="fill"
-                            android:showDividers="middle">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/partner"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailPartner"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="end"
-                                android:layout_weight="1"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textEnd"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="fill"
-                            android:showDividers="middle">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/vehicle"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailVehicle"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="end"
-                                android:layout_weight="1"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textEnd"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="fill"
-                            android:showDividers="middle">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/issue"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailIssue"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="end"
-                                android:layout_weight="1"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textEnd"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="fill"
-                            android:showDividers="middle">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/description"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailIssueDescription"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="end"
-                                android:layout_weight="1"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textEnd"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                    <!-- Distance detail -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/rounded_large_rectangle_background"
-                        android:divider="@drawable/divider_gap_8"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:showDividers="middle">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_4"
-                            android:orientation="vertical"
-                            android:showDividers="middle">
-
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/partner_location"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
+                                android:orientation="vertical">
 
-                            <TextView
-                                android:id="@+id/fragmentOrderServiceDetailPartnerLocation"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
+                                <com.google.android.material.textview.MaterialTextView
+                                    style="@style/Widget.App.H1.Bold.Primary"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/invoice"
+                                    android:textAlignment="textStart"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailTitle"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailDate"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
                         </LinearLayout>
 
-                        <LinearLayout
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/fragmentOrderServiceDetailPrice"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="center_vertical"
+                            android:autoSizeTextType="uniform"
+                            android:textAlignment="center"
+                            android:textAppearance="?attr/textAppearanceHeadlineMediumEmphasized"
+                            android:textColor="?colorOnSurface"
+                            tools:targetApi="26" />
+
+                        <LinearLayout
+                            android:id="@+id/fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/rounded_large_rectangle_background"
+                            android:divider="@drawable/divider_gap_16"
                             android:orientation="horizontal"
+                            android:padding="16dp"
                             android:showDividers="middle">
 
                             <com.google.android.material.imageview.ShapeableImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:src="@drawable/menu_24px" />
+                                android:id="@+id/fragmentOrderServiceDetailImageViewUser"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:layout_gravity="center_vertical"
+                                android:background="?colorSecondaryContainer"
+                                android:minWidth="48dp"
+                                android:minHeight="48dp"
+                                android:src="@drawable/person_24px"
+                                android:tint="?colorOnSecondaryContainer"
+                                app:contentPadding="8dp"
+                                app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
 
-                            <TextView
-                                android:id="@+id/fragmentOrderServiceDetailDistance"
-                                android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:textAppearance="?attr/textAppearanceBodyMediumEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="7"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/fragmentOrderServiceDetailTextViewUserName"
+                                    style="@style/Widget.App.H5.Bold.Primary"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:ellipsize="end"
+                                    android:gravity="center_vertical"
+                                    android:maxLines="1"
+                                    android:text="@string/title"
+                                    android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+                                <TextView
+                                    android:id="@+id/fragmentOrderServiceDetailTextViewUserDetail"
+                                    style="@style/Widget.App.P"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="@string/subtitle" />
+                            </LinearLayout>
                         </LinearLayout>
 
+                        <!-- General details -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_4"
+                            android:background="@drawable/rounded_large_rectangle_background"
+                            android:divider="@drawable/divider_gap_8"
+                            android:gravity="center_horizontal"
                             android:orientation="vertical"
+                            android:padding="16dp"
                             android:showDividers="middle">
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/service_location"
-                                android:textAppearance="?attr/textAppearanceBodyLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="fill"
+                                android:showDividers="middle">
 
-                            <TextView
-                                android:id="@+id/fragmentOrderServiceDetailServiceLocation"
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/invoice_number"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailInvoiceNumber"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_weight="1"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textEnd"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                            <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="fill"
+                                android:showDividers="middle">
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/payment_method"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailPaymentMethod"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_weight="1"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textEnd"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="fill"
+                                android:showDividers="middle">
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/partner"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailPartner"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_weight="1"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textEnd"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="fill"
+                                android:showDividers="middle">
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/vehicle"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailVehicle"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_weight="1"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textEnd"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="fill"
+                                android:showDividers="middle">
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/issue"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailIssue"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_weight="1"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textEnd"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="fill"
+                                android:showDividers="middle">
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/description"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailIssueDescription"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_weight="1"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textEnd"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Distance detail -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/rounded_large_rectangle_background"
+                            android:divider="@drawable/divider_gap_8"
+                            android:gravity="center_horizontal"
+                            android:orientation="vertical"
+                            android:padding="16dp"
+                            android:showDividers="middle">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_4"
+                                android:orientation="vertical"
+                                android:showDividers="middle">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/partner_location"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <TextView
+                                    android:id="@+id/fragmentOrderServiceDetailPartnerLocation"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:showDividers="middle">
+
+                                <com.google.android.material.imageview.ShapeableImageView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:src="@drawable/menu_24px" />
+
+                                <TextView
+                                    android:id="@+id/fragmentOrderServiceDetailDistance"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAppearance="?attr/textAppearanceBodyMediumEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_4"
+                                android:orientation="vertical"
+                                android:showDividers="middle">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/service_location"
+                                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <TextView
+                                    android:id="@+id/fragmentOrderServiceDetailServiceLocation"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- OrderItem detail -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/rounded_large_rectangle_background"
+                            android:divider="@drawable/divider_gap_8"
+                            android:gravity="center_horizontal"
+                            android:orientation="vertical"
+                            android:padding="16dp"
+                            android:showDividers="middle">
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/orderItem"
+                                android:textAppearance="?attr/textAppearanceLabelSmall"
+                                android:textColor="?colorOnSurface" />
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/fragmentOrderServiceDetailRecyclerViewSummaryDetail"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:nestedScrollingEnabled="false" />
+
+                            <com.google.android.material.divider.MaterialDivider
+                                android:layout_width="match_parent"
+                                android:layout_height="2dp" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:divider="@drawable/divider_gap_8"
+                                android:gravity="fill"
+                                android:showDividers="middle">
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
+                                    android:layout_height="wrap_content"
+                                    android:autoSizeTextType="uniform"
+                                    android:text="@string/total"
+                                    android:textAlignment="textStart"
+                                    android:textAppearance="?attr/textAppearanceTitleLarge"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailSummaryTotal"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="end"
+                                    android:layout_weight="1"
+                                    android:autoSizeTextType="uniform"
+                                    android:textAlignment="textEnd"
+                                    android:textAppearance="?attr/textAppearanceTitleLargeEmphasized"
+                                    android:textColor="?colorOnSurface"
+                                    tools:targetApi="26" />
+                            </LinearLayout>
+
                         </LinearLayout>
 
                     </LinearLayout>
 
-                    <!-- OrderItem detail -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/rounded_large_rectangle_background"
+                        android:layout_marginBottom="64dp"
                         android:divider="@drawable/divider_gap_8"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical"
-                        android:padding="16dp"
-                        android:showDividers="middle">
+                        android:gravity="fill|center_vertical"
+                        android:paddingHorizontal="16dp"
+                        android:showDividers="middle"
+                        android:visibility="gone">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:layout_width="match_parent"
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/fragmentOrderServiceDetailButtonSave"
+                            style="@style/Widget.Material3Expressive.Button"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/orderItem"
-                            android:textAppearance="?attr/textAppearanceLabelSmall"
-                            android:textColor="?colorOnSurface" />
+                            android:layout_weight="1"
+                            android:text="@string/save"
+                            app:icon="@drawable/save_24px"
+                            app:iconGravity="textStart" />
 
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/fragmentOrderServiceDetailRecyclerViewSummaryDetail"
-                            android:layout_width="match_parent"
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/fragmentOrderServiceDetailButtonShare"
+                            style="@style/Widget.Material3Expressive.Button"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:nestedScrollingEnabled="false" />
-
-                        <com.google.android.material.divider.MaterialDivider
-                            android:layout_width="match_parent"
-                            android:layout_height="2dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:divider="@drawable/divider_gap_8"
-                            android:gravity="fill"
-                            android:showDividers="middle">
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                android:layout_height="wrap_content"
-                                android:autoSizeTextType="uniform"
-                                android:text="@string/total"
-                                android:textAlignment="textStart"
-                                android:textAppearance="?attr/textAppearanceTitleLarge"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/fragmentOrderServiceDetailSummaryTotal"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="end"
-                                android:layout_weight="1"
-                                android:autoSizeTextType="uniform"
-                                android:textAlignment="textEnd"
-                                android:textAppearance="?attr/textAppearanceTitleLargeEmphasized"
-                                android:textColor="?colorOnSurface"
-                                tools:targetApi="26" />
-                        </LinearLayout>
-
+                            android:layout_weight="1"
+                            android:text="@string/share"
+                            app:icon="@drawable/share_24px"
+                            app:iconGravity="textStart" />
                     </LinearLayout>
 
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="64dp"
-                    android:divider="@drawable/divider_gap_8"
-                    android:gravity="fill|center_vertical"
-                    android:paddingHorizontal="16dp"
-                    android:visibility="gone"
-                    android:showDividers="middle">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/fragmentOrderServiceDetailButtonSave"
-                        style="@style/Widget.Material3Expressive.Button"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/save"
-                        app:icon="@drawable/save_24px"
-                        app:iconGravity="textStart" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/fragmentOrderServiceDetailButtonShare"
-                        style="@style/Widget.Material3Expressive.Button"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/share"
-                        app:icon="@drawable/share_24px"
-                        app:iconGravity="textStart" />
-                </LinearLayout>
-
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingtoolbar.FloatingToolbarLayout
         android:id="@+id/fragmentOrderServiceDetailFloatingToolbarLayout"
+        style="@style/Widget.Material3.FloatingToolbar.Vibrant"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
-        style="@style/Widget.Material3.FloatingToolbar.Vibrant"
-        app:layout_behavior="com.google.android.material.behavior.HideViewOnScrollBehavior"
-        android:layout_margin="16dp">
+        android:layout_margin="16dp"
+        app:layout_behavior="com.google.android.material.behavior.HideViewOnScrollBehavior">
 
         <!-- floating toolbar sample content -->
         <com.google.android.material.overflow.OverflowLinearLayout
@@ -555,46 +568,46 @@
             <Button
                 android:id="@+id/fragmentOrderServiceDetailButtonSaveAsImage"
                 style="?attr/materialButtonStyle"
-                android:text="@string/save_invoice_as_image"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/save_invoice_as_image"
+                android:text="@string/save_invoice_as_image"
                 app:icon="@drawable/save_24px"
-                app:layout_overflowText="@string/save_invoice_as_image"
-                app:layout_overflowIcon="@drawable/save_24px" />
+                app:layout_overflowIcon="@drawable/save_24px"
+                app:layout_overflowText="@string/save_invoice_as_image" />
 
             <Button
                 android:id="@+id/fragmentOrderServiceDetailButtonSaveAsPdf"
                 style="?attr/materialButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/save_invoice_as_pdf"
                 android:contentDescription="@string/save_invoice_as_pdf"
+                android:text="@string/save_invoice_as_pdf"
                 app:icon="@drawable/save_24px"
-                app:layout_overflowText="@string/save_invoice_as_pdf"
-                app:layout_overflowIcon="@drawable/save_24px" />
+                app:layout_overflowIcon="@drawable/save_24px"
+                app:layout_overflowText="@string/save_invoice_as_pdf" />
 
             <Button
                 android:id="@+id/fragmentOrderServiceDetailButtonShareAsImage"
                 style="?attr/materialButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/share_invoice_as_image"
                 android:contentDescription="@string/share_invoice_as_image"
+                android:text="@string/share_invoice_as_image"
                 app:icon="@drawable/share_24px"
-                app:layout_overflowText="@string/share_invoice_as_image"
-                app:layout_overflowIcon="@drawable/share_24px" />
+                app:layout_overflowIcon="@drawable/share_24px"
+                app:layout_overflowText="@string/share_invoice_as_image" />
 
             <Button
                 android:id="@+id/fragmentOrderServiceDetailButtonShareAsPdf"
                 style="?attr/materialButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/share_invoice_as_pdf"
                 android:contentDescription="@string/share_invoice_as_pdf"
+                android:text="@string/share_invoice_as_pdf"
                 app:icon="@drawable/share_24px"
-                app:layout_overflowText="@string/share_invoice_as_pdf"
-                app:layout_overflowIcon="@drawable/share_24px" />
+                app:layout_overflowIcon="@drawable/share_24px"
+                app:layout_overflowText="@string/share_invoice_as_pdf" />
         </com.google.android.material.overflow.OverflowLinearLayout>
 
     </com.google.android.material.floatingtoolbar.FloatingToolbarLayout>
