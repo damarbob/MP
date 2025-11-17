@@ -1,22 +1,23 @@
 package id.monpres.app.usecase
 
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class CheckEmailVerificationUseCase {
-    operator fun invoke(
-        onEmailVerified: (Boolean) -> Unit,
-        onFailure: (Exception?) -> Unit
-    ) {
-        val user: FirebaseUser? = Firebase.auth.currentUser
-        user?.reload()?.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val isVerified = user.isEmailVerified
-                onEmailVerified(isVerified)
-            } else {
-                onFailure(task.exception)
-            }
+/**
+ * A suspend function UseCase to check the user's email verification status.
+ * This forces a reload of the user's profile from Firebase.
+ */
+class CheckEmailVerificationUseCase @Inject constructor(
+    private val auth: FirebaseAuth
+) {
+    suspend operator fun invoke(): Boolean {
+        try {
+            auth.currentUser?.reload()?.await()
+            return auth.currentUser?.isEmailVerified ?: false
+        } catch (e: Exception) {
+            // If reload fails (e.g., no network), return the last known status
+            return auth.currentUser?.isEmailVerified ?: false
         }
     }
 }

@@ -1,128 +1,142 @@
 package id.monpres.app
 
 import android.app.Application
+import android.content.Intent
 import android.util.Log
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserIdentityRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.ConnectionState
 import id.monpres.app.state.NavigationGraphState
-import id.monpres.app.state.NavigationGraphState.Admin
-import id.monpres.app.state.NavigationGraphState.Customer
-import id.monpres.app.state.NavigationGraphState.Partner
-import id.monpres.app.state.UserEligibilityState
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetUserVerificationStatusUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
+import id.monpres.app.usecase.SignOutUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+
+// --- STATE CLASSES FOR UI ---
+
+/**
+ * Represents all possible dialogs the MainActivity can show.
+ * This centralizes dialog logic.
+ */
+sealed class DialogState {
+    data object None : DialogState()
+    data object EmailVerificationPending : DialogState()
+    data object AdminVerificationPending : DialogState() // Replaces AdminVerification(String)
+    data object AdminVerificationRejected : DialogState() // Replaces AdminVerification(String)
+    data object PartnerMissingLocation : DialogState()
+    data object CustomerMissingPhoneNumber : DialogState()
+    data object CustomerMissingSocialMedia : DialogState()
+}
+
+/**
+ * Represents one-time navigation events.
+ */
+sealed class NavigationEvent {
+    data class ToServiceProcess(val orderId: String) : NavigationEvent()
+    data object ToLogin : NavigationEvent()
+}
+
+/**
+ * Represents one-time toast/snackbar messages.
+ */
+sealed class ToastEvent {
+    data object VerificationEmailSent : ToastEvent() // Replaces Show(String)
+}
+
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val userRepository: UserRepository,
-    private val sessionManager: SessionManager,
-    private val getOrCreateUserUseCase: GetOrCreateUserUseCase,
-    private val getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase,
     private val userIdentityRepository: UserIdentityRepository,
     private val orderServiceRepository: OrderServiceRepository,
-    appPreferences: AppPreferences,
+    private val sessionManager: SessionManager,
     private val networkConnectivityObserver: NetworkConnectivityObserver,
+    private val application: Application,
+    // --- USE CASES (Assumed to be refactored as suspend functions) ---
+    private val getOrCreateUserUseCase: GetOrCreateUserUseCase,
+    private val getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase,
     private val getUserVerificationStatusUseCase: GetUserVerificationStatusUseCase,
-    private val application: Application
+    private val checkEmailVerificationUseCase: CheckEmailVerificationUseCase,
+    private val resendVerificationEmailUseCase: ResendVerificationEmailUseCase,
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
+
     companion object {
         private val TAG = MainViewModel::class.simpleName
     }
 
-    // --- STATE FLOWS FOR THE UI ---
+    // --- STATE FLOWS ---
     private val _navigationGraphState =
         MutableStateFlow<NavigationGraphState>(NavigationGraphState.Loading)
     val navigationGraphState: StateFlow<NavigationGraphState> = _navigationGraphState.asStateFlow()
 
-    private val _userEligibilityState =
-        MutableSharedFlow<UserEligibilityState>()
-    val userEligibilityState: SharedFlow<UserEligibilityState> =
-        _userEligibilityState.asSharedFlow()
+    private val _dialogState = MutableStateFlow<DialogState>(DialogState.None)
+    val dialogState: StateFlow<DialogState> = _dialogState.asStateFlow()
 
-    // --- FLOW FOR ACCOUNT VERIFICATION ---
     private val _userVerificationStatus =
         MutableStateFlow<UserVerificationStatus?>(null)
     val userVerificationStatus: StateFlow<UserVerificationStatus?> =
         _userVerificationStatus.asStateFlow()
 
     private val _mainLoadingState = MutableStateFlow(true)
-    val mainLoadingState = _mainLoadingState.asStateFlow()
+    val mainLoadingState: StateFlow<Boolean> = _mainLoadingState.asStateFlow()
 
-    private val _signOutEvent = MutableSharedFlow<Unit>()
-    val signOutEvent: SharedFlow<Unit> = _signOutEvent.asSharedFlow()
-
-    private val _isUserVerified = MutableStateFlow<Boolean?>(null)
-    val isUserVerified: StateFlow<Boolean?> = _isUserVerified.asStateFlow()
-
-    private val _isResendEmailVerificationSuccess = MutableStateFlow<Boolean?>(null)
-    val isResendEmailVerificationSuccess: StateFlow<Boolean?> =
-        _isResendEmailVerificationSuccess.asStateFlow()
-
-    private val _isConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
-    private val _errorEvent =
-        MutableSharedFlow<Exception?>() // No replay needed for one-time events
-    val errorEvent: SharedFlow<Exception?> = _errorEvent.asSharedFlow()
+    // --- EVENT FLOWS ---
+    private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
+    val navigationEvent: SharedFlow<NavigationEvent> = _navigationEvent.asSharedFlow()
 
-    private val checkEmailVerificationUseCase = CheckEmailVerificationUseCase()
-    private val resendVerificationEmailUseCase = ResendVerificationEmailUseCase()
+    private val _toastEvent = MutableSharedFlow<ToastEvent>()
+    val toastEvent: SharedFlow<ToastEvent> = _toastEvent.asSharedFlow()
+
+    private val _errorEvent = MutableSharedFlow<Exception>()
+    val errorEvent: SharedFlow<Exception> = _errorEvent.asSharedFlow()
+
+    private val _pendingIntent = MutableStateFlow<Intent?>(null)
 
     init {
         Log.d(TAG, "MainViewModel init")
-        viewModelScope.launch(Dispatchers.Default) {
+        observeNetwork()
+        observePendingIntent()
+        observeAdminVerification()
+    }
+
+    private fun observeNetwork() {
+        viewModelScope.launch {
             networkConnectivityObserver.networkStatus.collect { status ->
                 Log.d(TAG, "Network status: ${status.state}")
-
                 when (status.state) {
                     ConnectionState.Connected -> {
                         _isConnected.value = true
-
-                        if (_isUserVerified.value != true) {
+                        // Only run auth check if we aren't already verified and loaded
+                        if (userRepository.getCurrentUserRecord() == null) {
                             runAuthenticationCheck()
                         }
-
-                        if (userRepository.userRecord.value == null) {
-                            // Launch a coroutine that waits for verification before initializing the session.
-                            waitForVerificationAndInitialize()
-                        } else {
-                            determineNavGraphAndUserEligibility(
-                                userRepository.userRecord.filterNotNull().first()
-                            )
-                        }
-
-                        _mainLoadingState.value = false
                     }
 
                     ConnectionState.Disconnected -> {
@@ -130,167 +144,189 @@ class MainViewModel @Inject constructor(
                         _mainLoadingState.value = false
                     }
                 }
-
             }
         }
     }
 
+    /**
+     * Processes notification intents only when the app is not loading.
+     */
+    private fun observePendingIntent() {
+        viewModelScope.launch {
+            mainLoadingState.combine(_pendingIntent) { isLoading, intent ->
+                Pair(isLoading, intent)
+            }
+                .filterNotNull()
+                .collect { (isLoading, intent) ->
+                    if (!isLoading && intent != null) {
+                        val orderId = intent.getStringExtra(OrderServiceNotification.ORDER_ID_KEY)
+                        if (orderId != null) {
+                            Log.d(TAG, "Processing pending intent for order: $orderId")
+                            _navigationEvent.emit(NavigationEvent.ToServiceProcess(orderId))
+                            _pendingIntent.value = null // Consume the intent
+                        }
+                    }
+                }
+        }
+    }
+
+    /**
+     * Observes admin verification status and updates the dialog state.
+     */
+    private fun observeAdminVerification() {
+        viewModelScope.launch {
+            _userVerificationStatus.filterNotNull().collect { status ->
+                val userRole = userRepository.getCurrentUserRecord()?.role
+
+                // This collector will only run after email is verified
+                // (triggered by initializeSession).
+
+                when (status) {
+                    UserVerificationStatus.VERIFIED -> {
+                        // User is admin-verified. NOW check eligibility.
+                        checkUserEligibility(userRepository.getCurrentUserRecord())
+                    }
+
+                    UserVerificationStatus.PENDING -> {
+                        if (userRole == UserRole.CUSTOMER) {
+                            Log.d(TAG, "User verification is PENDING for CUSTOMER, showing dialog.")
+                            _dialogState.value =
+                                DialogState.AdminVerificationPending // Use the new state
+                            _mainLoadingState.value = false // We are "loaded" but blocked
+                        } else {
+                            // Partners/Admins are not blocked by PENDING, check eligibility
+                            checkUserEligibility(userRepository.getCurrentUserRecord())
+                        }
+                    }
+
+                    UserVerificationStatus.REJECTED -> {
+                        if (userRole == UserRole.CUSTOMER) {
+                            _dialogState.value =
+                                DialogState.AdminVerificationRejected // Use the new state
+                            _mainLoadingState.value = false // We are "loaded" but blocked
+                        } else {
+                            // Partners/Admins are not blocked by REJECTED, check eligibility
+                            checkUserEligibility(userRepository.getCurrentUserRecord())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Called by Activity to buffer an intent for processing.
+     */
+    fun setPendingIntent(intent: Intent?) {
+        if (intent?.hasExtra(OrderServiceNotification.ORDER_ID_KEY) == true) {
+            _pendingIntent.value = intent
+        }
+    }
+
+    /**
+     * Checks if the current Firebase user is email-verified.
+     */
     fun runAuthenticationCheck() {
         _mainLoadingState.value = true
-        // If there's no logged-in user, trigger sign-out immediately.
         val currentUser = auth.currentUser
         if (currentUser == null) {
             Log.d(TAG, "No current user, signing out.")
-            signOut()
+            signOut() // This will emit a navigation event
             return
         }
 
         Log.d(TAG, "Current user: ${currentUser.displayName}. Checking email verification.")
-        viewModelScope.launch(Dispatchers.IO) {
-            Log.d(TAG, "Checking email verification...")
-            checkEmailVerificationUseCase(
-                { isVerified ->
-                    Log.d(TAG, "Email verification check result: $isVerified")
-                    // This will trigger the flow below if isVerified is true.
-                    _isUserVerified.value = isVerified
-                },
-                { exception ->
-                    Log.e(TAG, "Error checking email verification: $exception")
+        viewModelScope.launch {
+            try {
+                // Assumes checkEmailVerificationUseCase is a suspend function
+                val isVerified = checkEmailVerificationUseCase()
+                Log.d(TAG, "Email verification check result: $isVerified")
+
+                if (isVerified) {
+                    initializeSession()
+                } else {
+                    _dialogState.value = DialogState.EmailVerificationPending
                     _mainLoadingState.value = false
-                    // Try to emit the error. tryEmit is non-suspending.
-                    viewModelScope.launch {
-                        _errorEvent.emit(exception)
-                    }
                 }
-            )
-        }
-    }
-
-    private fun waitForVerificationAndInitialize() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _mainLoadingState.value = true
-
-            // This coroutine will suspend here until _isUserVerified becomes non-null.
-            val isVerified = _isUserVerified.filterNotNull().first()
-            Log.d(TAG, "Email verification result: $isVerified")
-
-            if (isVerified) {
-                // Start collecting the admin verification status as soon as email is verified
-                launch {
-                    getUserVerificationStatusUseCase().collect { status ->
-                        _userVerificationStatus.value = status
-                    }
-                }
-
-                // Once verified, proceed with session initialization.
-                initializeSession()
-            } else {
-                // If the user is not verified, stop the main loading spinner.
-                // The UI will be showing the "Please Verify" screen.
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking email verification", e)
+                _errorEvent.emit(e)
                 _mainLoadingState.value = false
             }
         }
     }
 
+    /**
+     * Fetches user data, determines navigation, and starts observing admin verification.
+     */
     private suspend fun initializeSession() {
-        // Get user data and identity
-        getUserData()
+        try {
+            // Get user data and identity
+            val user = getUserData()
+            if (user != null) {
+                // Determine Navigation and Eligibility
+                determineNavigationGraph(user)
 
-        // Wait for the user record to be populated in the repository
-        val user = userRepository.userRecord.filterNotNull().first()
-        Log.d(TAG, "User record fetched: ${user.userId}")
-
-        determineNavGraphAndUserEligibility(user)
-    }
-
-    private suspend fun determineNavGraphAndUserEligibility(user: MontirPresisiUser) {
-        // Determine Navigation and Eligibility based on the fetched user
-        determineNavigationGraph(user)
-        checkUserEligibility(user)
-        _mainLoadingState.value = false
-    }
-
-    fun resendVerificationEmail() {
-        resendVerificationEmailUseCase(
-            { isSuccessful ->
-                _isResendEmailVerificationSuccess.value = isSuccessful
-            },
-            { exception ->
-                viewModelScope.launch {
-                    _errorEvent.emit(exception)
+                // Start collecting the admin verification status
+                getUserVerificationStatusUseCase().collect { status ->
+                    _userVerificationStatus.value = status
                 }
+            } else {
+                // Failed to get user data
+                _mainLoadingState.value = false
             }
-        )
-    }
-
-    private suspend fun getUserData() {
-        /* Get user profile */
-        getOrCreateUserUseCase(UserRole.CUSTOMER).onSuccess { user ->
-            Log.d(TAG, "User: ${user.userId}")
-            user.userId?.let {
-                Log.d(
-                    TAG,
-                    "UserRepository record: ${userRepository.getRecordByUserId(it)}"
-                )
-            }
-        }.onFailure { exception ->
-            when (exception) {
-                is GetOrCreateUserUseCase.UserNotAuthenticatedException -> {
-                    // Handle unauthenticated user
-                    Log.e(TAG, "User not authenticated")
-                }
-
-                is GetOrCreateUserUseCase.UserDataParseException,
-                is GetOrCreateUserUseCase.FirestoreOperationException -> {
-                    // Handle specific exceptions
-                    Log.e(TAG, "Error: ${exception.message}")
-                }
-
-                else -> {
-                    // Handle generic errors
-                    Log.e(TAG, "Unexpected error: ${exception.message}")
-                }
-            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing session", e)
+            _errorEvent.emit(e)
+            _mainLoadingState.value = false
         }
+    }
 
-        /* Get user identity */
-        getOrCreateUserIdentityUseCase().onSuccess { userIdentity ->
-            Log.d(TAG, "User: ${userIdentity.userId}")
-            userIdentity.userId?.let {
-                Log.d(
-                    TAG,
-                    "UserIdentityRepository record: ${
-                        userIdentityRepository.getRecordByUserId(
-                            it
-                        )
-                    }"
-                )
-            }
-        }.onFailure { exception ->
-            // Handle generic errors
-            Log.e(TAG, "Unexpected error: ${exception.message}")
+    /**
+     * Fetches and/or creates user data from repositories.
+     * Assumes UseCases are suspend functions returning Result<T>
+     */
+    private suspend fun getUserData(): MontirPresisiUser? {
+        try {
+            /* Get user profile */
+            val user = getOrCreateUserUseCase(UserRole.CUSTOMER).getOrThrow()
+            Log.d(TAG, "User: ${user.userId}")
+
+            /* Get user identity */
+            getOrCreateUserIdentityUseCase().getOrThrow()
+            Log.d(TAG, "User Identity: ${user.userId}")
+
+            return user
+
+        } catch (exception: Exception) {
+            Log.e(TAG, "Error getting user data", exception)
+            _errorEvent.emit(exception)
+            return null
         }
     }
 
     private fun determineNavigationGraph(user: MontirPresisiUser) {
         when (user.role) {
-            UserRole.ADMIN -> {
-                _navigationGraphState.value = Admin(R.navigation.nav_main)
-            }
+            UserRole.ADMIN -> _navigationGraphState.value =
+                NavigationGraphState.Admin(R.navigation.nav_main)
 
-            UserRole.PARTNER -> {
-                _navigationGraphState.value = Partner(R.navigation.nav_main)
-            }
+            UserRole.PARTNER -> _navigationGraphState.value =
+                NavigationGraphState.Partner(R.navigation.nav_main)
 
-            UserRole.CUSTOMER -> {
-                _navigationGraphState.value = Customer(R.navigation.nav_main)
-            }
+            UserRole.CUSTOMER -> _navigationGraphState.value =
+                NavigationGraphState.Customer(R.navigation.nav_main)
 
-            null -> _navigationGraphState.value = Customer(R.navigation.nav_main)
+            null -> _navigationGraphState.value =
+                NavigationGraphState.Customer(R.navigation.nav_main)
         }
     }
 
-    private suspend fun checkUserEligibility(user: MontirPresisiUser) {
+    private fun checkUserEligibility(user: MontirPresisiUser?) {
+        if (user == null) {
+            _mainLoadingState.value = false // Handle null user case
+            return
+        }
+
         val isPartnerMissingLocation = user.role == UserRole.PARTNER &&
                 (user.locationLat.isNullOrBlank() || user.locationLng.isNullOrBlank())
 
@@ -301,61 +337,64 @@ class MainViewModel @Inject constructor(
             user.role == UserRole.CUSTOMER &&
                     (user.instagramId.isNullOrBlank() && user.facebookId.isNullOrBlank())
 
-        _userEligibilityState.emit(
-            when {
-                isPartnerMissingLocation -> UserEligibilityState.PartnerMissingLocation
-                isCustomerMissingPhone -> UserEligibilityState.CustomerMissingPhoneNumber
-                isCustomerMissingSocialMedia -> UserEligibilityState.CustomerMissingSocialMedia
-                else -> UserEligibilityState.Eligible
-            }
-        )
+        val newDialogState = when {
+            isPartnerMissingLocation -> DialogState.PartnerMissingLocation
+            isCustomerMissingPhone -> DialogState.CustomerMissingPhoneNumber
+            isCustomerMissingSocialMedia -> DialogState.CustomerMissingSocialMedia
+            else -> DialogState.None // Eligible
+        }
+
+        _dialogState.value = newDialogState
+
+        // If we are eligible (None), we are done loading.
+        // If we are *not* eligible, we are also "done" loading, but blocked by a dialog.
+        _mainLoadingState.value = false
     }
 
-    // You can also add a function to re-check eligibility when needed
     fun recheckEligibility() {
         val user = userRepository.getCurrentUserRecord() ?: return
         Log.d(TAG, "Rechecking eligibility for user: ${user.userId}")
+        checkUserEligibility(user)
+    }
+
+    fun refreshAdminVerificationStatus() {
         viewModelScope.launch {
-            checkUserEligibility(user)
+            getUserVerificationStatusUseCase().collect { status ->
+                _userVerificationStatus.value = status
+            }
         }
     }
 
+    /**
+     * Resends the verification email.
+     * Assumes resendVerificationEmailUseCase is a suspend function.
+     */
+    fun resendVerificationEmail() {
+        viewModelScope.launch {
+            try {
+                resendVerificationEmailUseCase()
+                _toastEvent.emit(ToastEvent.VerificationEmailSent) // Use the new event
+            } catch (e: Exception) {
+                Log.e(TAG, "Error resending verification email", e)
+                _errorEvent.emit(e)
+            }
+        }
+    }
+
+    /**
+     * Signs the user out using the SignOutUseCase.
+     */
     fun signOut() {
         viewModelScope.launch {
-
             try {
-                // Get FCM token and remove it from the repository and database
-                Log.d(TAG, "Attempting to get FCM token for removal...")
-                val token = FirebaseMessaging.getInstance().token.await()
-                Log.d(TAG, "Got FCM token. Removing from repository...")
-                userRepository.removeFcmToken(token)
-                Log.d(TAG, "FCM token removed.")
-
+                // Assumes signOutUseCase is a suspend function
+                signOutUseCase()
+                Log.d(TAG, "Sign-out process complete. Emitting event to UI.")
+                _navigationEvent.emit(NavigationEvent.ToLogin)
             } catch (e: Exception) {
-                Log.w(TAG, "Could not get/remove FCM token, signing out anyway.", e)
-            }
-
-            try {
-                val credentialManager = CredentialManager.create(application)
-                credentialManager.clearCredentialState(ClearCredentialStateRequest())
-            } catch (e: Exception) {
+                Log.e(TAG, "Sign out failed", e)
                 _errorEvent.emit(e)
-                Log.e(TAG, "Error clearing credential state", e)
             }
-
-            // Clear the local record
-            userRepository.clearRecord()
-            orderServiceRepository.clearRecord()
-            _isUserVerified.value = null
-
-            // Perform the final sign-out actions ---
-            Log.d(TAG, "Triggering session manager and signing out from Firebase...")
-            sessionManager.triggerSignOut() // For other collectors to stop
-            auth.signOut()                 // Firebase sign-out
-
-            // Signal to the UI that all cleanup is complete ---
-            Log.d(TAG, "Sign-out process complete. Emitting event to UI.")
-            _signOutEvent.emit(Unit)       // This tells MainActivity it's safe to navigate
         }
     }
 

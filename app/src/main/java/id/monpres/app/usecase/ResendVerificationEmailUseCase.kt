@@ -1,22 +1,18 @@
 package id.monpres.app.usecase
 
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class ResendVerificationEmailUseCase {
-    operator fun invoke(
-        onSuccess: (Boolean) -> Unit,
-        onFailure: (Exception?) -> Unit
-    ) {
-        val user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
-        user?.sendEmailVerification()?.addOnCompleteListener { task: Task<Void?> ->
-            if (task.isSuccessful) {
-                onSuccess(true)
-            } else {
-                val errorMessage = task.exception?.localizedMessage ?: "Failed to send the verification email."
-                onFailure(task.exception)
-            }
-        }
+/**
+ * A suspend function UseCase to resend the verification email.
+ * Throws an exception if the user is null or the send fails.
+ */
+class ResendVerificationEmailUseCase @Inject constructor(
+    private val auth: FirebaseAuth
+) {
+    suspend operator fun invoke() {
+        val user = auth.currentUser ?: throw Exception("User not authenticated")
+        user.sendEmailVerification().await() // Throws exception on Firebase failure
     }
 }
