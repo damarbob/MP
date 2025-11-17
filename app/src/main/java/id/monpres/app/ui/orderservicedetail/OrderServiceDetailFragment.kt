@@ -26,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
@@ -334,7 +335,9 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             fragmentOrderServiceDetailPaymentMethod.text = orderService.paymentMethod ?: ""
             fragmentOrderServiceDetailPartner.text = orderService.partnerId ?: ""
             fragmentOrderServiceDetailVehicle.text = orderService.vehicle?.name ?: ""
-            fragmentOrderServiceDetailIssue.text = orderService.issue ?: ""
+            val issueEnum = orderService.issue?.let { PartnerCategory.fromName(it) }
+            val issueString = issueEnum?.let { getString(it.label) } ?: orderService.issue ?: getString(R.string.unknown_issue)
+            fragmentOrderServiceDetailIssue.text = issueString
             fragmentOrderServiceDetailIssueDescription.text = orderService.issueDescription ?: ""
 
             // Distance detail

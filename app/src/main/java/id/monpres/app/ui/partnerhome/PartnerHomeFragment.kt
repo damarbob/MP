@@ -4,16 +4,19 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.HeroCarouselStrategy
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.transition.MaterialElevationScale
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainGraphViewModel
@@ -52,6 +55,9 @@ class PartnerHomeFragment : BaseFragment(R.layout.fragment_partner_home) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        postponeEnterTransition()
+        view.doOnPreDraw { startPostponedEnterTransition() }
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentPartnerHomeNestedScrollView) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -110,19 +116,35 @@ class PartnerHomeFragment : BaseFragment(R.layout.fragment_partner_home) {
         orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService, root ->
             when (orderService.status) {
                 in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
+                    exitTransition = MaterialElevationScale(false)
+                    reenterTransition = MaterialElevationScale(true)
+                    val orderDetailTransitionName =
+                        getString(R.string.order_detail_transition_name)
+                    val extras = FragmentNavigatorExtras(root to orderDetailTransitionName)
                     // The status is closed (completed, cancelled, returned, failed)
-                    findNavController().navigate(
+                    val directions =
                         PartnerHomeFragmentDirections.actionPartnerHomeFragmentToOrderServiceDetailFragment(
                             orderService, mainGraphViewModel.getCurrentUser()
                         )
+                    findNavController().navigate(
+                        directions, extras
                     )
                 }
 
-                else -> findNavController().navigate(
-                    PartnerHomeFragmentDirections.actionPartnerHomeFragmentToServiceProcessFragment(
-                        orderService.id!!
+                else -> {
+                    exitTransition = MaterialElevationScale(false)
+                    reenterTransition = MaterialElevationScale(true)
+                    val serviceProcessTransitionName =
+                        getString(R.string.service_process_transition_name)
+                    val extras = FragmentNavigatorExtras(root to serviceProcessTransitionName)
+                    val directions =
+                        PartnerHomeFragmentDirections.actionPartnerHomeFragmentToServiceProcessFragment(
+                            orderService.id!!
+                        )
+                    findNavController().navigate(
+                        directions, extras
                     )
-                )
+                }
             }
         }
         binding.fragmentPartnerHomeRecyclerViewOrderService.apply {

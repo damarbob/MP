@@ -25,6 +25,7 @@ import id.monpres.app.enums.VehicleWheelDrive
 import id.monpres.app.model.Vehicle
 import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.utils.hideKeyboard
 import id.monpres.app.utils.markRequiredInRed
 
 @AndroidEntryPoint
@@ -128,16 +129,17 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
                             fragmentEditVehicleTextInputLayoutVehiclePowerOutput.editText?.text.toString()
                         seat =
                             fragmentEditVehicleTextInputLayoutVehicleSeat.editText?.text.toString()
-                        typeId = vehicleTypes.find {
-                            it.name.equals(
+                        typeId = vehicleTypes.find { type ->
+                            type.name.equals(
                                 fragmentEditVehicleDropdownVehicleType.text.toString(),
                                 true
                             )
                         }?.id
                         transmission =
-                            fragmentEditVehicleDropdownVehicleTransmission.text.toString()
+                            VehicleTransmission.fromLabel(requireContext(), fragmentEditVehicleDropdownVehicleTransmission.text.toString())?.name
                         wheelDrive = fragmentEditVehicleDropdownVehicleWheelDrive.text.toString()
-                        powerSource = fragmentEditVehicleDropdownVehiclePowerSource.text.toString()
+                        powerSource =
+                            VehiclePowerSource.fromLabel(requireContext(), fragmentEditVehicleDropdownVehiclePowerSource.text.toString())?.name
                     }
                 }
 
@@ -177,13 +179,19 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
         binding.fragmentEditVehicleDropdownVehicleType.setText(selectedVehicleType?.name, false)
 
         // Set default value for transmission
-        binding.fragmentEditVehicleDropdownVehicleTransmission.setText(vehicle?.transmission, false)
+        // Find the corresponding enum entry for the vehicle's transmission string
+        VehicleTransmission.entries.find { it.name == vehicle?.transmission }?.let { transmission ->
+            // This block only executes if a non-null transmission is found
+            binding.fragmentEditVehicleDropdownVehicleTransmission.setText(getString(transmission.label), false)
+        }
 
         // Set default value for wheel drive
         binding.fragmentEditVehicleDropdownVehicleWheelDrive.setText(vehicle?.wheelDrive, false)
 
         // Set default value for power source
-        binding.fragmentEditVehicleDropdownVehiclePowerSource.setText(vehicle?.powerSource, false)
+        VehiclePowerSource.entries.find { it.name == vehicle?.powerSource }?.let { powerSource ->
+            binding.fragmentEditVehicleDropdownVehiclePowerSource.setText(getString(powerSource.label), false)
+        }
     }
 
     private fun setDropdownsOptions() {
@@ -198,9 +206,8 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
         vehicleTransmissionAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
-            VehicleTransmission.toListString()
+            VehicleTransmission.toListString(requireContext())
         )
-        vehicleTransmissionAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentEditVehicleDropdownVehicleTransmission.setAdapter(vehicleTransmissionAdapter)
 
         // Wheel drive dropdown
@@ -209,16 +216,14 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
             android.R.layout.simple_dropdown_item_1line,
             VehicleWheelDrive.toListString()
         )
-        vehicleWheelDriveAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentEditVehicleDropdownVehicleWheelDrive.setAdapter(vehicleWheelDriveAdapter)
 
         // Power source dropdown
         vehiclePowerSourceAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
-            VehiclePowerSource.toListString()
+            VehiclePowerSource.toListString(requireContext())
         )
-        vehiclePowerSourceAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentEditVehicleDropdownVehiclePowerSource.setAdapter(vehiclePowerSourceAdapter)
     }
 
@@ -231,6 +236,19 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
         binding.fragmentEditVehicleDropdownVehiclePowerSource.addTextChangedListener { validateVehiclePowerSource() }
         binding.fragmentEditVehicleDropdownVehicleTransmission.addTextChangedListener { validateVehicleTransmission() }
         binding.fragmentEditVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
+
+        listOf(
+            binding.fragmentEditVehicleDropdownVehicleType,
+            binding.fragmentEditVehicleDropdownVehicleTransmission,
+            binding.fragmentEditVehicleDropdownVehicleWheelDrive,
+            binding.fragmentEditVehicleDropdownVehiclePowerSource,
+        ).forEach { autoCompleteTextView ->
+            autoCompleteTextView.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    v.hideKeyboard(requireActivity())
+                }
+            }
+        }
     }
 
     private fun setFormMarks() {
@@ -328,7 +346,7 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
             binding.fragmentEditVehicleTextInputLayoutVehiclePowerSource.error =
                 getString(R.string.x_is_required, getString(R.string.power_source))
             false
-        } else if (!VehiclePowerSource.toListString().any {
+        } else if (!VehiclePowerSource.toListString(requireContext()).any {
                 it.equals(
                     binding.fragmentEditVehicleDropdownVehiclePowerSource.text.toString(),
                     true
@@ -352,7 +370,7 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
             binding.fragmentEditVehicleTextInputLayoutVehicleTransmission.error =
                 getString(R.string.x_is_required, getString(R.string.transmission))
             false
-        } else if (!VehicleTransmission.toListString().any {
+        } else if (!VehicleTransmission.toListString(requireContext()).any {
                 it.equals(
                     binding.fragmentEditVehicleDropdownVehicleTransmission.text.toString(),
                     true

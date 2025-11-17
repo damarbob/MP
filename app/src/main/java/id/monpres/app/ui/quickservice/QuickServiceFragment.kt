@@ -19,6 +19,7 @@ import id.monpres.app.MainApplication
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentQuickServiceBinding
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseServiceFragment
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
@@ -89,14 +90,17 @@ class QuickServiceFragment : BaseServiceFragment(R.layout.fragment_quick_service
             }
         }
 
+        val issueAdapter = ArrayAdapter(
+            requireContext(),
+            R.layout.item_list,
+            PartnerCategory.toListString(requireContext())
+        )
+        fragBinding.quickServiceAutoCompleteIssue.setAdapter(issueAdapter)
+
         // Validate common inputs and place order
         fragBinding.quickServiceButtonPlaceOrder.setOnClickListener {
             if (
-                validateSelectedPartner() &&
-                validateLocation() &&
-                validateLocationConsent() &&
-                validateVehicle() &&
-                validateIssue()
+                isValidated()
             ) {
                 showLoading(true)
                 fragBinding.quickServiceButtonPlaceOrder.isEnabled = false
@@ -131,5 +135,15 @@ class QuickServiceFragment : BaseServiceFragment(R.layout.fragment_quick_service
 
     override fun getViewModel(): BaseServiceViewModel {
         return viewModel
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val issueAdapter = ArrayAdapter(
+            requireContext(),
+            R.layout.item_list,
+            PartnerCategory.toListString(requireContext())
+        )
+        fragBinding.quickServiceAutoCompleteIssue.setAdapter(issueAdapter)
     }
 }

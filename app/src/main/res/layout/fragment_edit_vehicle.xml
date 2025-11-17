@@ -20,8 +20,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingVertical="16dp"
-            android:clipToPadding="false">
+            android:clipToPadding="false"
+            android:paddingVertical="16dp">
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.Material3.CardView.Elevated"
@@ -29,6 +29,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:transitionName="@string/edit_vehicle_transition_name"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -54,173 +55,213 @@
                         <com.google.android.material.textfield.TextInputEditText
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:imeOptions="actionNext"
                             android:inputType="text"
                             android:minHeight="@dimen/input_field_min_height" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Registration Number -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    <GridLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/registration_number">
+                        android:columnCount="2"
+                        android:orientation="horizontal"
+                        android:rowCount="5">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:layout_width="match_parent"
+                        <!-- Registration Number -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="textCapCharacters"
-                            android:minHeight="@dimen/input_field_min_height" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:layout_marginEnd="@dimen/column_space_in_grid"
+                            android:hint="@string/registration_number">
 
-                    <!-- License Plate Number -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/license_plate_number">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="textCapCharacters"
+                                android:minHeight="@dimen/input_field_min_height" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:layout_width="match_parent"
+                        <!-- License Plate Number -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="textCapCharacters"
-                            android:minHeight="@dimen/input_field_min_height" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginStart="@dimen/column_space_in_grid"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:hint="@string/license_plate_number">
 
-                    <!-- Type -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleType"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/type">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="textCapCharacters"
+                                android:minHeight="@dimen/input_field_min_height" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                            android:id="@+id/fragmentEditVehicleDropdownVehicleType"
-                            android:layout_width="match_parent"
+                        <!-- Type -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleType"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="none"
-                            tools:ignore="SpeakableTextPresentCheck" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:layout_marginEnd="@dimen/column_space_in_grid"
+                            android:hint="@string/type">
 
-                    <!-- Power Source -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehiclePowerSource"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/power_source">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/fragmentEditVehicleDropdownVehicleType"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="none"
+                                tools:ignore="SpeakableTextPresentCheck" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                            android:id="@+id/fragmentEditVehicleDropdownVehiclePowerSource"
-                            android:layout_width="match_parent"
+                        <!-- Power Source -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehiclePowerSource"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="none"
-                            tools:ignore="SpeakableTextPresentCheck" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginStart="@dimen/column_space_in_grid"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:hint="@string/power_source">
 
-                    <!-- Transmission -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleTransmission"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/transmission">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/fragmentEditVehicleDropdownVehiclePowerSource"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="none"
+                                tools:ignore="SpeakableTextPresentCheck" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                            android:id="@+id/fragmentEditVehicleDropdownVehicleTransmission"
-                            android:layout_width="match_parent"
+                        <!-- Transmission -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleTransmission"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="none"
-                            tools:ignore="SpeakableTextPresentCheck" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:layout_marginEnd="@dimen/column_space_in_grid"
+                            android:hint="@string/transmission">
 
-                    <!-- Wheel Drive -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleWheelDrive"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/wheel_drive">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/fragmentEditVehicleDropdownVehicleTransmission"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="none"
+                                tools:ignore="SpeakableTextPresentCheck" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                            android:id="@+id/fragmentEditVehicleDropdownVehicleWheelDrive"
-                            android:layout_width="match_parent"
+                        <!-- Wheel Drive -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleWheelDrive"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="none"
-                            tools:ignore="SpeakableTextPresentCheck" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginStart="@dimen/column_space_in_grid"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:hint="@string/wheel_drive">
 
-                    <!-- Production Year -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleYear"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/production_year">
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/fragmentEditVehicleDropdownVehicleWheelDrive"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="none"
+                                tools:ignore="SpeakableTextPresentCheck" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:layout_width="match_parent"
+                        <!-- Production Year -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleYear"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:minHeight="@dimen/input_field_min_height" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:layout_marginEnd="@dimen/column_space_in_grid"
+                            android:hint="@string/production_year">
 
-                    <!-- Engine Capacity -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleEngineCapacity"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/engine_capacity">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="number"
+                                android:minHeight="@dimen/input_field_min_height" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:layout_width="match_parent"
+                        <!-- Engine Capacity -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleEngineCapacity"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:minHeight="@dimen/input_field_min_height" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginStart="@dimen/column_space_in_grid"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:hint="@string/engine_capacity">
 
-                    <!-- Seat -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleSeat"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/seat">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="number"
+                                android:minHeight="@dimen/input_field_min_height" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:layout_width="match_parent"
+                        <!-- Seat -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehicleSeat"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:minHeight="@dimen/input_field_min_height" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:layout_marginEnd="@dimen/column_space_in_grid"
+                            android:hint="@string/seat">
 
-                    <!-- Power Output -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/fragmentEditVehicleTextInputLayoutVehiclePowerOutput"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_between_input_field"
-                        android:hint="@string/power_output">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="number"
+                                android:minHeight="@dimen/input_field_min_height" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:layout_width="match_parent"
+                        <!-- Power Output -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fragmentEditVehicleTextInputLayoutVehiclePowerOutput"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:minHeight="@dimen/input_field_min_height" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_columnWeight="1"
+                            android:layout_marginStart="@dimen/column_space_in_grid"
+                            android:layout_marginTop="@dimen/space_between_input_field"
+                            android:hint="@string/power_output">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="number"
+                                android:minHeight="@dimen/input_field_min_height" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </GridLayout>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/fragmentEditVehicleButtonSave"
@@ -228,8 +269,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginVertical="@dimen/space_between_input_field"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
+
                         android:layout_marginBottom="16dp"
                         android:text="@string/save"
                         app:icon="@drawable/save_24px"

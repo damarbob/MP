@@ -337,4 +337,20 @@
     <string name="edit_vehicle_transition_name" translatable="false">edit_vehicle_transition_name</string>
     <string name="service_process_transition_name" translatable="false">service_process_transition_name</string>
     <string name="order_detail_transition_name" translatable="false">order_detail_transition_name</string>
+
+    <string name="machinery">Machinery</string>
+    <string name="tire_repairs">Tire repairs</string>
+    <string name="battery">Battery</string>
+    <string name="welding">Welding</string>
+
+    <string name="transmission_manual">Manual</string>
+    <string name="transmission_automatic">Automatic</string>
+
+    <string name="hybrid">Hybrid</string>
+    <string name="gasoline">Gasoline</string>
+    <string name="solar">Solar</string>
+    <string name="electric">Electric</string>
+    <string name="unknown_issue">Unknown issue</string>
+    <string name="your_service_categories">Your service categories</string>
+    <string name="select_all_services_you_provide_min_1">Select all services you provide min 1</string>
 </resources>

@@ -328,4 +328,21 @@
     <string name="error_network">Error jaringan. Periksa koneksi Anda</string>
     <string name="error_timeout">Waktu permintaan telah habis. Periksa koneksi Anda dan silakan coba lagi</string>
     <string name="error_unknown">Terjadi kesalahan. Silakan coba lagi</string>
+
+    <string name="machinery">Permesinan</string>
+    <string name="tire_repairs">Tambal ban</string>
+    <string name="battery">Aki</string>
+    <string name="welding">Las</string>
+
+    <string name="transmission_manual">Manual</string>
+    <string name="transmission_automatic">Matic</string>
+
+    <string name="hybrid">Hybrid</string>
+    <string name="gasoline">Bensin</string>
+    <string name="solar">Solar</string>
+    <string name="electric">Listrik</string>
+
+    <string name="unknown_issue">Masalah tidak diketahui</string>
+    <string name="your_service_categories">Kategori layanan Anda</string>
+    <string name="select_all_services_you_provide_min_1">Pilih layanan yang Anda sediakan, minimal 1</string>
 </resources>

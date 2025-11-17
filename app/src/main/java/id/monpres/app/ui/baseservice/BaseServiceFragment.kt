@@ -25,6 +25,7 @@ import id.monpres.app.MainApplication
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
 import id.monpres.app.enums.OrderStatus
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.Service
@@ -209,11 +210,16 @@ abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
         // Select partner button
         getPartnerSelectionButton().setOnClickListener {
 
+            if (!validateIssue()) {
+                return@setOnClickListener
+            }
+
             // Navigate to partner selection fragment with selected location point (if any)
             val bundle = Bundle()
             bundle.putString(PartnerSelectionFragment.KEY_SELECTED_LOCATION_POINT,
                 selectedLocationPoint?.toJson()
             )
+            bundle.putStringArray(PartnerSelectionFragment.KEY_CATEGORIES, arrayOf(getIssueAutoCompleteTextView().text.toString()))
 
             findNavController().navigate(R.id.action_global_partnerSelectionFragment, bundle)
         }
@@ -287,7 +293,7 @@ abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
             partner = selectedPartnerId?.let { partnerRepository.getRecordByUserId(it) }
             userAddress = getAddressText()
             vehicle = chosenMyVehicle
-            issue = getIssueAutoCompleteTextView().text.toString()
+            issue = PartnerCategory.fromLabel(requireContext(), getIssueAutoCompleteTextView().text.toString())?.name
             issueDescription = getIssueDescriptionText()
         }
         getViewModel().placeOrder(orderService)
@@ -311,6 +317,9 @@ abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
     }
 
     /* Validation */
+
+    protected fun isValidated(): Boolean =
+        validateLocation() && validateLocationConsent() && validateVehicle() && validateIssue() && validateSelectedPartner()
 
     protected fun validateLocation(): Boolean {
         return if (selectedLocationPoint == null) {

@@ -21,6 +21,7 @@ import id.monpres.app.MainApplication
 import id.monpres.app.MainGraphViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentScheduledServiceBinding
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.BaseServiceFragment
 import id.monpres.app.ui.baseservice.BaseServiceViewModel
@@ -114,13 +115,16 @@ class ScheduledServiceFragment : BaseServiceFragment(R.layout.fragment_scheduled
         }
         fragBinding.scheduledServiceButtonSelectDate.markRequiredInRed()
 
+        val issueAdapter = ArrayAdapter(
+            requireContext(),
+            R.layout.item_list,
+            PartnerCategory.toListString(requireContext())
+        )
+        fragBinding.scheduledServiceAutoCompleteIssue.setAdapter(issueAdapter)
+
         fragBinding.scheduledServiceButtonPlaceOrder.setOnClickListener {
             if (
-                validateSelectedPartner() && validateDate() &&
-                validateLocation() &&
-                validateLocationConsent() &&
-                validateVehicle() &&
-                validateIssue()
+                validateDate() && isValidated()
             ) {
                 showLoading(true)
                 fragBinding.scheduledServiceButtonPlaceOrder.isEnabled = false
@@ -192,5 +196,15 @@ class ScheduledServiceFragment : BaseServiceFragment(R.layout.fragment_scheduled
 
     override fun getViewModel(): BaseServiceViewModel {
         return viewModel
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val issueAdapter = ArrayAdapter(
+            requireContext(),
+            R.layout.item_list,
+            PartnerCategory.toListString(requireContext())
+        )
+        fragBinding.scheduledServiceAutoCompleteIssue.setAdapter(issueAdapter)
     }
 }

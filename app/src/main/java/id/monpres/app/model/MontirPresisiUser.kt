@@ -2,6 +2,7 @@ package id.monpres.app.model
 
 import android.os.Parcelable
 import com.google.firebase.firestore.DocumentId
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import kotlinx.parcelize.Parcelize
@@ -29,6 +30,8 @@ data class MontirPresisiUser(
     // Fields for verification
     var instagramId: String? = null,
     var facebookId: String? = null,
+
+    var partnerCategories: List<PartnerCategory>? = null,
 ) : Parcelable {
     companion object {
         val COLLECTION = "users"

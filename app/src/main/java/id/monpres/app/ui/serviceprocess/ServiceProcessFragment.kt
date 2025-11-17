@@ -64,6 +64,7 @@ import id.monpres.app.R
 import id.monpres.app.databinding.FragmentServiceProcessBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderItem
@@ -494,7 +495,9 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
                 if (orderService.userAddress?.isNotBlank() == true) orderService.userAddress else "-"
             fragmentServiceProcessPartner.text = orderService.partnerId ?: "-"
             fragmentServiceProcessVehicle.text = orderService.vehicle?.name ?: "-"
-            fragmentServiceProcessIssue.text = orderService.issue ?: "-"
+            val issueEnum = orderService.issue?.let { PartnerCategory.fromName(it) }
+            val issueString = issueEnum?.let { getString(it.label) } ?: orderService.issue ?: getString(R.string.unknown_issue)
+            fragmentServiceProcessIssue.text = issueString
             fragmentServiceProcessIssueDescription.text =
                 if (orderService.issueDescription?.isNotBlank() == true) orderService.issueDescription else "-"
 

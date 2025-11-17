@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentPartnerSelectionBinding
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.repository.PartnerRepository
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.adapter.PartnerAdapter
@@ -34,6 +35,7 @@ class PartnerSelectionFragment : Fragment(R.layout.fragment_partner_selection) {
         const val REQUEST_KEY_PARTNER_SELECTION = "partnerSelectionRequestKey"
         const val KEY_SELECTED_USER_ID = "selectedPartnerUserId"
         const val KEY_SELECTED_LOCATION_POINT = "selectedLocationPoint"
+        const val KEY_CATEGORIES = "categories"
 
     }
 
@@ -83,6 +85,10 @@ class PartnerSelectionFragment : Fragment(R.layout.fragment_partner_selection) {
         // Arguments
         val selectedLocationPointArg = arguments?.getString(KEY_SELECTED_LOCATION_POINT)
         val selectedLocationPoint = selectedLocationPointArg?.let { Point.fromJson(it) }
+        val categoriesArg = arguments?.getStringArray(KEY_CATEGORIES)
+        val categories = categoriesArg?.mapNotNull {
+            PartnerCategory.fromLabel(requireContext(), it)
+        } ?: emptyList()
 
         // Set current user location. Use selected location if available, otherwise use current user location.
         partnerRepository.setCurrentUserLocation(
@@ -109,7 +115,7 @@ class PartnerSelectionFragment : Fragment(R.layout.fragment_partner_selection) {
 
         getPartnersUseCase { result ->
             result.onSuccess {
-                partnerAdapter.submitPartnersWithDistance(partnerRepository.getPartnersWithDistance())
+                partnerAdapter.submitPartnersWithDistance(partnerRepository.getPartnersWithDistanceAndCategories(categories))
             }
             result.onFailure {
                 Log.e(TAG, it.message, it)

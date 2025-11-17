@@ -23,6 +23,7 @@ import id.monpres.app.enums.VehicleWheelDrive
 import id.monpres.app.model.Vehicle
 import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.utils.hideKeyboard
 import id.monpres.app.utils.markRequiredInRed
 
 @AndroidEntryPoint
@@ -117,10 +118,10 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
                             )
                         }?.id
                         transmission =
-                            fragmentInsertVehicleDropdownVehicleTransmission.text.toString()
+                            VehicleTransmission.fromLabel(requireContext(), fragmentInsertVehicleDropdownVehicleTransmission.text.toString())?.name
                         wheelDrive = fragmentInsertVehicleDropdownVehicleWheelDrive.text.toString()
                         powerSource =
-                            fragmentInsertVehicleDropdownVehiclePowerSource.text.toString()
+                            VehiclePowerSource.fromLabel(requireContext(), fragmentInsertVehicleDropdownVehiclePowerSource.text.toString())?.name
                     }
                 }
 
@@ -151,7 +152,7 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
         vehicleTransmissionAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
-            VehicleTransmission.toListString()
+            VehicleTransmission.toListString(requireContext())
         )
         vehicleTransmissionAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentInsertVehicleDropdownVehicleTransmission.setAdapter(
@@ -171,7 +172,7 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
         vehiclePowerSourceAdapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
-            VehiclePowerSource.toListString()
+            VehiclePowerSource.toListString(requireContext())
         )
         vehiclePowerSourceAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentInsertVehicleDropdownVehiclePowerSource.setAdapter(vehiclePowerSourceAdapter)
@@ -187,25 +188,14 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
         binding.fragmentInsertVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
 
         listOf(
-            binding.fragmentInsertVehicleTextInputLayoutVehicleName,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleRegistrationNumber,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleLicensePlateNumber,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleType,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleYear,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleEngineCapacity,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleTransmission,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleSeat,
-            binding.fragmentInsertVehicleTextInputLayoutVehiclePowerOutput,
-            binding.fragmentInsertVehicleTextInputLayoutVehicleWheelDrive,
-            binding.fragmentInsertVehicleTextInputLayoutVehiclePowerSource,
-        ).forEach { textInputLayout ->
-            textInputLayout.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+            binding.fragmentInsertVehicleDropdownVehicleType,
+            binding.fragmentInsertVehicleDropdownVehicleTransmission,
+            binding.fragmentInsertVehicleDropdownVehicleWheelDrive,
+            binding.fragmentInsertVehicleDropdownVehiclePowerSource,
+        ).forEach { autoCompleteTextView ->
+            autoCompleteTextView.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
                 if (hasFocus) {
-                    binding.fragmentInsertVehicleNestedScrollView.post {
-                        // Scroll to the focused field
-//                        v.requestRectangleOnScreen(Rect(), false)
-//                        binding.fragmentInsertVehicleNestedScrollView.scro(0,v.top + bottomInsets)
-                    }
+                    v.hideKeyboard(requireActivity())
                 }
             }
         }
@@ -312,7 +302,7 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
             binding.fragmentInsertVehicleTextInputLayoutVehiclePowerSource.error =
                 getString(R.string.x_is_required, getString(R.string.power_source))
             false
-        } else if (!VehiclePowerSource.toListString().any {
+        } else if (!VehiclePowerSource.toListString(requireContext()).any {
                 it.equals(
                     binding.fragmentInsertVehicleDropdownVehiclePowerSource.text.toString(),
                     true
@@ -336,7 +326,7 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
             binding.fragmentInsertVehicleTextInputLayoutVehicleTransmission.error =
                 getString(R.string.x_is_required, getString(R.string.transmission))
             false
-        } else if (!VehicleTransmission.toListString().any {
+        } else if (!VehicleTransmission.toListString(requireContext()).any {
                 it.equals(
                     binding.fragmentInsertVehicleDropdownVehicleTransmission.text.toString(),
                     true

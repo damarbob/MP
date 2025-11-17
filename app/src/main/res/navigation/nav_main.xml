@@ -62,7 +62,13 @@
         android:id="@+id/profileFragment"
         android:name="id.monpres.app.ui.profile.ProfileFragment"
         android:label="@string/profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile" >
+        <argument
+            android:name="user"
+            android:defaultValue="@null"
+            app:argType="id.monpres.app.model.MontirPresisiUser"
+            app:nullable="true"/>
+    </fragment>
     <fragment
         android:id="@+id/editVehicleFragment"
         android:name="id.monpres.app.ui.editvehicle.EditVehicleFragment"
@@ -233,4 +239,11 @@
         android:name="id.monpres.app.ui.adminnewusers.AdminNewUsersFragment"
         android:label="@string/new_users"
         tools:layout="@layout/fragment_admin_new_users" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="id.monpres.app.ui.settings.SettingsFragment"
+        android:label="SettingsFragment" />
+    <action
+        android:id="@+id/action_global_settingsFragment"
+        app:destination="@id/settingsFragment" />
 </navigation>

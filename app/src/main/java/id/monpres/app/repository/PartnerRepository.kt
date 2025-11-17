@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.mapbox.geojson.Point
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfMeasurement
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.model.MontirPresisiUser
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -65,6 +66,15 @@ class PartnerRepository @Inject constructor(
             partner to calculateDistance(partner)
         }.sortedBy { it.second }
     }
+
+    fun getPartnersWithDistanceAndCategories(categories: List<PartnerCategory>): List<Pair<MontirPresisiUser, Double>> {
+        return getRecords().filter { partner ->
+            partner.partnerCategories?.any { it in categories.toSet() } ?: false
+        }.map { partner ->
+            partner to calculateDistance(partner)
+        }.sortedBy { it.second }
+    }
+
 
     fun getDistanceToPartner(partner: MontirPresisiUser): Double {
         return calculateDistance(partner)

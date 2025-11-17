@@ -7,21 +7,23 @@ import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isNotEmpty
 import androidx.core.view.updateMarginsRelative
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
+import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.FirebaseAuth
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.mapbox.geojson.Point
@@ -31,59 +33,41 @@ import id.monpres.app.MainApplication
 import id.monpres.app.MapsActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentEditProfileBinding
+import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
+import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.MontirPresisiUser
-import id.monpres.app.repository.UserRepository
+import id.monpres.app.state.UiState
+import id.monpres.app.ui.BaseFragment
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.utils.dpToPx
+import id.monpres.app.utils.hideKeyboard
 import id.monpres.app.utils.markRequiredInRed
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @AndroidEntryPoint
-class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
+class ProfileFragment : BaseFragment(R.layout.fragment_edit_profile) {
 
     companion object {
         private val TAG = ProfileFragment::class.java.simpleName
         fun newInstance() = ProfileFragment()
     }
 
-    /* Dependencies */
-    @Inject
-    lateinit var userRepository: UserRepository
-
     /* Properties */
     private val viewModel: ProfileViewModel by viewModels()
-    private val auth = Firebase.auth
-    private var user: FirebaseUser? = null
-    private var userProfile: MontirPresisiUser? = null
+    private val args: ProfileFragmentArgs by navArgs()
 
     /* Use cases */
     private val getColorFromAttrUseCase = GetColorFromAttrUseCase()
 
-    /* Location */
-    private var selectedPrimaryLocationPoint: Point? = null
+    private var userProfile: MontirPresisiUser? = null
 
     /* UI */
     private val binding by viewBinding(FragmentEditProfileBinding::bind)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        user = auth.currentUser
-        userProfile = user?.uid?.let { userRepository.getRecordByUserId(it) }
-        selectedPrimaryLocationPoint =
-            userProfile?.locationLng?.toDouble()?.let {
-                userProfile?.locationLat?.toDouble()?.let { latitude ->
-                    Point.fromLngLat(it, latitude)
-                }
-            }
-        Log.d(TAG, "Selected primary location point: $selectedPrimaryLocationPoint")
-
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -117,63 +101,42 @@ class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
             WindowInsetsCompat.CONSUMED
         }
 
-        setupUI()
+        userProfile = args.user
+        setupObservers()
+        setupListeners()
 
-        /* Observers */
-        // Location observer
-        viewModel.selectedPrimaryLocationPoint.observe(viewLifecycleOwner) { point ->
-            point?.let {
-                selectedPrimaryLocationPoint = it
-                binding.editProfileButtonSelectPrimaryLocationButton.setText(getString(R.string.re_select_a_location))
+        // Set form marks
+        binding.apply {
+            editProfileInputLayoutFullName.markRequiredInRed()
+
+            if (userProfile?.role == UserRole.CUSTOMER) {
+                editProfileTextInputLayoutWhatsApp.markRequiredInRed()
+            } else if (userProfile?.role == UserRole.PARTNER) {
+                editProfileButtonSelectPrimaryLocationButton.markRequiredInRed()
             }
-            if (point == null) return@observe
+
         }
-        viewModel.updateProfileResult.observe(viewLifecycleOwner) { result ->
-            // Hide loading indicator
-            binding.editProfileProgressIndicator.visibility = View.GONE
+    }
 
+    private fun setupListeners() {
 
-            result?.onSuccess {
-                // Enable save button
-                binding.editProfileButton.isEnabled = true
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.profile_updated_successfully),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }?.onFailure { exception ->
-                // Enable save button
-                binding.editProfileButton.isEnabled = true
-
-                Toast.makeText(
-                    requireContext(),
-                    exception.message,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-
-        /* Listeners */
         binding.editProfileButton.setOnClickListener {
-
             // Get input values
             val whatsAppNumber = binding.editProfileInputWhatsApp.text.toString()
             val fullName = binding.editProfileInputEditFullName.text.toString()
             val emailAddress = binding.editProfileInputEmailAddress.text.toString()
             val active = !binding.editProfileCheckBoxHoliday.isChecked
-            val location = selectedPrimaryLocationPoint
             val address = binding.editProfileInputEditAddress.text.toString()
             val instagramId = binding.editProfileInputEditInstagramId.text.toString()
             val facebookId = binding.editProfileInputEditFacebookId.text.toString()
+            it.hideKeyboard(requireActivity())
 
             // Validate inputs (only necessary ones)
             if (!validateWhatsAppNumber()) {
                 return@setOnClickListener
             }
 
-            // Show loading indicator
-            binding.editProfileProgressIndicator.visibility = View.VISIBLE
+            if (!validatePartnerCategory()) return@setOnClickListener
 
             // Make button disabled
             it.isEnabled = false
@@ -192,7 +155,6 @@ class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
                 emailAddress,
                 formattedWhatsApp,
                 active,
-                location,
                 address,
                 instagramId,
                 facebookId,
@@ -201,19 +163,70 @@ class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
         binding.editProfileButtonSelectPrimaryLocationButton.setOnClickListener {
             openMap()
         }
-        binding.editProfileCheckBoxHoliday.setOnCheckedChangeListener { _, isChecked ->
-            // Show alert dialog if checked and user is partner
-            if (userProfile?.role == UserRole.PARTNER) {
-                if (isChecked) {
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(getString(R.string.i_am_on_holiday))
-                        .setMessage(getString(R.string.once_activated_customers_will_no_longer_see_you))
-                        .setPositiveButton(getString(R.string.okay)) { dialog, _ ->
-                            dialog.dismiss()
+    }
+
+    private fun setupObservers() {
+        observeUiState(viewModel.uiState) {
+            userProfile = it
+            setupUI(it)
+            binding.editProfileButton.isEnabled = true
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Combine uiState and selectedCategories to ensure we have both before building
+                viewModel.uiState.combine(viewModel.selectedCategories) { uiState, selectedCategories ->
+                    Pair(uiState, selectedCategories)
+                }.collect { (uiState, selectedCategories) ->
+                    if (uiState is UiState.Success) {
+                        val userProfile = uiState.data
+                        if (userProfile.role == UserRole.PARTNER) {
+                            binding.editProfileLayoutCategories.visibility = View.VISIBLE
+                            // Pass the currently selected categories to the builder
+                            buildCategoryCheckboxes(selectedCategories)
+                        } else {
+                            binding.editProfileLayoutCategories.visibility = View.GONE
                         }
-                        .show()
+                    }
                 }
             }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorEvent.collect {
+                    ErrorLocalizer.getLocalizedErrorWithLog(requireContext(), it)
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.selectedPrimaryLocationPoint.collect {
+                    if (it != null)
+                        binding.editProfileButtonSelectPrimaryLocationButton.text =
+                            getString(R.string.re_select_a_location)
+                }
+            }
+        }
+    }
+
+    private fun buildCategoryCheckboxes(selectedCategories: Set<PartnerCategory>) {
+        val checkboxGroup = binding.editProfileCheckboxGroupCategories
+        // Clear old views but preserve state by only adding if empty
+        if (checkboxGroup.isNotEmpty()) return
+
+        PartnerCategory.entries.forEach { category ->
+            val checkbox = MaterialCheckBox(requireContext()).apply {
+                text = getString(category.label)
+                tag = category // Store the enum object in the tag for easy access
+                isChecked = selectedCategories.contains(category)
+
+                setOnCheckedChangeListener { _, isChecked ->
+                    viewModel.onCategoryChanged(category, isChecked)
+                }
+            }
+            checkboxGroup.addView(checkbox)
         }
     }
 
@@ -250,16 +263,16 @@ class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
                 val userLocation = data.getStringExtra(MapsActivityExtraData.USER_LOCATION) ?: ""
                 Log.d(TAG, "User's location $userLocation")
                 Log.d(TAG, "Selected location $selectedLocation")
-                viewModel.setSelectedPrimaryLocationPoint(Point.fromJson(selectedLocation))
+                viewModel.onLocationSelected(Point.fromJson(selectedLocation))
             }
         }
     }
 
     private fun openMap() {
-        val points = arrayListOf(selectedPrimaryLocationPoint?.toJson())
+        val points = arrayListOf(viewModel.selectedPrimaryLocationPoint.value?.toJson())
         Log.d(
             TAG,
-            "Points: $points from ${arrayListOf(selectedPrimaryLocationPoint)} from $selectedPrimaryLocationPoint"
+            "Points: $points"
         )
 
         val intent = Intent(requireContext(), MapsActivity::class.java).apply {
@@ -272,33 +285,50 @@ class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
         pickLocationLauncher.launch(intent)
     }
 
-    private fun setupUI() {
+    private fun setupUI(userProfile: MontirPresisiUser) {
+        binding.editProfileCheckBoxHoliday.setOnCheckedChangeListener { _, isChecked ->
+            // Show alert dialog if checked and user is partner
+            if (userProfile.role == UserRole.PARTNER) {
+                if (isChecked) {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(getString(R.string.i_am_on_holiday))
+                        .setMessage(getString(R.string.once_activated_customers_will_no_longer_see_you))
+                        .setPositiveButton(getString(R.string.okay)) { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .show()
+                }
+            }
+        }
+
+        val user = FirebaseAuth.getInstance().currentUser
         // Hide unfinished features
         binding.editProfileTextInputLayoutEmail.visibility = View.GONE
 
         // Show for specific roles
         binding.editProfileCheckBoxHoliday.visibility =
-            if (userProfile?.role === UserRole.PARTNER) View.VISIBLE else View.GONE
+            if (userProfile.role === UserRole.PARTNER) View.VISIBLE else View.GONE
         binding.editProfileLayoutSocialMedia.visibility =
-            if (userProfile?.role !== UserRole.CUSTOMER) View.GONE else View.VISIBLE
+            if (userProfile.role !== UserRole.CUSTOMER) View.GONE else View.VISIBLE
 
         // Fill input fields
         binding.editProfileInputEditFullName.setText(user?.displayName)
         binding.editProfileInputEmailAddress.setText(user?.email)
-        binding.editProfileInputWhatsApp.setText(userProfile?.phoneNumber)
+        binding.editProfileInputWhatsApp.setText(userProfile.phoneNumber)
         binding.editProfileCheckBoxHoliday.isChecked =
-            if (userProfile?.role === UserRole.PARTNER)
+            if (userProfile.role === UserRole.PARTNER)
             // If partner and inactive, check
-                userProfile?.active == false
+                userProfile.active == false
             else
             // else, always uncheck
                 false
-        binding.editProfileInputEditAddress.setText(userProfile?.address)
-        binding.editProfileInputEditInstagramId.setText(userProfile?.instagramId)
-        binding.editProfileInputEditFacebookId.setText(userProfile?.facebookId)
+        binding.editProfileInputEditAddress.setText(userProfile.address)
+        binding.editProfileInputEditInstagramId.setText(userProfile.instagramId)
+        binding.editProfileInputEditFacebookId.setText(userProfile.facebookId)
 
-        if (userProfile?.locationLat != null && userProfile?.locationLng != null) {
-            binding.editProfileButtonSelectPrimaryLocationButton.setText(getString(R.string.re_select_a_location))
+        if (userProfile.locationLat != null && userProfile.locationLng != null) {
+            binding.editProfileButtonSelectPrimaryLocationButton.text =
+                getString(R.string.re_select_a_location)
         }
 
         // Hide loading indicator
@@ -329,17 +359,6 @@ class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
             )
             .into(binding.editProfileAvatar)
             .clearOnDetach()
-
-        // Set form marks
-        binding.apply {
-            editProfileInputLayoutFullName.markRequiredInRed()
-
-            if (userProfile?.role == UserRole.CUSTOMER) {
-                editProfileTextInputLayoutWhatsApp.markRequiredInRed()
-            } else if (userProfile?.role == UserRole.PARTNER) {
-                editProfileButtonSelectPrimaryLocationButton.markRequiredInRed()
-            }
-        }
 
         /* Listeners */
 
@@ -413,4 +432,27 @@ class ProfileFragment : Fragment(R.layout.fragment_edit_profile) {
             }
         }
     }
+
+    private fun validatePartnerCategory(): Boolean {
+        val selectedCategories = viewModel.selectedCategories.value
+        return if (selectedCategories.isEmpty() && userProfile?.role == UserRole.PARTNER) {
+            binding.editProfileTextCategoriesDescription.setTextColor(
+                getColorFromAttrUseCase(
+                    androidx.appcompat.R.attr.colorError, requireContext()
+                )
+            )
+            false
+        } else {
+            binding.editProfileTextCategoriesDescription.setTextColor(
+                getColorFromAttrUseCase(
+                    com.google.android.material.R.attr.colorOnSurface,
+                    requireContext()
+                )
+            )
+            true
+        }
+    }
+
+    override val progressIndicator: LinearProgressIndicator
+        get() = binding.editProfileProgressIndicator
 }

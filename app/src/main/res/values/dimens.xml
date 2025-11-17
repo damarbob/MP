@@ -15,4 +15,5 @@
     <dimen name="radius_medium">16dp</dimen>
     <dimen name="radius_large">24dp</dimen>
     <dimen name="radius_extra_large">32dp</dimen>
+    <dimen name="column_space_in_grid">4dp</dimen>
 </resources>
