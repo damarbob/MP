@@ -1,9 +1,7 @@
 package id.monpres.app.ui.adminhome
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -42,14 +40,9 @@ class AdminHomeFragment : Fragment(R.layout.fragment_admin_home) {
         // TODO: Use the ViewModel
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupUI()
-
-        return binding.root
     }
 
     private fun setupUI() {
