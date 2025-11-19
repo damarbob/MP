@@ -246,4 +246,12 @@
     <action
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment" />
+    <fragment
+        android:id="@+id/monpresSettingFragment"
+        android:name="id.monpres.app.ui.settings.MonpresSettingFragment"
+        android:label="@string/setting"
+        tools:layout="@layout/fragment_monpres_setting" />
+    <action
+        android:id="@+id/action_global_monpresSettingFragment"
+        app:destination="@id/monpresSettingFragment" />
 </navigation>

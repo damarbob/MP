@@ -1,18 +1,17 @@
 package id.monpres.app
 
-import android.app.Application
 import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.enums.Language
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.notification.OrderServiceNotification
-import id.monpres.app.repository.OrderServiceRepository
-import id.monpres.app.repository.UserIdentityRepository
+import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.ConnectionState
 import id.monpres.app.state.NavigationGraphState
@@ -31,6 +30,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -70,23 +70,25 @@ sealed class ToastEvent {
 class MainViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val userRepository: UserRepository,
-    private val userIdentityRepository: UserIdentityRepository,
-    private val orderServiceRepository: OrderServiceRepository,
-    private val sessionManager: SessionManager,
     private val networkConnectivityObserver: NetworkConnectivityObserver,
-    private val application: Application,
     // --- USE CASES (Assumed to be refactored as suspend functions) ---
     private val getOrCreateUserUseCase: GetOrCreateUserUseCase,
     private val getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase,
     private val getUserVerificationStatusUseCase: GetUserVerificationStatusUseCase,
     private val checkEmailVerificationUseCase: CheckEmailVerificationUseCase,
     private val resendVerificationEmailUseCase: ResendVerificationEmailUseCase,
-    private val signOutUseCase: SignOutUseCase
+    private val signOutUseCase: SignOutUseCase,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     companion object {
         private val TAG = MainViewModel::class.simpleName
     }
+
+    // --- SETTINGS ---
+    val isDynamicColorApplied = appPreferences.isDynamicColorEnabled
+    val themeMode = appPreferences.theme
+    val language = appPreferences.language
 
     // --- STATE FLOWS ---
     private val _navigationGraphState =
@@ -133,15 +135,22 @@ class MainViewModel @Inject constructor(
                 when (status.state) {
                     ConnectionState.Connected -> {
                         _isConnected.value = true
+                        val userRecord = userRepository.getCurrentUserRecord()
                         // Only run auth check if we aren't already verified and loaded
-                        if (userRepository.getCurrentUserRecord() == null) {
+                        if (userRecord == null) {
                             runAuthenticationCheck()
+                        } else {
+                            determineNavigationGraph(userRecord)
                         }
                     }
 
                     ConnectionState.Disconnected -> {
                         _isConnected.value = false
                         _mainLoadingState.value = false
+                        val userRecord = userRepository.userRecord.value
+                        if (userRecord != null) {
+                            determineNavigationGraph(userRecord)
+                        }
                     }
                 }
             }
@@ -399,4 +408,24 @@ class MainViewModel @Inject constructor(
     }
 
     fun getCurrentUser() = userRepository.getCurrentUserRecord()
+
+    fun syncLanguageWithSystem(systemLangTag: String) {
+        viewModelScope.launch {
+            // Get the last known value from our DataStore
+            val lastKnownLang = appPreferences.language.first()
+            val systemLanguage = Language.fromCode(systemLangTag) ?: Language.SYSTEM
+
+            if (lastKnownLang != systemLanguage.name) {
+                Log.i(
+                    TAG,
+                    "Language mismatch detected! System: '$systemLangTag', DataStore: '$lastKnownLang'. Syncing..."
+                )
+                // The value is different, so update our DataStore to match the system.
+                appPreferences.setLanguage(systemLanguage)
+            } else {
+                // The values match, no action needed.
+                Log.d(TAG, "Language is already in sync with system setting.")
+            }
+        }
+    }
 }

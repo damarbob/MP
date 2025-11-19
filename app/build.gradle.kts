@@ -78,6 +78,10 @@ android {
             ))
         }
     }
+
+    androidResources {
+        generateLocaleConfig = true
+    }
 }
 
 dependencies {

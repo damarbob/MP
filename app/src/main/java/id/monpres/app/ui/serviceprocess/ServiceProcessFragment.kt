@@ -95,7 +95,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
         fun newInstance() = ServiceProcessFragment()
         val TAG = ServiceProcessFragment::class.simpleName
         const val ARG_ORDER_SERVICE_ID = "orderServiceId"
-        const val MINIMUM_DISTANCE_TO_START_SERVICE = 20
+        const val MINIMUM_DISTANCE_TO_START_SERVICE = 50f
     }
 
     private val viewModel: ServiceProcessViewModel by viewModels()
@@ -223,7 +223,6 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
 
         currentUser = mainGraphViewModel.getCurrentUser()
         mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
-
 
         if (!OrderServiceNotification.isPostPromotionEnabled(requireContext())) {
             Log.d(
@@ -416,6 +415,15 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
             getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance))
 
         binding.fragmentServiceProcessTextViewWarningMessage.text = getString(R.string.haven_t_arrived_at_the_location_yet, numberFormatterUseCase(aerialDistanceToTargetInMeters))
+
+        // Disable button if order is on the way and distance is greater than minimum
+        if (currentUser?.role == UserRole.PARTNER && orderService.status == OrderStatus.ON_THE_WAY && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE) {
+            binding.fragmentServiceProcessActButton.isLocked = true
+            binding.fragmentServiceProcessTextViewWarningMessage.visibility = View.VISIBLE
+        } else {
+            binding.fragmentServiceProcessActButton.isLocked = false
+            binding.fragmentServiceProcessTextViewWarningMessage.visibility = View.GONE
+        }
     }
 
     // New helper functions for distance calculation

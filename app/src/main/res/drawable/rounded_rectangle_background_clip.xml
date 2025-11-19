@@ -3,8 +3,7 @@
     android:color="?colorPrimaryInverse">
     <item>
         <shape>
-            <solid android:color="?colorSurfaceContainer" /> <!-- Background color -->
-            <corners android:radius="@dimen/large_rounding" />   <!-- Rounded corners -->
+            <corners android:radius="@dimen/radius_medium" />   <!-- Rounded corners -->
         </shape>
 
     </item>

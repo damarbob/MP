@@ -90,6 +90,7 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
             Log.d(TAG, "Logged in. Navigating to user dashboard.")
 
             val intent = Intent(this, MainActivity::class.java)
+            this.intent.extras?.let { intent.putExtras(it) }
             startActivity(intent)
             this.finish()  // Finish the current activity so the user can't navigate back to the login screen
         }
@@ -160,7 +161,11 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
                         this,
                         getString(R.string.signed_in_as, user?.displayName), Toast.LENGTH_SHORT
                     ).show()
-                    this.startActivity(Intent(this, MainActivity::class.java))
+                    this.startActivity(
+                        Intent(
+                            this,
+                            MainActivity::class.java
+                        ).apply { this@LoginActivity.intent.extras?.let { putExtras(it) } })
                     this.finish()
                 } else {
                     Toast.makeText(

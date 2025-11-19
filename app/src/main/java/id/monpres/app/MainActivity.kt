@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.Insets
 import androidx.core.view.GravityCompat
@@ -40,22 +41,30 @@ import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.bumptech.glide.Glide
 import com.faltenreich.skeletonlayout.Skeleton
+import com.faltenreich.skeletonlayout.SkeletonConfig
 import com.faltenreich.skeletonlayout.createSkeleton
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.DynamicColorsOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.databinding.ActivityMainBinding
+import id.monpres.app.enums.Language
+import id.monpres.app.enums.ThemeMode
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.notification.OrderServiceNotification
+import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.service.OrderServiceLocationTrackingService
 import id.monpres.app.state.NavigationGraphState
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
+import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -120,6 +129,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        applyInitialSettings()
 
         networkConnectivityObserver.registerNetworkCallback()
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -385,6 +395,51 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 }
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isDynamicColorApplied.collect { isApplied ->
+                    Log.d(TAG, "isDynamicColorApplied: $isApplied")
+                    setDynamicColors(isApplied)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.themeMode.collect { mode ->
+                    Log.d(TAG, "Theme mode: $mode")
+                    val modeInt = AppPreferences.decideThemeMode(enumByNameIgnoreCaseOrNull<ThemeMode>(mode, ThemeMode.SYSTEM)!!)
+                    AppCompatDelegate.setDefaultNightMode(modeInt)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.language.collect { language ->
+                    Log.d(TAG, "Language: $language")
+                    setAppLanguage(enumByNameIgnoreCaseOrNull<Language>(language))
+                }
+            }
+        }
+    }
+
+    private fun setAppLanguage(language: Language? = null) {
+        AppCompatDelegate.setApplicationLocales(AppPreferences.decideLanguage(language))
+    }
+
+    private fun setDynamicColors(isApplied: Boolean) {
+        val precondition = DynamicColors.Precondition { activity, _ ->
+            isApplied
+        }
+        val options = DynamicColorsOptions.Builder()
+            .setPrecondition(precondition)
+            .build()
+        DynamicColors.applyToActivitiesIfAvailable(
+            application,
+            options
+        )
     }
 
     // --- DIALOG BUILDER FUNCTIONS ---
@@ -467,7 +522,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
         navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainEmail).text =
             auth.currentUser?.email
 
-        skeleton = binding.navHostFragmentActivityMain.createSkeleton()
+        skeleton = binding.navHostFragmentActivityMain.createSkeleton(SkeletonConfig.default(this, R.layout.skeleton_mask))
     }
 
     private fun setupUIListeners() {
@@ -476,6 +531,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 R.id.activityMainDrawerMenuLogOut -> viewModel.signOut()
                 R.id.activityMainDrawerMenuProfile -> navController.navigate(R.id.action_global_profileFragment)
                 R.id.activityMainDrawerMenuOrder -> navController.navigate(R.id.action_global_orderServiceListFragment)
+
+                R.id.activityMainDrawerMenuSettings -> navController.navigate(R.id.action_global_monpresSettingFragment)
             }
             drawerLayout.close()
             true
@@ -611,5 +668,37 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
     override fun onRestart() {
         super.onRestart()
         networkConnectivityObserver.registerNetworkCallback()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Get the current language setting from the Android system for this app.
+        val currentSystemLangTag = if (AppCompatDelegate.getApplicationLocales().isEmpty) {
+            Language.SYSTEM.code
+        } else {
+            AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        }
+
+        Log.d(TAG, "onStart: Current system language for app is '$currentSystemLangTag'")
+
+        // Tell the ViewModel to sync this value with DataStore.
+        // The ViewModel will handle the logic of checking if an update is needed.
+        viewModel.syncLanguageWithSystem(currentSystemLangTag)
+    }
+
+    private fun applyInitialSettings() {
+        // This is one of the few acceptable places to use runBlocking, because it's
+        // essential for the initial UI state and only runs once on activity creation.
+        lifecycleScope.launch {
+            val language = viewModel.language.first()
+            setAppLanguage(enumByNameIgnoreCaseOrNull<Language>(language))
+
+            val isDynamic = viewModel.isDynamicColorApplied.first()
+            setDynamicColors(isDynamic)
+
+            val theme = viewModel.themeMode.first()
+            val modeInt = AppPreferences.decideThemeMode(enumByNameIgnoreCaseOrNull<ThemeMode>(theme, ThemeMode.SYSTEM)!!)
+            AppCompatDelegate.setDefaultNightMode(modeInt)
+        }
     }
 }
