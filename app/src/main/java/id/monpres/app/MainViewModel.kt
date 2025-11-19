@@ -60,6 +60,7 @@ sealed class NavigationEvent {
 
 /**
  * Represents one-time toast/snackbar messages.
+ * TODO: Use data class with message string parameter and use application context.
  */
 sealed class ToastEvent {
     data object VerificationEmailSent : ToastEvent() // Replaces Show(String)

@@ -353,4 +353,7 @@
     <string name="unknown_issue">Unknown issue</string>
     <string name="your_service_categories">Your service categories</string>
     <string name="select_all_services_you_provide_min_1">Select all services you provide min 1</string>
+
+    <string name="manage_orders">Manage Orders</string>
+    <string name="orders">Orders</string>
 </resources>

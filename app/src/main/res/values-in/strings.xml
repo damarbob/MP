@@ -345,4 +345,7 @@
     <string name="unknown_issue">Masalah tidak diketahui</string>
     <string name="your_service_categories">Kategori layanan Anda</string>
     <string name="select_all_services_you_provide_min_1">Pilih layanan yang Anda sediakan, minimal 1</string>
+
+    <string name="manage_orders">Kelola Pesanan</string>
+    <string name="orders">Pesanan</string>
 </resources>

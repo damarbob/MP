@@ -63,18 +63,18 @@ class AdminHomeFragment : Fragment(R.layout.fragment_admin_home) {
                 subtitle = getString(R.string.verify_and_approve_new_user_registrations),
                 iconRes = R.drawable.person_add_24px
             ),
+            Menu(
+                id = "manage_orders",
+                title = getString(R.string.orders),
+                subtitle = getString(R.string.manage_orders),
+                iconRes = R.drawable.orders_24px
+            ),
             // TODO: Enable these menus once implemented
 //            Menu(
 //                id = "manage_users",
 //                title = "Manage Users",
 //                subtitle = "Add, edit, or remove users",
 //                iconRes = R.drawable.person_24px
-//            ),
-//            Menu(
-//                id = "manage_orders",
-//                title = "Manage Orders",
-//                subtitle = "Add, edit, or remove orders",
-//                iconRes = R.drawable.orders_24px
 //            ),
         ))
 
@@ -92,6 +92,12 @@ class AdminHomeFragment : Fragment(R.layout.fragment_admin_home) {
                         // Navigate to AdminNewUsersFragment
                         findNavController().navigate(
                             R.id.action_adminHomeFragment_to_adminNewUsersFragment
+                        )
+                    }
+                    "manage_orders" -> {
+                        // Navigate to AdminNewUsersFragment
+                        findNavController().navigate(
+                            R.id.action_global_orderServiceListFragment
                         )
                     }
 //                    "manage_users" -> {}

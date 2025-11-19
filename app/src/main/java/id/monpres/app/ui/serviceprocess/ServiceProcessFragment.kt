@@ -50,6 +50,7 @@ import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialFade
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
+import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.plugin.annotation.annotations
@@ -276,12 +277,6 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
 
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
-        // 1. Tell the ViewModel to start observing the specific order for this screen.
-        //    This will populate the dedicated `selectedOrderServiceState` flow.
-        mainGraphViewModel.observeOrderServiceById(args.orderServiceId)
-
-        // 2. Observe the NEW dedicated state flow for the single selected order.
-        //    This is the CRITICAL FIX to prevent overwriting the master list.
         observeUiState(mainGraphViewModel.openedOrderServiceState) { data ->
             // This 'data' is now correctly a single OrderService object.
             orderService = data
@@ -304,7 +299,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.selectedPaymentMethod.collect { paymentMethod ->
                     if (paymentMethod != null) {
-                        binding.fragmentServiceProcessTextViewPaymentMethod.text = paymentMethod.name
+                        binding.fragmentServiceProcessTextViewPaymentMethod.text =
+                            paymentMethod.name
                     }
                 }
             }
@@ -322,9 +318,10 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
 
         // Determine button visibility based on role and status
         when (role) {
-            UserRole.CUSTOMER -> {
+            UserRole.CUSTOMER, UserRole.ADMIN -> {
+                // Admin is treated like a Customer (Viewer)
                 showCancelButton(status == OrderStatus.ORDER_PLACED)
-                showActionButton(false) // Customer never sees the main action button
+                showActionButton(false) // Customer/Admin never sees the main action button
 
                 TransitionManager.beginDelayedTransition(binding.root, AutoTransition())
                 // Show/hide payment section based on status
@@ -415,7 +412,10 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
         binding.fragmentServiceProcessTextViewCurrentDistance.text =
             getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance))
 
-        binding.fragmentServiceProcessTextViewWarningMessage.text = getString(R.string.haven_t_arrived_at_the_location_yet, numberFormatterUseCase(aerialDistanceToTargetInMeters))
+        binding.fragmentServiceProcessTextViewWarningMessage.text = getString(
+            R.string.haven_t_arrived_at_the_location_yet,
+            numberFormatterUseCase(aerialDistanceToTargetInMeters)
+        )
     }
 
     // New helper functions for distance calculation
@@ -465,6 +465,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
             // Order Item
             fragmentServiceProcessLinearLayoutOrderItemContainer.visibility =
                 if (orderService.orderItems.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+            // Edit button only for Partner
             fragmentServiceProcessButtonEditOrderItem.visibility =
                 if (currentUser?.role == UserRole.PARTNER && orderService.status?.type != OrderStatusType.CLOSED) View.VISIBLE else View.GONE
 
@@ -477,16 +479,27 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
                     timeStyle = DateFormat.LONG
                 )
 
+            // Determine logic for Name and Detail based on current user role
+            // Admin & Customer see Partner's Name. Partner sees Customer's Name.
+            val isPartnerView = currentUser?.role == UserRole.PARTNER
+
             fragmentServiceProcessTextViewUserName.text =
-                if (currentUser?.role == UserRole.CUSTOMER) orderService.partner?.displayName
-                    ?: "-" else if (currentUser?.role == UserRole.PARTNER) orderService.user?.displayName
-                    ?: "-" else "-"
+                if (isPartnerView) orderService.user?.displayName ?: "-"
+                else orderService.partner?.displayName ?: "-"
+
             fragmentServiceProcessTextViewUserDetail.text =
-                when (currentUser?.role) {
-                    UserRole.CUSTOMER -> getString(R.string.partner)
-                    UserRole.PARTNER -> getString(R.string.customer)
-                    else -> ""
-                }
+                if (isPartnerView) getString(R.string.customer)
+                else getString(R.string.partner)
+
+            // Admin sees both Customer and Partner
+            if (currentUser?.role == UserRole.ADMIN) {
+                fragmentServiceProcessLinearLayoutUserOrPartnerContainer2.visibility = View.VISIBLE
+                fragmentServiceProcessTextViewUserName2.text =
+                    orderService.user?.displayName ?: "-"
+                fragmentServiceProcessTextViewUserDetail2.text = getString(R.string.customer)
+            } else {
+                fragmentServiceProcessLinearLayoutUserOrPartnerContainer2.visibility = View.GONE
+            }
 
             fragmentServiceProcessOrderId.text = orderService.id ?: "-"
             fragmentServiceProcessLocation.text =
@@ -496,7 +509,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
             fragmentServiceProcessPartner.text = orderService.partnerId ?: "-"
             fragmentServiceProcessVehicle.text = orderService.vehicle?.name ?: "-"
             val issueEnum = orderService.issue?.let { PartnerCategory.fromName(it) }
-            val issueString = issueEnum?.let { getString(it.label) } ?: orderService.issue ?: getString(R.string.unknown_issue)
+            val issueString = issueEnum?.let { getString(it.label) } ?: orderService.issue
+            ?: getString(R.string.unknown_issue)
             fragmentServiceProcessIssue.text = issueString
             fragmentServiceProcessIssueDescription.text =
                 if (orderService.issueDescription?.isNotBlank() == true) orderService.issueDescription else "-"
@@ -508,7 +522,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
             // Set order items list
             orderItemAdapter.submitList(orderItems?.toList())
 
-            // Current distance
+            // Current distance visibility (Usually only for Partner execution view, or if Customer wants to see distance to Partner)
+            // Keeping existing logic: Visible for Partner during active states.
             fragmentServiceProcessTextViewCurrentDistance.visibility =
                 if (currentUser?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
 
@@ -573,11 +588,11 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
 
     private fun setupListeners() {
         binding.fragmentServiceProcessButtonWhatsApp.setOnClickListener {
-            val whatsAppNumber =
+            var whatsAppNumber =
                 when (currentUser?.role) {
-                    UserRole.CUSTOMER -> orderService.partner?.phoneNumber
                     UserRole.PARTNER -> orderService.user?.phoneNumber
-                    else -> null
+                    // Customer & Admin contact the Partner
+                    else -> orderService.partner?.phoneNumber
                 }
 
             if (whatsAppNumber == null) {
@@ -589,6 +604,45 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
                 it.isEnabled = false
                 return@setOnClickListener
             } else {
+
+                val phoneUtil = PhoneNumberUtil.getInstance()
+                try {
+                    val numberProto = phoneUtil.parse(whatsAppNumber, "ID")
+                    whatsAppNumber = "" + numberProto.countryCode + numberProto.nationalNumber
+                } catch (e: Exception) {
+                    // Keep original number if parsing fails
+                }
+
+                Log.d(TAG, "WhatsApp Number 2: $whatsAppNumber")
+
+                openWhatsAppUseCase(requireContext(), whatsAppNumber)
+            }
+        }
+
+        binding.fragmentServiceProcessButtonWhatsApp2.setOnClickListener {
+            var whatsAppNumber =
+                if (currentUser?.role == UserRole.ADMIN) orderService.user?.phoneNumber else null
+
+            if (whatsAppNumber == null) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.there_is_no_phone_number_for_that_user),
+                    Toast.LENGTH_LONG
+                ).show()
+                it.isEnabled = false
+                return@setOnClickListener
+            } else {
+
+                val phoneUtil = PhoneNumberUtil.getInstance()
+                try {
+                    val numberProto = phoneUtil.parse(whatsAppNumber, "ID")
+                    whatsAppNumber = "" + numberProto.countryCode + numberProto.nationalNumber
+                } catch (e: Exception) {
+                    // Keep original number if parsing fails
+                }
+
+                Log.d(TAG, "WhatsApp Number 2: $whatsAppNumber")
+
                 openWhatsAppUseCase(requireContext(), whatsAppNumber)
             }
         }
@@ -748,7 +802,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
                     updatedAt = Timestamp.now(),
                     status = orderService.status?.serviceNextProcess(),
                     orderItems = orderItems,
-                    price = price
+                    price = price,
+                    paymentMethod = viewModel.selectedPaymentMethod.value?.id
                 )
             ), onEmpty = {
                 view.isLocked = true
