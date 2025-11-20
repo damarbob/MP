@@ -146,6 +146,17 @@ abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Set special transition to selected destinations
+        findNavController().addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.profileFragment, R.id.monpresSettingFragment, R.id.orderServiceListFragment -> {
+                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+                    reenterTransition =
+                        MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
+                }
+            }
+        }
+
         // Setup vehicle dropdown
         val vehicleInputView = getVehicleAutoCompleteTextView()
         val vehicles = myVehicles.map { it.name }

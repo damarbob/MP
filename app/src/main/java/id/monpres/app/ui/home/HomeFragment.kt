@@ -116,7 +116,8 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
             fragmentHomeButtonAddVehicle.setOnClickListener {
                 if (currentUser != null) {
                     exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-                    reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+                    reenterTransition =
+                        MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                     findNavController().navigate(R.id.action_homeFragment_to_insertVehicleFragment)
                 } else {
                     Toast.makeText(
@@ -128,8 +129,8 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
             }
 
             fragmentHomeButtonSeeAllHistory.setOnClickListener {
-                exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-                reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+                exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+                reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
                 findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToOrderServiceListFragment())
             }
 
@@ -155,8 +156,10 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
                     // Quick Service (temp id) TODO: Finalize ID
                     "1" -> {
                         handleServiceClicked {
-                            exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-                            reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+                            exitTransition =
+                                MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                            reenterTransition =
+                                MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                             findNavController().navigate(
                                 HomeFragmentDirections.actionHomeFragmentToQuickServiceFragment(
                                     serviceId
@@ -167,8 +170,10 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
                     // Scheduled Service (temp id) TODO: Finalize ID
                     "2" -> {
                         handleServiceClicked {
-                            exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-                            reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+                            exitTransition =
+                                MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+                            reenterTransition =
+                                MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
                             findNavController().navigate(
                                 R.id.action_homeFragment_to_scheduledServiceFragment,
                                 bundleOf(Pair("serviceId", serviceId))
@@ -295,7 +300,10 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
                     val serviceProcessTransitionName =
                         getString(R.string.service_process_transition_name)
                     val extras = FragmentNavigatorExtras(root to serviceProcessTransitionName)
-                    val directions = HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(orderService.id!!)
+                    val directions =
+                        HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(
+                            orderService.id!!
+                        )
                     findNavController().navigate(
                         directions, extras
                     )

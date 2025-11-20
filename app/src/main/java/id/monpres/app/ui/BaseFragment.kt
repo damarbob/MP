@@ -1,6 +1,7 @@
 package id.monpres.app.ui
 
 import android.animation.ObjectAnimator
+import android.os.Bundle
 import android.view.View
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
@@ -9,7 +10,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.transition.MaterialSharedAxis
+import id.monpres.app.R
 import id.monpres.app.state.UiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -21,6 +25,19 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId) {
     private val activeLoaders = AtomicInteger(0)
 
     abstract val progressIndicator: LinearProgressIndicator
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        findNavController().addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.profileFragment, R.id.monpresSettingFragment, R.id.orderServiceListFragment -> {
+                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+                    reenterTransition =
+                        MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
+                }
+            }
+        }
+    }
 
     /**
      * Observes a [Flow] of [UiState] and executes the provided callbacks based on the state.

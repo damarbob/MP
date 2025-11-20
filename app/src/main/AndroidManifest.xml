@@ -57,7 +57,8 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

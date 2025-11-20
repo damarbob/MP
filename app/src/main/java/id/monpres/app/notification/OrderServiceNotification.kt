@@ -265,7 +265,7 @@ object OrderServiceNotification {
         return NotificationCompat.Builder(context, BASE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_mp_notification)
             .setContentTitle(context.getString(R.string.app_name))
-            .setContentText("Starting service")
+            .setContentText(context.getString(R.string.app_running_in_background))
             .setGroup(ORDER_NOTIFICATION_GROUP_KEY)
 //            .setContentIntent(contentIntent)
 //            .setOngoing(ongoing)

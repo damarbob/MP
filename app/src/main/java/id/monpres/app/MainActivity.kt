@@ -163,13 +163,18 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             // Apply padding to the root for navigation drawer cutouts
             v.setPadding(insets.left, 0, insets.right, 0)
 
-            // NavHostFragment (main content) gets bottom padding
-            binding.navHostFragmentActivityMain.updatePadding(bottom = insets.bottom)
+            // NavHostFragment (main content)
+            binding.navHostFragmentActivityMain.updatePadding(
+                left = insets.left,
+                right = insets.right
+            )
 
             // NavigationView (drawer content) gets all insets
             binding.activityMainNavigationView.updatePadding(
                 top = insets.top,
-                bottom = insets.bottom
+                bottom = insets.bottom,
+                left = insets.left,
+                right = insets.right
             )
 
             // AppBar gets left/right
@@ -182,10 +187,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 right = insets.right
             )
 
-            // We consume the bottom inset, but pass the rest down
             WindowInsetsCompat.Builder(windowInsets).setInsets(
                 WindowInsetsCompat.Type.systemBars(),
-                Insets.of(0, insets.top, 0, 0) // Keep top inset for AppBar
+                Insets.of(0, insets.top, 0, insets.bottom)
             ).build()
         }
     }
@@ -409,7 +413,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.themeMode.collect { mode ->
                     Log.d(TAG, "Theme mode: $mode")
-                    val modeInt = AppPreferences.decideThemeMode(enumByNameIgnoreCaseOrNull<ThemeMode>(mode, ThemeMode.SYSTEM)!!)
+                    val modeInt = AppPreferences.decideThemeMode(
+                        enumByNameIgnoreCaseOrNull<ThemeMode>(
+                            mode,
+                            ThemeMode.SYSTEM
+                        )!!
+                    )
                     AppCompatDelegate.setDefaultNightMode(modeInt)
                 }
             }
@@ -522,7 +531,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
         navViewCardHeader.findViewById<TextView>(R.id.headerNavigationActivityMainEmail).text =
             auth.currentUser?.email
 
-        skeleton = binding.navHostFragmentActivityMain.createSkeleton(SkeletonConfig.default(this, R.layout.skeleton_mask))
+        skeleton = binding.navHostFragmentActivityMain.createSkeleton(
+            SkeletonConfig.default(
+                this,
+                R.layout.skeleton_mask
+            )
+        )
     }
 
     private fun setupUIListeners() {
@@ -697,7 +711,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             setDynamicColors(isDynamic)
 
             val theme = viewModel.themeMode.first()
-            val modeInt = AppPreferences.decideThemeMode(enumByNameIgnoreCaseOrNull<ThemeMode>(theme, ThemeMode.SYSTEM)!!)
+            val modeInt = AppPreferences.decideThemeMode(
+                enumByNameIgnoreCaseOrNull<ThemeMode>(
+                    theme,
+                    ThemeMode.SYSTEM
+                )!!
+            )
             AppCompatDelegate.setDefaultNightMode(modeInt)
         }
     }

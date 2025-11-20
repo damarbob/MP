@@ -412,6 +412,11 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        setDropdownsOptions()
+    }
+
     override val progressIndicator: LinearProgressIndicator
         get() = binding.fragmentEditVehicleProgressIndicator
 }

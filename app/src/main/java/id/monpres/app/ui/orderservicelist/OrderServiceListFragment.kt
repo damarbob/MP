@@ -48,8 +48,8 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
         postponeEnterTransition()
         view.doOnPreDraw { startPostponedEnterTransition() }
 
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
 
         // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceListNestedScrollView) { v, windowInsets ->

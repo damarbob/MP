@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.radiobutton.MaterialRadioButton
+import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.R
@@ -31,6 +32,8 @@ class MonpresSettingFragment : Fragment(R.layout.fragment_monpres_setting) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
 
         setupDynamicColorSetting()
         createThemeRadioOptions()

@@ -15,9 +15,5 @@ enum class Language(val code: String, @field:StringRes val label: Int) {
         fun fromCode(code: String): Language? {
             return entries.find { code.contains(it.code) }
         }
-
-        fun byNameIgnoreCaseOrNull(input: String): Language? {
-            return entries.firstOrNull { it.name.equals(input, true) }
-        }
     }
 }

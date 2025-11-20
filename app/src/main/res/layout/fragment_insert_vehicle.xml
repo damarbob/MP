@@ -31,8 +31,7 @@
                 android:maxWidth="@dimen/input_field_max_width"
                 android:minWidth="@dimen/input_field_max_width"
                 android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="16dp"
+                android:padding="16dp"
                 app:layout_constraintBottom_toTopOf="@+id/fragmentInsertVehicleButtonSave"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -259,18 +258,18 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentInsertVehicleButtonSave"
                 style="@style/Widget.Material3Expressive.Button"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/space_between_input_field"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_margin="@dimen/space_between_input_field"
                 android:text="@string/save"
                 app:icon="@drawable/save_24px"
                 app:iconGravity="textStart"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/fragmentInsertVehicleLinearLayout" />
+                app:layout_constraintTop_toBottomOf="@id/fragmentInsertVehicleLinearLayout"
+                app:layout_constraintVertical_chainStyle="packed"
+                app:layout_constraintWidth_max="@dimen/input_field_max_width" />
 
             <!--<com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentInsertVehicleButtonTry"

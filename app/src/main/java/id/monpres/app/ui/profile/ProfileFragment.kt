@@ -72,8 +72,8 @@ class ProfileFragment : BaseFragment(R.layout.fragment_edit_profile) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Set the transition for this fragment
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
 

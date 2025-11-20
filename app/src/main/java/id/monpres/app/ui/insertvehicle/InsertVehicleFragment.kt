@@ -154,7 +154,6 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
             android.R.layout.simple_dropdown_item_1line,
             VehicleTransmission.toListString(requireContext())
         )
-        vehicleTransmissionAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentInsertVehicleDropdownVehicleTransmission.setAdapter(
             vehicleTransmissionAdapter
         )
@@ -165,7 +164,6 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
             android.R.layout.simple_dropdown_item_1line,
             VehicleWheelDrive.toListString()
         )
-        vehicleWheelDriveAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentInsertVehicleDropdownVehicleWheelDrive.setAdapter(vehicleWheelDriveAdapter)
 
         // Power source dropdown
@@ -174,7 +172,6 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
             android.R.layout.simple_dropdown_item_1line,
             VehiclePowerSource.toListString(requireContext())
         )
-        vehiclePowerSourceAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line)
         binding.fragmentInsertVehicleDropdownVehiclePowerSource.setAdapter(vehiclePowerSourceAdapter)
     }
 
@@ -366,6 +363,11 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
             }
             true
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setDropdownsOptions()
     }
 
     override val progressIndicator: LinearProgressIndicator
