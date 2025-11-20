@@ -67,6 +67,7 @@ import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
+import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
@@ -90,7 +91,7 @@ import java.util.concurrent.TimeUnit
 
 
 @AndroidEntryPoint
-class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
+class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process), IOrderServiceProvider {
 
     companion object {
         fun newInstance() = ServiceProcessFragment()
@@ -1045,4 +1046,9 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process) {
 
     override val progressIndicator: LinearProgressIndicator
         get() = binding.fragmentServiceProcessLinearProgressIndicator
+
+    override fun getCurrentOrderService(): OrderService? {
+        // Return the local variable we already have populated
+        return if (::orderService.isInitialized) orderService else null
+    }
 }

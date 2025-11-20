@@ -47,6 +47,7 @@ import com.google.firebase.auth.auth
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.databinding.ActivityMainBinding
+import id.monpres.app.enums.UserRole
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.notification.OrderServiceNotification
@@ -210,12 +211,52 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         prepareProfileIconMenu(menu)
+
+        // Programmatically hide the edit menu by default on start
+        menu.findItem(R.id.menu_edit)?.isVisible = false
+
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> super.onOptionsItemSelected(item)
+
+            R.id.menu_edit -> {
+                // 1. Get the current fragment from the NavHost
+                val navHostFragment =
+                    supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main)
+                val currentFragment =
+                    navHostFragment?.childFragmentManager?.fragments?.firstOrNull()
+
+                // 2. Check if it provides an OrderService
+                if (currentFragment is id.monpres.app.interfaces.IOrderServiceProvider) {
+                    val orderService = currentFragment.getCurrentOrderService()
+
+                    if (orderService != null) {
+                        // 3. Navigate to Edit Fragment
+                        // We use a global action or explicit ID navigation.
+                        // Since both fragments share the same destination, we can use the ID directly with a Bundle or Directions.
+                        // Using Directions is safer if you generated a global action,
+                        // but standard navigate with Bundle works universally here since the ID is known.
+
+                        navController.navigate(
+                            R.id.action_global_orderServiceEditFragment, // Ensure you created this global action in nav_graph
+                            Bundle().apply {
+                                putParcelable("orderService", orderService)
+                            }
+                        )
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "Data not ready yet",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -244,6 +285,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 destination.id == R.id.homeFragment ||
                         destination.id == R.id.partnerHomeFragment ||
                         destination.id == R.id.adminHomeFragment
+
+            // Show only on specific fragments AND if user is ADMIN
+            val isEditablePage = destination.id == R.id.orderServiceDetailFragment ||
+                    destination.id == R.id.serviceProcessFragment
+
+            val isAdmin = viewModel.getCurrentUser()?.role == UserRole.ADMIN
+
+            optionsMenu?.findItem(R.id.menu_edit)?.isVisible = isEditablePage && isAdmin
         }
     }
 

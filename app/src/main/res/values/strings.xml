@@ -356,4 +356,7 @@
 
     <string name="manage_orders">Manage Orders</string>
     <string name="orders">Orders</string>
+
+    <string name="order_updated_successfully">Order updated successfully</string>
+    <string name="order_status">Order Status</string>
 </resources>

@@ -28,6 +28,7 @@ import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
 import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
+import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.adapter.OrderItemAdapter
@@ -43,7 +44,7 @@ import java.text.DateFormat
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_detail) {
+class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_detail), IOrderServiceProvider {
 
     companion object {
         fun newInstance() = OrderServiceDetailFragment()
@@ -402,5 +403,10 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             }
 
         }
+    }
+
+    override fun getCurrentOrderService(): OrderService? {
+        // Return the local variable we already have populated
+        return if (::orderService.isInitialized) orderService else null
     }
 }
