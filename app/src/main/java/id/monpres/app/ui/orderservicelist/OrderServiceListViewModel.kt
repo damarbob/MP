@@ -25,14 +25,27 @@ class OrderServiceListViewModel @Inject constructor(
     private val _selectedChipId = MutableStateFlow<Int?>(null)
     val selectedChipId: StateFlow<Int?> = _selectedChipId.asStateFlow()
 
+    // Input: Search Query
+    private val _searchQuery = MutableStateFlow<String>("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
     // --- State to be observed by the UI ---
 
     // Output: The final, filtered, and sorted list for the RecyclerView
     val filteredOrderServices: StateFlow<List<OrderService>> = combine(
         _allOrderServices,
-        _selectedChipId
-    ) { allOrders, chipId ->
-        // This block runs whenever the order list OR the selected chip changes
+        _selectedChipId,
+        _searchQuery
+    ) { allOrders, chipId, query ->
+
+        // 1. Priority: If search query exists, filter by ID and ignore chips
+        if (query.isNotBlank()) {
+            return@combine allOrders.filter {
+                it.id?.contains(query, ignoreCase = true) == true
+            }.sortedByDescending { it.updatedAt }
+        }
+
+        // 2. If no search, filter by Chips
         val ongoingOrders =
             allOrders.filter { it.status?.type == OrderStatusType.OPEN || it.status?.type == OrderStatusType.IN_PROGRESS }
 
@@ -53,7 +66,6 @@ class OrderServiceListViewModel @Inject constructor(
             else -> {
                 // Default case: Show "All" or a default set
                 allOrders.sortedByDescending { it.updatedAt }
-
             }
         }
     }.stateIn(
@@ -73,8 +85,6 @@ class OrderServiceListViewModel @Inject constructor(
             _selectedChipId.value = if (ongoingOrdersExist) {
                 R.id.fragmentOrderServiceListChipOrderStatusOngoing
             } else {
-                // If there are no ongoing orders, you might default to "Completed" or "All".
-                // Here, we can check a different chip or leave it null/blank.
                 R.id.fragmentOrderServiceListChipOrderStatusCompleted
             }
         }
@@ -84,4 +94,7 @@ class OrderServiceListViewModel @Inject constructor(
         _selectedChipId.value = chipId
     }
 
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
 }

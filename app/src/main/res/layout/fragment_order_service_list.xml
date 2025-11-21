@@ -25,6 +25,25 @@
             android:orientation="vertical"
             android:showDividers="middle">
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragmentOrderServiceListTextInputLayoutSearch"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:hint="@string/search"
+                app:endIconMode="clear_text"
+                app:startIconDrawable="@drawable/search_24px">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/fragmentOrderServiceListEditTextSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/fragmentOrderServiceListChipGroupOrderStatus"
                 style="@style/Widget.Material3.ChipGroup"

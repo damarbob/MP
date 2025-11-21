@@ -370,4 +370,6 @@
     <string name="restart_app_message">Please restart the app to apply changes</string>
     <string name="theme_mode">Theme mode</string>
     <string name="app_running_in_background">App running in background</string>
+
+    <string name="search">Search</string>
 </resources>

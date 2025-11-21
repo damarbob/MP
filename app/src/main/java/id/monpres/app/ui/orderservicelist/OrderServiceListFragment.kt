@@ -1,7 +1,10 @@
 package id.monpres.app.ui.orderservicelist
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
@@ -64,11 +67,39 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
         }
 
         setupOrderServiceListRecyclerView()
+        setupSearchListener() // Added Search Listener setup
         setupOrderServiceListObservers()
 
         binding.fragmentOrderServiceListChipGroupOrderStatus.setOnCheckedStateChangeListener { group, checkedIds ->
             viewModel.setSelectedChipId(group.checkedChipId)
         }
+    }
+
+    private fun setupSearchListener() {
+        // Handle Enter / Submit button on keyboard
+        binding.fragmentOrderServiceListEditTextSearch.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+                val query = v.text.toString().trim()
+                viewModel.setSearchQuery(query)
+                hideKeyboard()
+                return@setOnEditorActionListener true
+            }
+            false
+        }
+
+        // Handle the Clear Text icon click to reset search
+        binding.fragmentOrderServiceListTextInputLayoutSearch.setEndIconOnClickListener {
+            binding.fragmentOrderServiceListEditTextSearch.text?.clear()
+            viewModel.setSearchQuery("")
+            hideKeyboard()
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
+        binding.fragmentOrderServiceListEditTextSearch.clearFocus()
     }
 
     private fun setupOrderServiceListRecyclerView() {
@@ -80,7 +111,6 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
                     val orderDetailTransitionName =
                         getString(R.string.order_detail_transition_name)
                     val extras = FragmentNavigatorExtras(root to orderDetailTransitionName)
-                    // The status is closed (completed, cancelled, returned, failed)
                     val directions =
                         OrderServiceListFragmentDirections.actionOrderServiceListFragmentToOrderServiceDetailFragment(
                             orderService, mainGraphViewModel.getCurrentUser()
@@ -123,25 +153,23 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
                     viewModel.setAllOrderServices(it)
                 }
             }
+
             UserRole.PARTNER -> {
                 observeUiState(mainGraphViewModel.partnerOrderServicesState) {
                     viewModel.setAllOrderServices(it)
                 }
             }
+
             UserRole.ADMIN -> {
-                // Trigger the fetch for all orders
                 mainGraphViewModel.observeAllOrderServices()
-                // Observe the state containing all orders
                 observeUiState(mainGraphViewModel.allOrderServicesState) {
                     viewModel.setAllOrderServices(it)
                 }
             }
-            else -> {
-                // Handle other roles or null if necessary
-            }
+
+            else -> {}
         }
 
-        // 2. Observe the final, filtered list and submit it to the adapter.
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filteredOrderServices.collect { filteredList ->
@@ -151,11 +179,9 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
             }
         }
 
-        // 3. Observe the selected chip ID just to update the UI (the ChipGroup).
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.selectedChipId.collect { chipId ->
-                    // Ensure the correct chip is visually checked without triggering the listener again.
                     if (binding.fragmentOrderServiceListChipGroupOrderStatus.checkedChipId != chipId) {
                         binding.fragmentOrderServiceListChipGroupOrderStatus.check(
                             chipId ?: View.NO_ID
