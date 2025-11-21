@@ -247,6 +247,21 @@
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment" />
     <fragment
+        android:id="@+id/orderServiceEditFragment"
+        android:name="id.monpres.app.ui.orderserviceedit.OrderServiceEditFragment"
+        android:label="@string/edit"
+        tools:layout="@layout/fragment_order_service_edit" >
+        <argument
+            android:name="orderService"
+            app:argType="id.monpres.app.model.OrderService" />
+        <action
+            android:id="@+id/action_orderServiceEditFragment_to_orderItemEditorFragment"
+            app:destination="@id/orderItemEditorFragment" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_orderServiceEditFragment"
+        app:destination="@id/orderServiceEditFragment" />
+    <fragment
         android:id="@+id/monpresSettingFragment"
         android:name="id.monpres.app.ui.settings.MonpresSettingFragment"
         android:label="@string/setting"

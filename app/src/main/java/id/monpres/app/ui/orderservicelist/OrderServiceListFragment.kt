@@ -115,13 +115,29 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
     }
 
     private fun setupOrderServiceListObservers() {
-        if (mainGraphViewModel.getCurrentUser()?.role == UserRole.CUSTOMER) {
-            observeUiState(mainGraphViewModel.userOrderServicesState) {
-                viewModel.setAllOrderServices(it)
+        val currentUser = mainGraphViewModel.getCurrentUser()
+
+        when (currentUser?.role) {
+            UserRole.CUSTOMER -> {
+                observeUiState(mainGraphViewModel.userOrderServicesState) {
+                    viewModel.setAllOrderServices(it)
+                }
             }
-        } else if (mainGraphViewModel.getCurrentUser()?.role == UserRole.PARTNER) {
-            observeUiState(mainGraphViewModel.partnerOrderServicesState) {
-                viewModel.setAllOrderServices(it)
+            UserRole.PARTNER -> {
+                observeUiState(mainGraphViewModel.partnerOrderServicesState) {
+                    viewModel.setAllOrderServices(it)
+                }
+            }
+            UserRole.ADMIN -> {
+                // Trigger the fetch for all orders
+                mainGraphViewModel.observeAllOrderServices()
+                // Observe the state containing all orders
+                observeUiState(mainGraphViewModel.allOrderServicesState) {
+                    viewModel.setAllOrderServices(it)
+                }
+            }
+            else -> {
+                // Handle other roles or null if necessary
             }
         }
 
@@ -148,7 +164,6 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
                 }
             }
         }
-
     }
 
     private fun toggleEmptyState(isEmpty: Boolean) {

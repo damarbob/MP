@@ -170,6 +170,58 @@
                             </LinearLayout>
                         </LinearLayout>
 
+                        <LinearLayout
+                            android:id="@+id/fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/rounded_large_rectangle_background"
+                            android:divider="@drawable/divider_gap_16"
+                            android:orientation="horizontal"
+                            android:padding="16dp"
+                            android:showDividers="middle">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/fragmentOrderServiceDetailImageViewUser2"
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:layout_gravity="center_vertical"
+                                android:background="?colorSecondaryContainer"
+                                android:minWidth="48dp"
+                                android:minHeight="48dp"
+                                android:src="@drawable/person_24px"
+                                android:tint="?colorOnSecondaryContainer"
+                                app:contentPadding="8dp"
+                                app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="7"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/fragmentOrderServiceDetailTextViewUserName2"
+                                    style="@style/Widget.App.H5.Bold.Primary"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:ellipsize="end"
+                                    android:gravity="center_vertical"
+                                    android:maxLines="1"
+                                    android:text="@string/title"
+                                    android:textAppearance="?attr/textAppearanceTitleLarge" />
+
+                                <TextView
+                                    android:id="@+id/fragmentOrderServiceDetailTextViewUserDetail2"
+                                    style="@style/Widget.App.P"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="@string/subtitle" />
+                            </LinearLayout>
+                        </LinearLayout>
+
                         <!-- General details -->
                         <LinearLayout
                             android:layout_width="match_parent"

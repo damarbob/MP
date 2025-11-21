@@ -28,6 +28,7 @@ import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
 import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
+import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.adapter.OrderItemAdapter
@@ -43,7 +44,7 @@ import java.text.DateFormat
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_detail) {
+class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_detail), IOrderServiceProvider {
 
     companion object {
         fun newInstance() = OrderServiceDetailFragment()
@@ -163,7 +164,11 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
 
             // Draw the window's background color first ---
             // Get the theme's surface color to use as a base to avoid pure white/black.
-            val bgColor = MaterialColors.getColor(v.context, com.google.android.material.R.attr.colorSurface, 0)
+            val bgColor = MaterialColors.getColor(
+                v.context,
+                com.google.android.material.R.attr.colorSurface,
+                0
+            )
             canvas.drawColor(bgColor)
 
             // Draw the view's own background (e.g., rounded corners shape) ---
@@ -185,9 +190,11 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
      * Captures the view as a bitmap and saves it as a PDF file to the device's public Downloads directory.
      */
     private fun saveInvoiceAsPdf() {
-        val bitmap = getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
+        val bitmap =
+            getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
         if (bitmap == null) {
-            Toast.makeText(requireContext(), "Failed to capture invoice.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Failed to capture invoice.", Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
@@ -196,10 +203,15 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             val result = savePdfToDownloadsUseCase(bitmap, filename)
 
             result.onSuccess {
-                Toast.makeText(requireContext(), "PDF saved to Downloads folder", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "PDF saved to Downloads folder",
+                    Toast.LENGTH_SHORT
+                ).show()
             }.onFailure { error ->
                 Log.e(TAG, "Failed to save PDF", error)
-                Toast.makeText(requireContext(), "Error: Failed to save PDF.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error: Failed to save PDF.", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -209,9 +221,11 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
      * and triggers the system's share sheet.
      */
     private fun shareInvoiceAsPdf() {
-        val bitmap = getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
+        val bitmap =
+            getScreenShotFromView(binding.fragmentOrderServiceDetailLinearLayoutDetailContainer)
         if (bitmap == null) {
-            Toast.makeText(requireContext(), "Failed to capture invoice.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Failed to capture invoice.", Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
@@ -230,7 +244,11 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error writing temporary PDF for sharing", e)
-            Toast.makeText(requireContext(), "Could not prepare PDF for sharing.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Could not prepare PDF for sharing.",
+                Toast.LENGTH_SHORT
+            ).show()
             pdfDocument.close()
             return
         }
@@ -310,25 +328,33 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             fragmentOrderServiceDetailPrice.text =
                 if (orderService.price != null) indonesianCurrencyFormatter(orderService.price!!) else ""
 
+            // Logic Update: Admin sees what the Customer sees (The Partner/Provider details)
             fragmentOrderServiceDetailTextViewUserName.text =
                 when (currentUser?.role) {
-                    UserRole.CUSTOMER -> orderService.partner?.displayName
-                        ?: "-"
-
-                    UserRole.PARTNER -> orderService.user?.displayName
-                        ?: "-"
-
+                    UserRole.PARTNER -> orderService.user?.displayName ?: "-"
+                    // For Customer and Admin, show the Partner (Service Provider)
+                    UserRole.CUSTOMER, UserRole.ADMIN -> orderService.partner?.displayName ?: "-"
                     else -> "-"
                 }
+
             fragmentOrderServiceDetailTextViewUserDetail.text =
                 when (currentUser?.role) {
-                    UserRole.CUSTOMER -> getString(R.string.partner)
-                    UserRole.PARTNER -> getString(
-                        R.string.customer
-                    )
-
+                    UserRole.PARTNER -> getString(R.string.customer)
+                    // Admin sees "Partner" label, matching the Invoice format
+                    UserRole.CUSTOMER, UserRole.ADMIN -> getString(R.string.partner)
                     else -> ""
                 }
+
+            // Admin sees both Customer and Partner
+            if (currentUser?.role == UserRole.ADMIN) {
+                fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer2.visibility = View.VISIBLE
+                fragmentOrderServiceDetailTextViewUserName2.text =
+                    orderService.user?.displayName ?: "-"
+                fragmentOrderServiceDetailTextViewUserDetail2.text = getString(R.string.customer)
+            }
+            else {
+                fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer2.visibility = View.GONE
+            }
 
             // General info
             fragmentOrderServiceDetailInvoiceNumber.text = orderService.id ?: ""
@@ -336,7 +362,8 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             fragmentOrderServiceDetailPartner.text = orderService.partnerId ?: ""
             fragmentOrderServiceDetailVehicle.text = orderService.vehicle?.name ?: ""
             val issueEnum = orderService.issue?.let { PartnerCategory.fromName(it) }
-            val issueString = issueEnum?.let { getString(it.label) } ?: orderService.issue ?: getString(R.string.unknown_issue)
+            val issueString = issueEnum?.let { getString(it.label) } ?: orderService.issue
+            ?: getString(R.string.unknown_issue)
             fragmentOrderServiceDetailIssue.text = issueString
             fragmentOrderServiceDetailIssueDescription.text = orderService.issueDescription ?: ""
 
@@ -376,5 +403,10 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             }
 
         }
+    }
+
+    override fun getCurrentOrderService(): OrderService? {
+        // Return the local variable we already have populated
+        return if (::orderService.isInitialized) orderService else null
     }
 }

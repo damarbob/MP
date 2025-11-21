@@ -353,8 +353,14 @@
     <string name="unknown_issue">Unknown issue</string>
     <string name="your_service_categories">Your service categories</string>
     <string name="select_all_services_you_provide_min_1">Select all services you provide min 1</string>
-    <string name="dynamic_color">Dynamic color (beta)</string>
 
+    <string name="manage_orders">Manage Orders</string>
+    <string name="orders">Orders</string>
+
+    <string name="order_updated_successfully">Order updated successfully</string>
+    <string name="order_status">Order Status</string>
+
+    <string name="dynamic_color">Dynamic color (beta)</string>
     <string name="dynamic_color_desc">Use device theme colors (Android 12+)</string>
     <string name="choose_language">Choose Language</string>
     <string name="english">English</string>

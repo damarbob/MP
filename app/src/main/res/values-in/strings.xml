@@ -346,6 +346,12 @@
     <string name="your_service_categories">Kategori layanan Anda</string>
     <string name="select_all_services_you_provide_min_1">Pilih layanan yang Anda sediakan, minimal 1</string>
 
+    <string name="manage_orders">Kelola Pesanan</string>
+    <string name="orders">Pesanan</string>
+
+    <string name="order_updated_successfully">Order updated successfully</string>
+    <string name="order_status">Order Status</string>
+
     <string name="dynamic_color">Warna dinamis (beta)</string>
     <string name="dynamic_color_desc">Berdasarkan tema warna sistem (Android 12+)</string>
     <string name="choose_language">Pilih bahasa</string>
