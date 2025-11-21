@@ -1,11 +1,15 @@
 package id.monpres.app.ui.orderservicedetail
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -44,7 +48,8 @@ import java.text.DateFormat
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_detail), IOrderServiceProvider {
+class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_detail),
+    IOrderServiceProvider {
 
     companion object {
         fun newInstance() = OrderServiceDetailFragment()
@@ -347,12 +352,12 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
 
             // Admin sees both Customer and Partner
             if (currentUser?.role == UserRole.ADMIN) {
-                fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer2.visibility = View.VISIBLE
+                fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer2.visibility =
+                    View.VISIBLE
                 fragmentOrderServiceDetailTextViewUserName2.text =
                     orderService.user?.displayName ?: "-"
                 fragmentOrderServiceDetailTextViewUserDetail2.text = getString(R.string.customer)
-            }
-            else {
+            } else {
                 fragmentOrderServiceDetailLinearLayoutUserOrPartnerContainer2.visibility = View.GONE
             }
 
@@ -402,6 +407,27 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
                 saveInvoiceAsPdf()
             }
 
+            // Copy Invoice Number to Clipboard on Long Click
+            fragmentOrderServiceDetailInvoiceNumber.setOnLongClickListener {
+                val textToCopy = fragmentOrderServiceDetailInvoiceNumber.text.toString()
+                if (textToCopy.isNotBlank()) {
+                    val clipboard =
+                        requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("Invoice Number", textToCopy)
+                    clipboard.setPrimaryClip(clip)
+
+                    // Only show toast for Android 12 and below.
+                    // Android 13+ (Tiramisu) shows a system UI confirmation automatically.
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.copied),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                true
+            }
         }
     }
 

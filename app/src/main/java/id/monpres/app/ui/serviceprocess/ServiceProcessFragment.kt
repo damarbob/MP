@@ -3,6 +3,8 @@ package id.monpres.app.ui.serviceprocess
 import android.Manifest
 import android.animation.ValueAnimator
 import android.app.Activity.RESULT_OK
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -91,7 +93,8 @@ import java.util.concurrent.TimeUnit
 
 
 @AndroidEntryPoint
-class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process), IOrderServiceProvider {
+class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
+    IOrderServiceProvider {
 
     companion object {
         fun newInstance() = ServiceProcessFragment()
@@ -416,7 +419,10 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process), 
             R.string.haven_t_arrived_at_the_location_yet,
             numberFormatterUseCase(aerialDistanceToTargetInMeters)
         )
-        binding.fragmentServiceProcessTextViewWarningMessage.text = getString(R.string.haven_t_arrived_at_the_location_yet, numberFormatterUseCase(aerialDistanceToTargetInMeters))
+        binding.fragmentServiceProcessTextViewWarningMessage.text = getString(
+            R.string.haven_t_arrived_at_the_location_yet,
+            numberFormatterUseCase(aerialDistanceToTargetInMeters)
+        )
 
         // Disable button if order is on the way and distance is greater than minimum
         if (currentUser?.role == UserRole.PARTNER && orderService.status == OrderStatus.ON_THE_WAY && aerialDistanceToTargetInMeters > MINIMUM_DISTANCE_TO_START_SERVICE) {
@@ -802,6 +808,24 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process), 
                 guideResId = currentSelectedPaymentMethod.guideRes
             )
             paymentGuideBottomSheet.show(parentFragmentManager, PaymentGuideBottomSheetFragment.TAG)
+        }
+
+        // --- NEW: Copy Order ID ---
+        binding.fragmentServiceProcessOrderId.setOnLongClickListener {
+            val textToCopy = binding.fragmentServiceProcessOrderId.text.toString()
+            if (textToCopy.isNotBlank() && textToCopy != "-") {
+                val clipboard =
+                    requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("Order ID", textToCopy)
+                clipboard.setPrimaryClip(clip)
+
+                // Only show toast for Android 12 and below.
+                // Android 13+ (Tiramisu) shows a system UI confirmation automatically.
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                    Toast.makeText(requireContext(), getString(R.string.copied), Toast.LENGTH_SHORT).show()
+                }
+            }
+            true
         }
     }
 

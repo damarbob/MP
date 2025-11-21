@@ -364,4 +364,6 @@
     <string name="app_running_in_background">Aplikasi berjalan di background</string>
 
     <string name="search">Cari</string>
+
+    <string name="copied">Disalin</string>
 </resources>
