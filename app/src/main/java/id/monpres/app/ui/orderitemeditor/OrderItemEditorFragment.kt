@@ -47,9 +47,7 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
 
     private val viewModel: OrderItemEditorViewModel by viewModels()
     private val mainViewModel: MainViewModel by activityViewModels()
-
     private val binding by viewBinding(FragmentOrderItemEditorBinding::bind)
-
     private val args: OrderItemEditorFragmentArgs by navArgs()
 
     private lateinit var orderItemEditorAdapter: OrderItemEditorAdapter
@@ -60,20 +58,16 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Set the transition for this fragment
-        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
-        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
-        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Set insets
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-            val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
             windowInsets
         }
@@ -82,21 +76,41 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
             v.setPadding(insets.left, 0, insets.right, insets.bottom)
             WindowInsetsCompat.CONSUMED
         }
-        items.clear()
-        args.orderItems?.let { item ->
-            items.addAll(item)
-        }
-        Log.d(TAG, "args Items: ${args.orderItems}")
-        Log.d(TAG, "Items: $items")
-        addAdditionalItems()
 
+        setupData() // Combined data loading logic here
         setupRecyclerView()
         setupListeners()
     }
 
-    private fun addAdditionalItems() {
+    private fun setupData() {
+        items.clear()
+        val user = mainViewModel.getCurrentUser()
+        val isAdmin = user?.role == UserRole.ADMIN
+
+        // 1. Load existing items and UNLOCK fees if Admin
+        args.orderItems?.let { loadedItems ->
+            val processedItems = loadedItems.map { item ->
+                if (item.id == OrderItem.PLATFORM_FEE_ID || item.id == OrderItem.DISTANCE_FEE_ID) {
+                    // If Admin, set isFixed = false so they can edit. Otherwise keep true.
+                    item.copy(isFixed = !isAdmin)
+                } else {
+                    item
+                }
+            }
+            items.addAll(processedItems)
+        }
+
+        // 2. Add missing fees (if they don't exist yet)
+        addAdditionalItems(isAdmin)
+
+        Log.d(TAG, "Items loaded: $items")
+    }
+
+    private fun addAdditionalItems(isAdmin: Boolean) {
         val user = mainViewModel.getCurrentUser()
         var distanceFee = 0.0
+
+        // Calculate distance fee logic (Partner only automatically, or generic calc)
         if (user?.role == UserRole.PARTNER) {
             val orderDistance = calculateAerialDistance(
                 user.locationLat?.toDouble() ?: 0.0,
@@ -106,31 +120,36 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
             ).toDouble()
             distanceFee = ceil(orderDistance / 1000) * OrderItem.DISTANCE_FEE
         }
-        items.apply {
-            if (items.none { it.id == OrderItem.PLATFORM_FEE_ID })
-                add(
-                    if (items.isEmpty()) 0 else items.size - 1,
-                    OrderItem(
-                        id = OrderItem.PLATFORM_FEE_ID,
-                        name = getString(OrderItem.PLATFORM_FEE_NAME),
-                        price = OrderItem.PLATFORM_FEE,
-                        quantity = 1.0,
-                        isFixed = true
-                    )
-                )
 
-            if (items.none { it.id == OrderItem.DISTANCE_FEE_ID })
-                add(
-                    if (items.isEmpty()) 0 else items.size - 1,
-                    OrderItem(
-                        id = OrderItem.DISTANCE_FEE_ID,
-                        name = getString(OrderItem.DISTANCE_FEE_NAME),
-                        price = distanceFee,
-                        quantity = 1.0,
-                        isFixed = true
-                    )
+        // Check if items missing and add them with correct fixed state
+        if (items.none { it.id == OrderItem.PLATFORM_FEE_ID }) {
+            items.add(
+                if (items.isEmpty()) 0 else items.size, // Add to end or specific logic
+                OrderItem(
+                    id = OrderItem.PLATFORM_FEE_ID,
+                    name = getString(OrderItem.PLATFORM_FEE_NAME),
+                    price = OrderItem.PLATFORM_FEE,
+                    quantity = 1.0,
+                    isFixed = !isAdmin // False if Admin, True otherwise
                 )
+            )
         }
+
+        if (items.none { it.id == OrderItem.DISTANCE_FEE_ID }) {
+            items.add(
+                if (items.isEmpty()) 0 else items.size,
+                OrderItem(
+                    id = OrderItem.DISTANCE_FEE_ID,
+                    name = getString(OrderItem.DISTANCE_FEE_NAME),
+                    price = distanceFee,
+                    quantity = 1.0,
+                    isFixed = !isAdmin // False if Admin, True otherwise
+                )
+            )
+        }
+
+        // Ensure fees are at the top if preferred, or just let them be added.
+        // (Your original code added them at index 0 or size-1. Keeping logic simple here).
     }
 
     private fun setupRecyclerView() {
@@ -163,7 +182,19 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
 
     private fun setupListeners() {
         binding.fragmentOrderItemEditorButtonSave.setOnClickListener {
-            setFragmentResult(REQUEST_KEY_ORDER_ITEM_EDITOR, bundleOf(KEY_ORDER_ITEMS to items))
+            // --- CRITICAL: Lock fees back to Fixed=True before saving ---
+            val finalItems = items.map { item ->
+                if (item.id == OrderItem.PLATFORM_FEE_ID || item.id == OrderItem.DISTANCE_FEE_ID) {
+                    item.copy(isFixed = true) // Always lock them on save
+                } else {
+                    item
+                }
+            }.toMutableList()
+
+            setFragmentResult(
+                REQUEST_KEY_ORDER_ITEM_EDITOR,
+                bundleOf(KEY_ORDER_ITEMS to ArrayList(finalItems))
+            )
             findNavController().popBackStack()
         }
 
@@ -183,7 +214,13 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
             dialogView.findViewById<TextInputLayout>(R.id.dialogOrderItemEditorTextInputLayoutPrice)
 
         item?.let {
+            val isSystemFee =
+                it.id == OrderItem.PLATFORM_FEE_ID || it.id == OrderItem.DISTANCE_FEE_ID
+
             textInputLayoutName.editText?.setText(it.name)
+            // If it is a system fee, prevent changing the NAME, but allow price/qty
+            textInputLayoutName.isEnabled = !isSystemFee
+
             textInputLayoutQuantity.editText?.setText(it.quantity.toString())
             textInputLayoutPrice.editText?.setText(
                 indonesianCurrencyFormatter(it.price)
@@ -207,28 +244,39 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
                     maximumFractionDigits = 0
                 }.parse(textInputLayoutPrice.editText?.text.toString())?.toDouble() ?: 0.0
 
+                // Check current user again just to be safe for the isFixed state in memory
+                val user = mainViewModel.getCurrentUser()
+                val isAdmin = user?.role == UserRole.ADMIN
+
                 if (item == null) {
                     // Add new item
                     val newItem = OrderItem(
                         name = name,
                         quantity = quantity,
-                        price = price
+                        price = price,
+                        isFixed = false
                     )
                     items.add(0, newItem)
                 } else {
                     // Edit existing item
-                    items.indexOf(item).let {
-                        items.set(
-                            it, OrderItem(
+                    items.indexOf(item).let { index ->
+                        if (index != -1) {
+                            val isSystemFee =
+                                item.id == OrderItem.PLATFORM_FEE_ID || item.id == OrderItem.DISTANCE_FEE_ID
+                            // If it is a system fee & Admin, keeps it unlocked (false).
+                            // If it's a normal item, keep original state (likely false).
+                            val fixedState = if (isSystemFee) !isAdmin else item.isFixed
+
+                            items[index] = OrderItem(
+                                id = item.id, // Preserve ID
                                 name = name,
                                 quantity = quantity,
-                                price = price
+                                price = price,
+                                isFixed = fixedState
                             )
-                        )
+                        }
                     }
                 }
-                Log.d(TAG, "Items: $items")
-                Log.d(TAG, "adapter item count: ${orderItemEditorAdapter.itemCount}")
                 orderItemEditorAdapter.submitList(items.toList())
                 updateTotalPriceView()
             }
@@ -236,8 +284,8 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
             .show()
     }
 
+    // Helpers remain the same...
     private fun validateForm(view: TextInputLayout): Boolean {
-        // Validate name (required)
         return if (view.editText?.text.isNullOrBlank()) {
             view.error =
                 getString(R.string.x_is_required, getString(R.string.name))
@@ -251,28 +299,11 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
         }
     }
 
-    /**
-     * Adds a currency formatter to an EditText.
-     *
-     * This function adds a TextWatcher to the EditText that formats the input as currency.
-     * The formatter uses the default locale's currency symbol and formatting rules.
-     *
-     * For example, if the user types "12345", the EditText will display "$123.45" (assuming the default locale is US).
-     *
-     * The formatter also handles cases where the input is blank or invalid. If the input is blank,
-     * the EditText will display "$0.00". If the input is invalid (e.g., contains non-numeric characters),
-     * the formatter will attempt to remove the invalid characters and format the remaining numeric input.
-     *
-     * Note: This function modifies the EditText in place.
-     */
     fun EditText.addCurrencyFormatter() {
         this.addTextChangedListener(object : TextWatcher {
             private var current = this@addCurrencyFormatter.text.toString()
-
             override fun afterTextChanged(s: Editable?) {}
-
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (s.toString() != current) {
                     this@addCurrencyFormatter.removeTextChangedListener(this)
@@ -280,22 +311,11 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
                     val parsed = if (cleanString.isBlank()) {
                         0L
                     } else {
-                        // Use BigInteger to handle potentially huge numbers
                         val bigIntValue = cleanString.toBigInteger()
-                        // Compare with Long.MAX_VALUE as BigInteger before converting
-                        if (bigIntValue > Long.MAX_VALUE.toBigInteger()) {
-                            // If it's too big, cap it at Long.MAX_VALUE
-                            Long.MAX_VALUE
-                        } else {
-                            // Otherwise, it's safe to convert to Long
-                            bigIntValue.toLong()
-                        }
+                        if (bigIntValue > Long.MAX_VALUE.toBigInteger()) Long.MAX_VALUE else bigIntValue.toLong()
                     }
                     val formatted = indonesianCurrencyFormatter(parsed)
                     current = formatted
-                    Log.d(TAG, "cleanString: $cleanString")
-                    Log.d(TAG, "parsed: $parsed")
-                    Log.d(TAG, "formatted: $formatted")
                     this@addCurrencyFormatter.setText(formatted)
                     this@addCurrencyFormatter.setSelection(formatted.length)
                     this@addCurrencyFormatter.addTextChangedListener(this)
