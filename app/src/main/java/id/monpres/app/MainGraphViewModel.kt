@@ -147,11 +147,19 @@ class MainGraphViewModel @Inject constructor(
 
     fun observeDataByRole(user: MontirPresisiUser) {
         Log.d(TAG, "current role: ${user.role}")
-        if (user.role == UserRole.CUSTOMER) {
-            observeUserOrderServices()
-            observeUserVehicles()
-        } else if (user.role == UserRole.PARTNER) {
-            observePartnerOrderServices()
+        when (user.role) {
+            UserRole.PARTNER -> {
+                observePartnerOrderServices()
+            }
+
+            UserRole.ADMIN -> {
+                observeAllOrderServices()
+            }
+
+            else -> {
+                observeUserOrderServices()
+                observeUserVehicles()
+            }
         }
         // If you have an ADMIN role or want to trigger this for everyone, call observeAllOrderServices() here.
     }

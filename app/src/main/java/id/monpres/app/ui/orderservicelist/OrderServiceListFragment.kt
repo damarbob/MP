@@ -161,7 +161,6 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
             }
 
             UserRole.ADMIN -> {
-                mainGraphViewModel.observeAllOrderServices()
                 observeUiState(mainGraphViewModel.allOrderServicesState) {
                     viewModel.setAllOrderServices(it)
                 }
