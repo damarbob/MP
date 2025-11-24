@@ -284,7 +284,9 @@
     <string name="x_whatsapp">%1$s (WhatsApp)</string>
     <string name="x_instagram">%1$s (Instagram)</string>
     <string name="x_facebook">%1$s (Facebook)</string>
+    <string name="accepted">Diterima</string>
     <string name="reject">Tolak</string>
+    <string name="rejected">Ditolak</string>
     <string name="accept_user">Terima Pengguna</string>
     <string name="reject_user">Tolak Pengguna</string>
     <string name="delete_user">Hapus Pengguna</string>
@@ -366,4 +368,8 @@
     <string name="search">Cari</string>
 
     <string name="copied">Disalin</string>
+    <string name="user_role">Peran Pengguna</string>
+    <string name="reject_registration_for_x">Tolak pendaftaran untuk \'%1$s\'. Mereka tidak akan dapat lagi mengakses aplikasi ini.</string>
+    <string name="all">All</string>
+    <string name="pending">Pending</string>
 </resources>

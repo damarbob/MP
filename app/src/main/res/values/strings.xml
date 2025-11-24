@@ -289,7 +289,9 @@
     <string name="x_whatsapp">%1$s (WhatsApp)</string>
     <string name="x_instagram">%1$s (Instagram)</string>
     <string name="x_facebook">%1$s (Facebook)</string>
+    <string name="accepted">Accepted</string>
     <string name="reject">Reject</string>
+    <string name="rejected">Rejected</string>
     <string name="accept_user">Accept User</string>
     <string name="reject_user">Reject User</string>
     <string name="delete_user">Delete User</string>
@@ -374,4 +376,8 @@
     <string name="search">Search</string>
 
     <string name="copied">Copied</string>
+    <string name="user_role">User Role</string>
+    <string name="reject_registration_for_x">Reject registration for \'%1$s\'. They will no longer be able to access this application.</string>
+    <string name="all">All</string>
+    <string name="pending">Pending</string>
 </resources>

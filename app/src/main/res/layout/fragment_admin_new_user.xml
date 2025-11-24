@@ -136,19 +136,74 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="8dp" />
+
+<!--            <TextView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="@string/lorem_ipsum_dolor_sit_amet" />-->
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragmentAdminNewUserTextInputLayoutUserRole"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/user_role">
+
+                <AutoCompleteTextView
+                    android:id="@+id/fragmentAdminNewUserAutoCompleteTextViewUserRole"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/user_role"
+                    android:inputType="none" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="8dp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/fragmentAdminNewUserButtonReject"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/fragmentAdminNewUserButtonAccept"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:contentDescription="@string/reject"
-                    android:text="@string/reject"
-                    app:backgroundTint="?attr/colorError"
-                    app:icon="@drawable/block_24px" />
+                    android:contentDescription="@string/accept"
+                    android:text="@string/accept"
+                    android:visibility="gone"
+                    app:icon="@drawable/check_24px" />
+
+            </LinearLayout>
+
+            <com.ncorti.slidetoact.SlideToActView
+                android:id="@+id/fragmentAdminNewUserSlideToActAccept"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:outer_color="?colorPrimary"
+                app:text="@string/accept"
+                app:text_appearance="@style/Widget.App.H5.Bold"
+                app:text_color="?colorOnPrimary" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/fragmentAdminNewUserTextWarningReject"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/reject_registration_for_x" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/fragmentAdminNewUserButtonDelete"
@@ -167,12 +222,14 @@
                     android:layout_weight="1" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/fragmentAdminNewUserButtonAccept"
+                    android:id="@+id/fragmentAdminNewUserButtonReject"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:contentDescription="@string/accept"
-                    android:text="@string/accept"
-                    app:icon="@drawable/check_24px" />
+                    android:layout_gravity="end"
+                    android:contentDescription="@string/reject"
+                    android:text="@string/reject"
+                    app:backgroundTint="?attr/colorError"
+                    app:icon="@drawable/block_24px" />
 
             </LinearLayout>
 

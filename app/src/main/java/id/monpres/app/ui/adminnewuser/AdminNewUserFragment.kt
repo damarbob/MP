@@ -6,6 +6,7 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
@@ -15,9 +16,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.i18n.phonenumbers.PhoneNumberUtil
+import com.ncorti.slidetoact.SlideToActView
+import com.ncorti.slidetoact.SlideToActView.OnSlideCompleteListener
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminNewUserBinding
+import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -62,6 +66,9 @@ class AdminNewUserFragment : DialogFragment() {
         // Setup UI (marquee, etc.)
         setupMarquee()
 
+        // Setup Dropdown Adapter
+        setupRoleDropdown()
+
         // Setup button click listeners
         setupClickListeners()
 
@@ -79,6 +86,13 @@ class AdminNewUserFragment : DialogFragment() {
                 viewModel.onAcceptClicked()
             }
         }
+        binding.fragmentAdminNewUserSlideToActAccept.onSlideCompleteListener =
+            object : OnSlideCompleteListener {
+                override fun onSlideComplete(view: SlideToActView) {
+                    viewModel.onAcceptClicked()
+                }
+
+            }
         binding.fragmentAdminNewUserButtonReject.setOnClickListener {
             showConfirmationDialog(
                 title = getString(R.string.reject_user),
@@ -129,6 +143,7 @@ class AdminNewUserFragment : DialogFragment() {
                                 Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                                 dismiss() // Close the dialog on success
                             }
+
                             is AdminNewUserEvent.ShowToast -> {
                                 Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                             }
@@ -148,6 +163,11 @@ class AdminNewUserFragment : DialogFragment() {
         val createdAtDate = userCreatedAtTimestamp?.let { Date(it.toLong()) }
         val formattedDate = createdAtDate?.let { sdf.format(it) } ?: "N/A"
 
+        binding.fragmentAdminNewUserTextWarningReject.text = getString(
+            R.string.reject_registration_for_x,
+            user.displayName ?: "User"
+        )
+
         // Set WhatsApp link
         val phoneUtil = PhoneNumberUtil.getInstance()
         var whatsappNumber = user.phoneNumber
@@ -161,14 +181,46 @@ class AdminNewUserFragment : DialogFragment() {
 
         binding.apply {
             fragmentAdminNewUserTextViewTitle.text = user.displayName
-            fragmentAdminNewUserTextViewSubtitle.text = getString(R.string.joined_at_x, formattedDate)
-            fragmentAdminNewUserTextViewPhone.text = if (!user.phoneNumber.isNullOrBlank()) getString(R.string.x_whatsapp, user.phoneNumber) else getString(R.string.no_whatsapp_number)
-            fragmentAdminNewUserTextViewInstagramId.text = if (!user.instagramId.isNullOrBlank()) getString(R.string.x_instagram, user.instagramId) else getString(R.string.no_instagram_id)
-            fragmentAdminNewUserTextViewFacebookId.text = if (!user.facebookId.isNullOrBlank()) getString(R.string.x_facebook, user.facebookId) else getString(R.string.no_facebook_id)
+            fragmentAdminNewUserTextViewSubtitle.text =
+                getString(R.string.joined_at_x, formattedDate)
+            fragmentAdminNewUserTextViewPhone.text =
+                if (!user.phoneNumber.isNullOrBlank()) getString(
+                    R.string.x_whatsapp,
+                    user.phoneNumber
+                ) else getString(R.string.no_whatsapp_number)
+            fragmentAdminNewUserTextViewInstagramId.text =
+                if (!user.instagramId.isNullOrBlank()) getString(
+                    R.string.x_instagram,
+                    user.instagramId
+                ) else getString(R.string.no_instagram_id)
+            fragmentAdminNewUserTextViewFacebookId.text =
+                if (!user.facebookId.isNullOrBlank()) getString(
+                    R.string.x_facebook,
+                    user.facebookId
+                ) else getString(R.string.no_facebook_id)
+
+            // --- BINDING THE ROLE ---
+            // 1. Get the current role name. Assumes user.role is of type UserRole enum.
+            // If user.role is null, default to CUSTOMER or handle accordingly.
+            val currentRoleName = user.role?.name ?: UserRole.CUSTOMER.name
+
+            // 2. Set the text ONLY if it's different to avoid resetting cursor/adapter state loop
+            // setText(text, filter) -> set filter to false to prevent showing the list immediately
+            if (fragmentAdminNewUserAutoCompleteTextViewUserRole.text.toString() != currentRoleName) {
+                fragmentAdminNewUserAutoCompleteTextViewUserRole.setText(currentRoleName, false)
+            }
 
             setCardClickListener(fragmentAdminNewUserCardViewPhone, user.phoneNumber, whatsappLink)
-            setCardClickListener(fragmentAdminNewUserCardViewInstagramId, user.instagramId, "https://www.instagram.com/${user.instagramId}")
-            setCardClickListener(fragmentAdminNewUserCardViewFacebookId, user.facebookId, "https://www.facebook.com/${user.facebookId}")
+            setCardClickListener(
+                fragmentAdminNewUserCardViewInstagramId,
+                user.instagramId,
+                "https://www.instagram.com/${user.instagramId}"
+            )
+            setCardClickListener(
+                fragmentAdminNewUserCardViewFacebookId,
+                user.facebookId,
+                "https://www.facebook.com/${user.facebookId}"
+            )
         }
     }
 
@@ -198,6 +250,20 @@ class AdminNewUserFragment : DialogFragment() {
             textView.isSingleLine = true
             textView.ellipsize = TextUtils.TruncateAt.MARQUEE
             textView.marqueeRepeatLimit = -1 // marquee_forever
+        }
+    }
+
+    private fun setupRoleDropdown() {
+        // Get list of role names (CUSTOMER, PARTNER, ADMIN)
+        val roles = UserRole.entries.map { it.name }
+
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, roles)
+        binding.fragmentAdminNewUserAutoCompleteTextViewUserRole.setAdapter(adapter)
+
+        // Listen for user selection
+        binding.fragmentAdminNewUserAutoCompleteTextViewUserRole.setOnItemClickListener { _, _, position, _ ->
+            val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
+            viewModel.onRoleSelected(selectedRole)
         }
     }
 

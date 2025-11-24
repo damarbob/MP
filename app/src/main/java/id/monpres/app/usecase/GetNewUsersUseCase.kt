@@ -8,7 +8,6 @@ import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -19,57 +18,83 @@ import javax.inject.Singleton
 @Singleton
 class GetNewUsersUseCase @Inject constructor(
     private val firestore: FirebaseFirestore
-    // No longer need newUserRepository for this, the Flow is the source of truth
 ) {
-    companion object {
-        private val TAG = GetNewUsersUseCase::class.java.simpleName
-    }
-
     /**
-     * Invokes the use case to listen for real-time updates to new users.
-     * Returns a Flow that emits a new list of users whenever there's a change.
+     * @param statusFilter
+     * - PENDING: Shows CUSTOMERS with Pending or Null status.
+     * - VERIFIED: Shows ALL Verified users.
+     * - REJECTED: Shows ALL Rejected users.
+     * - NULL: Shows ALL users (no status filter).
+     * @param searchQuery Search by UID (overrides filters for scalability).
      */
-    operator fun invoke(): Flow<List<MontirPresisiUser>> = callbackFlow {
-        // Use Filter.or() to combine the 'PENDING' and 'null' status checks
-        val pendingFilter = Filter.equalTo("verificationStatus", UserVerificationStatus.PENDING)
-        val nullFilter = Filter.equalTo("verificationStatus", null)
+    operator fun invoke(
+        statusFilter: UserVerificationStatus? = UserVerificationStatus.PENDING,
+        searchQuery: String? = null
+    ): Flow<List<MontirPresisiUser>> = callbackFlow {
 
-        val listenerRegistration = firestore
-            .collection(MontirPresisiUser.COLLECTION)
-            .where(
-                Filter.and(
-                    Filter.equalTo("role", UserRole.CUSTOMER),
-                    Filter.or(pendingFilter, nullFilter) // Combine checks into one query
-                )
-            )
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshots, error ->
-                // Handle errors
-                if (error != null) {
-                    Log.w(TAG, "Listen failed.", error)
-                    cancel("Error fetching new users", error) // Cancel the flow on error
-                    return@addSnapshotListener
+        var query: Query = firestore.collection(MontirPresisiUser.COLLECTION)
+
+        if (!searchQuery.isNullOrBlank()) {
+            // --- SEARCH MODE ---
+            // Scalability: When searching, we drop complex filters to avoid
+            // needing exponential index combinations. We search strictly by UID.
+            val endQuery = searchQuery + "\uf8ff"
+            query = query
+                .whereGreaterThanOrEqualTo("userId", searchQuery)
+                .whereLessThanOrEqualTo("userId", endQuery)
+                .orderBy("userId") // Firestore requires OrderBy to match Range Filter
+
+        } else {
+            // --- FILTER MODE ---
+
+            when (statusFilter) {
+                UserVerificationStatus.PENDING -> {
+                    // Logic: "Pending should show CUSTOMER only"
+                    // AND (Status is Pending OR Status is Null)
+                    val roleCustomer = Filter.equalTo("role", UserRole.CUSTOMER)
+                    val isPending =
+                        Filter.equalTo("verificationStatus", UserVerificationStatus.PENDING)
+                    val isNull = Filter.equalTo("verificationStatus", null)
+
+                    // (Role == Customer) AND (Status == Pending OR Status == Null)
+                    query = query.where(Filter.and(roleCustomer, Filter.or(isPending, isNull)))
                 }
 
-                // Handle null snapshots (defensive check)
-                if (snapshots == null) {
-                    Log.w(TAG, "Null snapshots received")
-                    trySend(emptyList()) // Send an empty list
-                    return@addSnapshotListener
+                UserVerificationStatus.VERIFIED -> {
+                    // Logic: "Accepted should show all VERIFIED users" (implies ignore Role)
+                    query =
+                        query.whereEqualTo("verificationStatus", UserVerificationStatus.VERIFIED)
                 }
 
-                // Deserialize documents
-                val users = snapshots.toObjects(MontirPresisiUser::class.java)
-                Log.d(TAG, "New users updated: ${users.size} users")
+                UserVerificationStatus.REJECTED -> {
+                    // Logic: "Rejected should show all REJECTED users"
+                    query =
+                        query.whereEqualTo("verificationStatus", UserVerificationStatus.REJECTED)
+                }
 
-                // Send the new list into the flow
-                trySend(users)
+                null -> {
+                    // Logic: "All should show all users" (No filters applied)
+                    // We do nothing here, querying the raw collection.
+                }
             }
 
-        // This block is called when the flow is cancelled (e.g., ViewModel is cleared)
-        awaitClose {
-            Log.d(TAG, "Stopping new user listener")
-            listenerRegistration.remove() // Detach the listener
+            // Always sort by newest first when not searching
+            query = query.orderBy("createdAt", Query.Direction.DESCENDING)
         }
-    }.flowOn(Dispatchers.IO) // Run the listener logic on the IO dispatcher
+
+        val listenerRegistration = query.addSnapshotListener { snapshots, error ->
+            if (error != null) {
+                // IMPORTANT: If this logs "FAILED_PRECONDITION", you need to create an Index.
+                // Check the Logcat link provided by Firebase in the error message.
+                Log.e("GetNewUsersUseCase", "Firestore Listen Failed: ${error.message}", error)
+                close(error)
+                return@addSnapshotListener
+            }
+
+            val users = snapshots?.toObjects(MontirPresisiUser::class.java) ?: emptyList()
+            trySend(users)
+        }
+
+        awaitClose { listenerRegistration.remove() }
+    }.flowOn(Dispatchers.IO)
 }

@@ -1,9 +1,12 @@
 package id.monpres.app.ui.adminnewusers
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -13,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminNewUsersBinding
+import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.state.UiState
 import id.monpres.app.ui.adapter.UserAdapter
@@ -23,23 +27,16 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class AdminNewUsersFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = AdminNewUsersFragment()
-    }
+    // ... Companion Object ...
 
     private val viewModel: AdminNewUsersViewModel by viewModels()
-
-    /* UI */
     private var _binding: FragmentAdminNewUsersBinding? = null
     private val binding get() = _binding!!
 
-    // Use 'lazy' to create the adapter and its listener only ONCE.
-    // This survives view recreation and avoids listener setup issues.
     private val userAdapter: UserAdapter by lazy {
         UserAdapter().apply {
             setOnItemClickListener(object : UserAdapter.OnItemClickListener {
                 override fun onMenuClicked(user: MontirPresisiUser?) {
-                    // Use 'let' for cleaner null-checking
                     user?.let { validUser ->
                         AdminNewUserFragment.newInstance(validUser)
                             .show(parentFragmentManager, AdminNewUserFragment.TAG)
@@ -60,19 +57,51 @@ class AdminNewUsersFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        setupInputs() // New
         observeViewModel()
+    }
+
+    private fun setupInputs() {
+        // 1. Search Listener (Trigger ONLY on Enter)
+        binding.fragmentAdminNewUsersEditTextSearch.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val query = v.text.toString().trim()
+                viewModel.setSearchQuery(query)
+
+                // Hide keyboard for better UX
+                hideKeyboard()
+                return@setOnEditorActionListener true
+            }
+            false
+        }
+
+        // Optional: Handle the "Clear" (X) button explicitly if you want it
+        // to reset the list immediately without pressing Enter.
+        binding.fragmentAdminNewUsersInputLayoutSearch.setEndIconOnClickListener {
+            binding.fragmentAdminNewUsersEditTextSearch.text?.clear()
+            viewModel.setSearchQuery("") // Reset list immediately
+            // If you strictly want NO requests until Enter, remove the line above.
+        }
+
+        // Chips
+        binding.fragmentAdminNewUsersChipGroupFilter.setOnCheckedStateChangeListener { _, checkedIds ->
+            val status = when (checkedIds.firstOrNull()) {
+                R.id.chipPending -> UserVerificationStatus.PENDING
+                R.id.chipVerified -> UserVerificationStatus.VERIFIED
+                R.id.chipRejected -> UserVerificationStatus.REJECTED
+                R.id.chipAll -> null // Sends NULL to ViewModel, triggering "All" logic
+                else -> UserVerificationStatus.PENDING
+            }
+            viewModel.setFilter(status)
+        }
     }
 
     private fun setupRecyclerView() {
         binding.fragmentAdminNewUsersRecyclerViewNewUsers.apply {
-            // 2. OPTIMIZATION: Use the single, lazy-initialized adapter
             adapter = userAdapter
             layoutManager = LinearLayoutManager(requireContext())
-
-            // 3. OPTIMIZATION: Only add item decoration if it hasn't been added before.
-            // This prevents stacking decorations on view re-creation.
             if (itemDecorationCount == 0) {
-                addItemDecoration(SpacingItemDecoration(2))
+                addItemDecoration(SpacingItemDecoration(8)) // Gap of 8dp
             }
         }
     }
@@ -81,36 +110,33 @@ class AdminNewUsersFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    // 4. OPTIMIZATION: Use 'binding.apply' for a much cleaner
-                    // "hide all, show one" state management pattern.
                     binding.apply {
-                        // Default state: Hide all mutually exclusive views
+                        // Reset visibility
                         fragmentAdminNewUsersLinearProgressIndicator.visibility = View.GONE
                         fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.GONE
                         fragmentAdminNewUsersTextViewError.visibility = View.GONE
                         fragmentAdminNewUsersLinearLayoutInfo.visibility = View.GONE
 
-                        // Now, show only the view for the current state
                         when (state) {
                             is UiState.Loading -> {
-                                fragmentAdminNewUsersLinearProgressIndicator.visibility =
-                                    View.VISIBLE
+                                fragmentAdminNewUsersLinearProgressIndicator.visibility = View.VISIBLE
+                                // Optional: Keep list visible while reloading if you prefer
                             }
-
                             is UiState.Success -> {
                                 fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.VISIBLE
-                                // Submit the list to our single adapter instance
                                 userAdapter.submitList(state.data)
                             }
-
                             is UiState.Error -> {
                                 fragmentAdminNewUsersTextViewError.visibility = View.VISIBLE
                                 fragmentAdminNewUsersTextViewError.text = state.message
                             }
-
                             is UiState.Empty -> {
                                 fragmentAdminNewUsersLinearLayoutInfo.visibility = View.VISIBLE
-                                fragmentAdminNewUsersTextViewInfo.text =
+                                // Update empty text based on whether search is active
+                                val isSearching = !binding.fragmentAdminNewUsersEditTextSearch.text.isNullOrBlank()
+                                fragmentAdminNewUsersTextViewInfo.text = if(isSearching)
+                                    getString(R.string.no_new_users_found)
+                                else
                                     getString(R.string.no_new_users_found)
                             }
                         }
@@ -122,7 +148,13 @@ class AdminNewUsersFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Good practice: null out binding to prevent memory leaks
         _binding = null
+    }
+
+    private fun hideKeyboard() {
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
+        binding.fragmentAdminNewUsersEditTextSearch.clearFocus()
     }
 }

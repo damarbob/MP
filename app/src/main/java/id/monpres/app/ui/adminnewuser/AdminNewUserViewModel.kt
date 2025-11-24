@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.usecase.UpdateUserUseCase
@@ -97,6 +98,24 @@ class AdminNewUserViewModel @Inject constructor(
                     _eventFlow.emit(AdminNewUserEvent.ShowToast(exception.message ?: "Update failed"))
                 }
             }
+        }
+    }
+
+    // --- PUBLIC ACTIONS ---
+
+    // Add this function
+    fun onRoleSelected(roleName: String) {
+        val currentUser = _user.value ?: return
+        try {
+            // Convert String back to Enum
+            val newRole = UserRole.valueOf(roleName)
+
+            // Update the local state.
+            // Assuming your MontirPresisiUser has a 'role' property of type UserRole.
+            // If the property name is different (e.g. userRole), change it here.
+            _user.value = currentUser.copy(role = newRole)
+        } catch (e: IllegalArgumentException) {
+            reportError("Invalid Role Selected")
         }
     }
 
