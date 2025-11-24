@@ -6,9 +6,13 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateMarginsRelative
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -38,6 +42,7 @@ import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
+import id.monpres.app.utils.dpToPx
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -88,6 +93,18 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
     }
 
     private fun setupUI() {
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceEditFabSave) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            (v.layoutParams as ViewGroup.MarginLayoutParams).updateMarginsRelative(
+                insets.left + 16.dpToPx(requireActivity()),
+                0,
+                insets.right + 16.dpToPx(requireActivity()),
+                insets.bottom + 16.dpToPx(requireActivity())
+            )
+            WindowInsetsCompat.CONSUMED
+        }
 
         // --- 1. Order Status Dropdown (NEW) ---
         val statuses = OrderStatus.entries
