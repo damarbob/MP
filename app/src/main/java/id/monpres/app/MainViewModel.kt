@@ -10,6 +10,7 @@ import id.monpres.app.enums.Language
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.module.CoroutineModule
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
@@ -22,6 +23,7 @@ import id.monpres.app.usecase.GetUserVerificationStatusUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import id.monpres.app.usecase.SignOutUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -79,7 +81,8 @@ class MainViewModel @Inject constructor(
     private val checkEmailVerificationUseCase: CheckEmailVerificationUseCase,
     private val resendVerificationEmailUseCase: ResendVerificationEmailUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val appPreferences: AppPreferences
+    private val appPreferences: AppPreferences,
+    @param:CoroutineModule.ApplicationScope private val applicationScope: CoroutineScope
 ) : ViewModel() {
 
     companion object {
@@ -395,12 +398,14 @@ class MainViewModel @Inject constructor(
      * Signs the user out using the SignOutUseCase.
      */
     fun signOut() {
-        viewModelScope.launch {
+        applicationScope.launch {
             try {
-                // Assumes signOutUseCase is a suspend function
-                signOutUseCase()
-                Log.d(TAG, "Sign-out process complete. Emitting event to UI.")
-                _navigationEvent.emit(NavigationEvent.ToLogin)
+                signOutUseCase {
+                    Log.d(TAG, "Sign-out process complete. Emitting event to UI.")
+                    launch {
+                        _navigationEvent.emit(NavigationEvent.ToLogin)
+                    }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Sign out failed", e)
                 _errorEvent.emit(e)

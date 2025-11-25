@@ -363,6 +363,20 @@
     <string name="restart_required">Mulai ulang dibutuhkan</string>
     <string name="restart_app_message">Mohon mulai ulang applikasi untuk melakukan perubahan</string>
     <string name="theme_mode">Tema</string>
+
+    <string name="send_email_verification">Kirim email verifikasi</string>
+    <string name="verify_your_email">Verifikasi Email Anda</string>
+    <string name="we_have_sent_a_verification_link">Kami sudah mengirim tautan verifikasi ke alamat email Anda. Mohon buka tautan untuk verifikasi email Anda</string>
+    <string name="resend_verification_email">Kirim ulang email verifikasi</string>
+    <string name="resend_available_in_x_s">Kirim ulang tersedia dalam %1$d detik</string>
+    <string name="email_sent">Email Terkirim</string>
+    <string name="chat_admin">Hubungi Admin</string>
+    <string name="google_sign_in_failed">Google Sign-In gagal: %1$s</string>
+    <string name="admin_verification">Verifikasi oleh admin</string>
+    <string name="please_wait_for_admin_verification">Mohon tunggu verifikasi oleh admin. Anda akan otomatis masuk ke beranda setelah admin memverifikasi Anda</string>
+    <string name="verification_rejected">Verifikasi Ditolak</string>
+    <string name="your_account_has_been_rejected_by_admin">Akun Anda ditolak oleh admin</string>
+
     <string name="app_running_in_background">Aplikasi berjalan di background</string>
 
     <string name="search">Cari</string>

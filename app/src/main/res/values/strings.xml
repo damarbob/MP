@@ -373,6 +373,19 @@
     <string name="theme_mode">Theme mode</string>
     <string name="app_running_in_background">App running in background</string>
 
+    <string name="send_email_verification">Send Email Verification</string>
+    <string name="verify_your_email">Verify Your Email</string>
+    <string name="we_have_sent_a_verification_link">We have sent a verification link to your email address. Please click the link to verify your account.</string>
+    <string name="resend_verification_email">Resend Verification Email</string>
+    <string name="resend_available_in_x_s">Resend available in %1$ds</string>
+    <string name="email_sent">Email Sent</string>
+    <string name="chat_admin">Chat Admin</string>
+    <string name="google_sign_in_failed">Google Sign-In failed: %1$s</string>
+    <string name="admin_verification">Admin verification</string>
+    <string name="please_wait_for_admin_verification">Please wait for admin verification</string>
+    <string name="verification_rejected">Verification rejected</string>
+    <string name="your_account_has_been_rejected_by_admin">Your account has been rejected by admin</string>
+
     <string name="search">Search</string>
 
     <string name="copied">Copied</string>

@@ -3,110 +3,272 @@ package id.monpres.app
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.postOnAnimationDelayed
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.transition.TransitionManager
+import com.faltenreich.skeletonlayout.Skeleton
+import com.faltenreich.skeletonlayout.SkeletonConfig
+import com.faltenreich.skeletonlayout.createSkeleton
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.DynamicColorsOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.firebase.Firebase
+import com.google.android.material.transition.MaterialFade
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
+import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication.Companion.APP_REGION
 import id.monpres.app.MainApplication.Companion.userRegion
 import id.monpres.app.databinding.ActivityLoginBinding
+import id.monpres.app.enums.Language
+import id.monpres.app.enums.ThemeMode
+import id.monpres.app.libraries.ErrorLocalizer
+import id.monpres.app.module.CoroutineModule
+import id.monpres.app.repository.AppPreferences
+import id.monpres.app.usecase.GetUserVerificationStatusUseCase
+import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.system.exitProcess
 
+@AndroidEntryPoint
 class LoginActivity : AppCompatActivity(R.layout.activity_login) {
 
     companion object {
         private val TAG = LoginActivity::class.java.simpleName
     }
 
+    private var loginJob: Job? = null
+    private val viewModel: AuthViewModel by viewModels()
+
     /* Variables */
-    private lateinit var auth: FirebaseAuth
-    private lateinit var credentialManager: CredentialManager
+    @Inject
+    lateinit var credentialManager: CredentialManager
+
+    @Inject
+    lateinit var auth: FirebaseAuth
+
+    @Inject
+    @CoroutineModule.ApplicationScope
+    lateinit var applicationScope: CoroutineScope
+
+    @Inject
+    lateinit var getUserVerificationStatusUseCase: GetUserVerificationStatusUseCase
 
     /* Views */
     private val binding by viewBinding(ActivityLoginBinding::bind)
     private lateinit var navController: NavController
+    private lateinit var skeleton: Skeleton
+    private var isNavigatedToMainActivity = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        applyInitialSettings()
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(binding.navHostFragmentActivityLogin.id) as NavHostFragment
         navController = navHostFragment.navController
 
-        /* Region validation */
-        if (userRegion != APP_REGION) {
-            MaterialAlertDialogBuilder(this)
-                .setTitle(getString(R.string.unsupported_region))
-                .setMessage(
-                    getString(
-                        R.string.this_app_version_is_only_supported_in_s_your_sim_card_region_is_s,
-                        APP_REGION,
-                        userRegion
-                    )
-                )
-                .setPositiveButton(R.string.continue_) { _, _ ->
-                    // The user forces to continue
-
-                    // Run auth
-                    runAuthentication()
-                }
-                .setNegativeButton(R.string.cancel) { _, _ -> exitProcess(0) }
-                .setCancelable(false)
-                .show()
-        }
-        // If the user region is the same as the application region
-        else {
-            // Run auth
-            runAuthentication()
-        }
-    }
-
-    private fun runAuthentication() {
-        /* Auth */
-        credentialManager = CredentialManager.create(application)
-        auth = Firebase.auth // Initialize Firebase Auth
-        val currentUser = auth.currentUser // Get current user
-
-        if (currentUser != null) {
-            Log.d(TAG, "Logged in. Navigating to user dashboard.")
-
-            val intent = Intent(this, MainActivity::class.java)
-            this.intent.extras?.let { intent.putExtras(it) }
-            startActivity(intent)
-            this.finish()  // Finish the current activity so the user can't navigate back to the login screen
-        }
-    }
-
-    fun signIn() {
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(
-                GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(BuildConfig.GOOGLE_SERVER_CLIENT_ID)
-                    .build()
+        skeleton = binding.navHostFragmentActivityLogin.createSkeleton(
+            SkeletonConfig.default(
+                this, R.layout.skeleton_mask
             )
-            .build()
+        )
 
-        CoroutineScope(Dispatchers.Default).launch {
+        checkRegionAndInitialize()
+    }
+
+    private fun checkInitialUserState() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // We have a logged-in user, check verification status
+            if (currentUser.isEmailVerified) {
+                lifecycleScope.launch {
+                    Log.d(
+                        TAG,
+                        "User is verified - checking verification status: ${System.currentTimeMillis()}"
+                    )
+                    viewModel.checkInitialAdminVerificationStatus(
+                        onVerified = { navigateToMainActivity() },
+                        onPendingOrRejected = {
+                            navController.navigate(NavLoginDirections.actionGlobalAdminVerificationFragment())
+                        })
+                }
+            } else {
+                // User is not verified - navigate to email verification immediately
+                if (navController.currentDestination?.id != R.id.emailVerificationFragment) {
+                    Log.d(
+                        TAG,
+                        "User is not verified - navigating to email verification (called by checkInitialUserState)"
+                    )
+                    navController.navigate(NavLoginDirections.actionGlobalEmailVerificationFragment())
+                }
+            }
+        } else {
+            // No user - ensure we're on login fragment
+            if (navController.currentDestination?.id != R.id.loginFragment && navController.currentDestination?.id != R.id.registerFragment) {
+                navController.navigate(NavLoginDirections.actionGlobalLoginFragment())
+            }
+        }
+    }
+
+    private fun setupObservers() {
+        // Observe authentication state
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.authState.collect { authState ->
+                    Log.d(
+                        TAG,
+                        "Auth state changed: $authState, current time: ${System.currentTimeMillis()}"
+                    )
+                    when (authState) {
+                        is AuthViewModel.AuthState.FullyVerified -> {
+                            // Email is verified, navigate to MainActivity
+                            navigateToMainActivity()
+                        }
+
+                        is AuthViewModel.AuthState.EmailNotVerified -> {
+                            // Email not verified, show verification fragment
+                            if (navController.currentDestination?.id != R.id.emailVerificationFragment) {
+                                Log.d(
+                                    TAG,
+                                    "Email not verified - navigating to email verification (called by setupObservers)"
+                                )
+                                navController.navigate(NavLoginDirections.actionGlobalEmailVerificationFragment())
+                            }
+                            showLoadingContainer(false)
+                        }
+
+                        is AuthViewModel.AuthState.Unauthenticated -> {
+                            // User signed out or not logged in, ensure we're on login fragment
+                            if (navController.currentDestination?.id != R.id.loginFragment && navController.currentDestination?.id != R.id.registerFragment) {
+                                navController.navigate(NavLoginDirections.actionGlobalLoginFragment())
+                            }
+                            showLoadingContainer(false)
+                        }
+
+                        is AuthViewModel.AuthState.Error -> {
+                            // Handle error
+                            // Error message handled by errorEvent
+                            showLoadingContainer(false)
+                        }
+
+                        is AuthViewModel.AuthState.AdminVerificationPending, is AuthViewModel.AuthState.AdminVerificationRejected -> {
+                            if (navController.currentDestination?.id != R.id.adminVerificationFragment) {
+                                navController.navigate(NavLoginDirections.actionGlobalAdminVerificationFragment())
+                            }
+                            showLoadingContainer(false)
+                        }
+
+                        is AuthViewModel.AuthState.Loading -> {
+                            if (viewModel.loginState.value != AuthViewModel.LoginState.Loading || viewModel.registerState.value != AuthViewModel.RegisterState.Loading) {
+                                showLoadingContainer(true)
+                            }
+                        }
+
+                        else -> {}
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorEvent.collect { exception ->
+                    Toast.makeText(
+                        this@LoginActivity,
+                        ErrorLocalizer.getLocalizedError(this@LoginActivity, exception),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun showLoadingContainer(isLoading: Boolean) {
+//        TransitionManager.beginDelayedTransition(
+//            binding.root, MaterialFade()
+//        )
+//        skeleton.showOriginal()
+        if (!isLoading) {
+            binding.activityLoginContainerLoading.postOnAnimationDelayed(150L) {
+                TransitionManager.beginDelayedTransition(
+                    binding.root, MaterialFade()
+                )
+                binding.activityLoginContainerLoading.visibility = View.GONE
+            }
+        } else {
+            TransitionManager.beginDelayedTransition(
+                binding.root, MaterialFade()
+            )
+//            skeleton.showSkeleton()
+            binding.activityLoginContainerLoading.visibility = View.VISIBLE
+        }
+    }
+
+    private fun checkRegionAndInitialize() {
+        if (userRegion != APP_REGION) {
+            showRegionWarningDialog()
+        }
+    }
+
+    private fun showRegionWarningDialog() {
+        MaterialAlertDialogBuilder(this).setTitle(getString(R.string.unsupported_region))
+            .setMessage(
+                getString(
+                    R.string.this_app_version_is_only_supported_in_s_your_sim_card_region_is_s,
+                    APP_REGION,
+                    userRegion
+                )
+            ).setPositiveButton(R.string.continue_) { _, _ ->
+                checkInitialUserState()
+                setupObservers()
+            }.setNegativeButton(R.string.cancel) { _, _ -> exitProcess(0) }.setCancelable(false)
+            .show()
+    }
+
+    private fun navigateToMainActivity() {
+        if (isNavigatedToMainActivity) return // Avoid navigating multiple times
+        isNavigatedToMainActivity = true
+        val intent = Intent(this, MainActivity::class.java)
+        this.intent.extras?.let { intent.putExtras(it) }
+        startActivity(intent)
+        this.finish()
+    }
+
+    // Google Sign-In method - called from UI
+    fun signInWithGoogle() {
+        Log.d(TAG, "Google server client id ${BuildConfig.GOOGLE_SERVER_CLIENT_ID}")
+        val request = GetCredentialRequest.Builder().addCredentialOption(
+            GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(BuildConfig.GOOGLE_SERVER_CLIENT_ID)
+                .build()
+        ).build()
+
+        applicationScope.launch {
             try {
                 val result = credentialManager.getCredential(
                     request = request,
@@ -114,66 +276,94 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
                 )
                 handleSignIn(result)
             } catch (e: GetCredentialException) {
-                Toast.makeText(this@LoginActivity, e.localizedMessage, Toast.LENGTH_SHORT).show()
                 Log.e(TAG, "Error getting credential", e)
             }
         }
     }
 
     private fun handleSignIn(result: GetCredentialResponse) {
-        // Handle the successfully returned credential.
         when (val credential = result.credential) {
-
-            // GoogleIdToken credential
             is CustomCredential -> {
                 if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                     try {
-                        // Use googleIdTokenCredential and extract the ID to validate and
-                        // authenticate on your server.
-                        val googleIdTokenCredential = GoogleIdTokenCredential
-                            .createFrom(credential.data)
-
-                        firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
-
+                        val googleIdTokenCredential =
+                            GoogleIdTokenCredential.createFrom(credential.data)
+                        viewModel.signInWithGoogle(googleIdTokenCredential.idToken)
                     } catch (e: GoogleIdTokenParsingException) {
                         Log.e(TAG, "Received an invalid google id token response", e)
+                        Toast.makeText(
+                            this, getString(
+                                R.string.google_sign_in_failed,
+                                ErrorLocalizer.getLocalizedError(this, e)
+                            ), Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
-                    // Catch any unrecognized custom credential type here.
                     Log.e(TAG, "Unexpected type of credential")
                 }
             }
 
             else -> {
-                // Catch any unrecognized credential type here.
                 Log.e(TAG, "Unexpected type of credential")
             }
         }
     }
 
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    Toast.makeText(
-                        this,
-                        getString(R.string.signed_in_as, user?.displayName), Toast.LENGTH_SHORT
-                    ).show()
-                    this.startActivity(
-                        Intent(
-                            this,
-                            MainActivity::class.java
-                        ).apply { this@LoginActivity.intent.extras?.let { putExtras(it) } })
-                    this.finish()
-                } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.authentication_failed, task.exception?.localizedMessage),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
+    override fun onStart() {
+        super.onStart()
+        // Get the current language setting from the Android system for this app.
+        val currentSystemLangTag = if (AppCompatDelegate.getApplicationLocales().isEmpty) {
+            Language.SYSTEM.code
+        } else {
+            AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        }
+
+        Log.d(
+            MainActivity.Companion.TAG,
+            "onStart: Current system language for app is '$currentSystemLangTag'"
+        )
+
+        // Tell the ViewModel to sync this value with DataStore.
+        // The ViewModel will handle the logic of checking if an update is needed.
+        viewModel.syncLanguageWithSystem(currentSystemLangTag)
+    }
+
+    private fun applyInitialSettings() {
+        // This is one of the few acceptable places to use runBlocking, because it's
+        // essential for the initial UI state and only runs once on activity creation.
+        lifecycleScope.launch {
+            val language = viewModel.language.first()
+            AppCompatDelegate.setApplicationLocales(
+                AppPreferences.decideLanguage(
+                    enumByNameIgnoreCaseOrNull<Language>(language)
+                )
+            )
+
+            val isDynamic = viewModel.isDynamicColorApplied.first()
+            setDynamicColors(isDynamic)
+
+            val theme = viewModel.themeMode.first()
+            val modeInt = AppPreferences.decideThemeMode(
+                enumByNameIgnoreCaseOrNull<ThemeMode>(
+                    theme, ThemeMode.SYSTEM
+                )!!
+            )
+            AppCompatDelegate.setDefaultNightMode(modeInt)
+        }
+    }
+
+    private fun setDynamicColors(isApplied: Boolean) {
+        val precondition = DynamicColors.Precondition { activity, _ ->
+            isApplied
+        }
+        val options = DynamicColorsOptions.Builder().setPrecondition(precondition).build()
+        DynamicColors.applyToActivitiesIfAvailable(
+            application, options
+        )
+    }
+
+    override fun onDestroy() {
+        loginJob?.cancel()
+        super.onDestroy()
     }
 }

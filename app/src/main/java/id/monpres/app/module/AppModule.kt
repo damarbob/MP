@@ -1,6 +1,7 @@
 package id.monpres.app.module
 
 import android.content.Context
+import androidx.credentials.CredentialManager
 import androidx.room.Room
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -52,4 +53,11 @@ object AppModule {
     /* DAOs */
     @Provides
     fun provideVehicleDao(db: AppDatabase): VehicleDao = db.vehicleDao()
+
+    /* Credential Manager */
+    @Provides
+    @Singleton
+    fun provideCredentialManager(@ApplicationContext context: Context): CredentialManager {
+        return CredentialManager.create(context)
+    }
 }

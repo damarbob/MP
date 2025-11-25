@@ -276,6 +276,20 @@ class VehicleListFragment : BaseFragment(R.layout.fragment_vehicle_list) {
             resources.getQuantityString(R.plurals.x_items_selected, selectedCount, selectedCount)
     }
 
+    override fun onDestroyView() {
+        // Crucial: Force the Transition Manager to stop tracking the root layout
+        // This removes the reference from the ThreadLocal map causing the leak.
+        (view as? ViewGroup)?.let { rootView ->
+            androidx.transition.TransitionManager.endTransitions(rootView)
+        }
+
+        // Clean up the RecyclerView specifically
+        // This prevents the Adapter from holding onto ViewHolders that might still
+        // have transition tags on them.
+        binding.fragmentListVehicleRecyclerViewListVehicle.adapter = null
+        super.onDestroyView()
+    }
+
     override val progressIndicator: LinearProgressIndicator
         get() = binding.fragmentListVehicleProgressIndicator
 }

@@ -1,30 +1,35 @@
 package id.monpres.app.ui.auth.login
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.androidbroadcast.vbpd.viewBinding
+import id.monpres.app.AuthViewModel
 import id.monpres.app.LoginActivity
-import id.monpres.app.MainActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentLoginBinding
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
+import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
     private val binding by viewBinding(FragmentLoginBinding::bind)
 
     private val viewModel: LoginViewModel by viewModels()
+    private val authViewModel: AuthViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,26 +52,11 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         /* Set up UI */
         binding.loginLayoutForm.visibility = View.GONE
 
-        /* Observers */
-        // Auth result
-        viewModel.authResult.observe(viewLifecycleOwner) { result ->
-            result?.onSuccess {
-                // Navigate to the next screen or update UI
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.sign_in_successful),
-                    Toast.LENGTH_SHORT
-                ).show()
+        setupObservers()
+        setupListeners()
+    }
 
-                val intent = Intent(activity, MainActivity::class.java)
-                startActivity(intent)
-                activity?.finish()  // Finish the current activity so the user can't navigate back to the login screen
-
-            }?.onFailure { exception ->
-                // Show error message
-                Toast.makeText(requireContext(), exception.localizedMessage, Toast.LENGTH_LONG).show()
-            }
-        }
+    private fun setupObservers() {
         // Form Layout State
         viewModel.loginFormVisibilityState.observe(viewLifecycleOwner) {
             TransitionManager.beginDelayedTransition(binding.root, AutoTransition().apply {
@@ -75,11 +65,40 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             binding.loginEmailButton.visibility = if (it) View.GONE else View.VISIBLE
             binding.loginLayoutForm.visibility = if (it) View.VISIBLE else View.GONE
         }
-        // Loading indicator visibility
-        viewModel.progressVisibility.observe(viewLifecycleOwner) { isVisible ->
-            binding.loginProgressIndicatorLoading.visibility = if (isVisible) View.VISIBLE else View.GONE
-        }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.loginState.collect { loginState ->
+                    when (loginState) {
+                        is AuthViewModel.LoginState.Loading -> {
+                            binding.loginProgressIndicatorLoading.visibility = View.VISIBLE
+                            binding.loginButton.isEnabled = false
+                        }
+
+                        is AuthViewModel.LoginState.Success -> {
+                            binding.loginProgressIndicatorLoading.visibility = View.GONE
+                            binding.loginButton.isEnabled = true
+                            // Navigation is handled by AuthState in Activity
+                        }
+
+                        is AuthViewModel.LoginState.Error -> {
+                            binding.loginProgressIndicatorLoading.visibility = View.GONE
+                            binding.loginButton.isEnabled = true
+//                            Toast.makeText(requireContext(), loginState.message, Toast.LENGTH_SHORT)
+//                                .show()
+                        }
+
+                        else -> {
+                            binding.loginProgressIndicatorLoading.visibility = View.GONE
+                            binding.loginButton.isEnabled = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupListeners() {
         /* Listeners */
         binding.loginTextForgotPassword.setOnClickListener {
 
@@ -91,11 +110,16 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                     .setTitle(getString(R.string.forgot_password))
                     .setMessage(getString(R.string.continue_please_make_sure))
                     .setPositiveButton(getString(R.string.send)) { dialog, which ->
-                        viewModel.sendPasswordResetEmail(email) { success, errorMessage ->
+                        authViewModel.sendPasswordResetEmail(email) { success, errorMessage ->
                             if (success) {
-                                Toast.makeText(requireContext(), getString(R.string.an_email_with_a_password_reset_link), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.an_email_with_a_password_reset_link),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             } else {
-                                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         }
                     }
@@ -112,7 +136,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 val email = binding.loginInputEmailAddress.text.toString()
                 val password = binding.loginInputPassword.text.toString()
 
-                viewModel.loginWithEmailPassword(email, password)
+                authViewModel.loginWithEmailPassword(email, password)
             } else {
                 binding.loginInputEmailAddress.doAfterTextChanged { validateEmail() }
                 binding.loginInputPassword.doAfterTextChanged { validatePassword() }
@@ -122,7 +146,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             viewModel.toggleFormLayoutState()
         }
         binding.loginGoogleButton.setOnClickListener {
-            (activity as LoginActivity).signIn()
+            (activity as LoginActivity).signInWithGoogle()
         }
         binding.loginSignUpText.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
@@ -134,6 +158,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         val isPasswordValid = validatePassword()
         return isEmailValid && isPasswordValid
     }
+
     private fun validateEmail(): Boolean {
         val email = binding.loginInputEmailAddress.text.toString()
         return when {
