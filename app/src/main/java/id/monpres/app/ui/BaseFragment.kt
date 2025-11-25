@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.transition.MaterialSharedAxis
@@ -25,18 +26,18 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId) {
     private val activeLoaders = AtomicInteger(0)
 
     abstract val progressIndicator: LinearProgressIndicator
+    private val destinationChangedListener = NavController.OnDestinationChangedListener { _, destination, _ ->
+        when (destination.id) {
+            R.id.profileFragment, R.id.monpresSettingFragment, R.id.orderServiceListFragment -> {
+                exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+                reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
+            }
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        findNavController().addOnDestinationChangedListener { _, destination, _ ->
-            when (destination.id) {
-                R.id.profileFragment, R.id.monpresSettingFragment, R.id.orderServiceListFragment -> {
-                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
-                    reenterTransition =
-                        MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
-                }
-            }
-        }
+        findNavController().addOnDestinationChangedListener(destinationChangedListener)
     }
 
     /**
@@ -193,6 +194,11 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId) {
             }
             start()
         }
+    }
+
+    override fun onDestroyView() {
+        findNavController().removeOnDestinationChangedListener(destinationChangedListener)
+        super.onDestroyView()
     }
 }
 

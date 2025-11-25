@@ -9,9 +9,10 @@ googleid = "1.1.1"
 hiltAndroid = "2.57"
 leakcanaryAndroid = "2.14"
 libphonenumber = "9.0.17"
+lottie = "6.7.1"
 mapbox = "11.16.2"
-firebaseBom = "34.1.0"
-kotlin = "2.2.0"
+firebaseBom = "34.6.0"
+kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -19,15 +20,15 @@ espressoCore = "3.5.1"
 appcompat = "1.7.1"
 mapboxSdkTurf = "7.8.0"
 material = "1.14.0-alpha06"
-activity = "1.10.1"
-constraintlayout = "2.1.4"
+activity = "1.12.0"
+constraintlayout = "2.2.1"
 legacySupportV4 = "1.0.0"
-lifecycleLivedataKtx = "2.9.4"
-lifecycleViewmodelKtx = "2.9.4"
+lifecycleLivedataKtx = "2.10.0"
+lifecycleViewmodelKtx = "2.10.0"
 fragmentKtx = "1.8.8"
-navigationFragmentKtx = "2.8.9"
-navigationSafeArgsGradlePlugin = "2.8.9"
-navigationUiKtx = "2.8.9"
+navigationFragmentKtx = "2.9.6"
+navigationSafeArgsGradlePlugin = "2.9.6"
+navigationUiKtx = "2.9.6"
 annotation = "1.9.1"
 coordinatorlayout = "1.3.0"
 playServicesLocation = "21.3.0"
@@ -60,6 +61,7 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltA
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
+lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 mapbox = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }

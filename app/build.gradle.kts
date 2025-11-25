@@ -150,6 +150,7 @@ dependencies {
 
     /* Lottie */
     implementation(libs.dotlottie.android)
+    implementation(libs.lottie)
 
     /* libphonenumber for phone number parsing, formatting, and validation */
     implementation(libs.libphonenumber)

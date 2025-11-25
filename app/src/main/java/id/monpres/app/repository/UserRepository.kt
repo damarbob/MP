@@ -5,9 +5,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.usecase.ObserveCollectionByIdUseCase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -16,6 +23,7 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
+    private val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase
 ) : Repository<MontirPresisiUser>() {
 
     // Private mutable state flow to hold the user record
@@ -74,6 +82,30 @@ class UserRepository @Inject constructor(
         }
     }
 
+    fun observeUserById(): Flow<MontirPresisiUser> {
+        val currentUserId = auth.currentUser?.uid
+
+        return if (currentUserId == null) {
+            Log.w(TAG, "No user is signed in")
+            _userRecord.value = null
+            emptyFlow()
+        } else {
+        observeCollectionByIdUseCase(
+            auth.currentUser?.uid ?: throw IllegalStateException("No user is signed in"),
+            MontirPresisiUser.COLLECTION, MontirPresisiUser::class.java
+        )
+            .mapNotNull { user ->
+                setRecords(listOf(user!!), false)
+                _userRecord.value = user
+                user
+            }
+//            .distinctUntilChanged()
+            .catch {
+                Log.e(OrderServiceRepository.Companion.TAG, "Error observing user", it)
+            }
+            .flowOn(Dispatchers.IO) // Run the collection and mapping on an IO thread
+    }
+    }
     companion object {
         private const val TAG = "UserRepository"
     }

@@ -87,7 +87,6 @@
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
                 android:padding="1dp"
-                android:transitionGroup="true"
                 tools:targetApi="31" />
 
             <LinearLayout

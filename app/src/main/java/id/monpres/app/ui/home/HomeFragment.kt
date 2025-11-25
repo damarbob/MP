@@ -2,6 +2,7 @@ package id.monpres.app.ui.home
 
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
@@ -364,6 +365,21 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
                 fragmentHomeRecyclerViewHistory.visibility = View.VISIBLE
             }
         }
+    }
+
+    override fun onDestroyView() {
+        // Crucial: Force the Transition Manager to stop tracking the root layout
+        // This removes the reference from the ThreadLocal map causing the leak.
+        (view as? ViewGroup)?.let { rootView ->
+            androidx.transition.TransitionManager.endTransitions(rootView)
+        }
+
+        // Clean up the RecyclerView specifically
+        // This prevents the Adapter from holding onto ViewHolders that might still
+        // have transition tags on them.
+        binding.fragmentHomeRecyclerViewHistory.adapter = null
+        binding.fragmentHomeRecyclerViewVehicle.adapter = null
+        super.onDestroyView()
     }
 
     override val progressIndicator: LinearProgressIndicator

@@ -8,6 +8,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -29,7 +30,10 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val APP_LANGUAGE = stringPreferencesKey("app_language")
+        val COOLDOWN_TIME = longPreferencesKey("cooldown_time")
         val PAYMENT_METHOD_ID = stringPreferencesKey("payment_method_id")
+
+        const val COOLDOWN_DURATION_MS = 90000L // 90 seconds
     }
 
     companion object {
@@ -92,6 +96,27 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
         context.dataStore.edit { preferences ->
             preferences[PreferenceKeys.APP_LANGUAGE] = language.name
         }
+    }
+
+    // --- Language ---
+    val cooldownTime: Flow<Long> = context.dataStore.data
+        .map { preferences ->
+            preferences[PreferenceKeys.COOLDOWN_TIME] ?: 0L
+        }
+
+    suspend fun setCooldownTime(time: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferenceKeys.COOLDOWN_TIME] = time
+        }
+    }
+
+    suspend fun startCooldown() {
+        val endTime = System.currentTimeMillis() + PreferenceKeys.COOLDOWN_DURATION_MS
+        setCooldownTime(endTime)
+    }
+
+    suspend fun clearCooldown() {
+        setCooldownTime(0L)
     }
 
     // --- Payment Method ---

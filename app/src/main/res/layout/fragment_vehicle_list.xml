@@ -31,8 +31,7 @@
                 android:nestedScrollingEnabled="false"
                 android:paddingHorizontal="1dp"
                 android:paddingTop="16dp"
-                android:paddingBottom="1dp"
-                android:transitionGroup="true" />
+                android:paddingBottom="1dp" />
 
             <Space
                 android:layout_width="match_parent"

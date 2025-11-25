@@ -2,23 +2,26 @@ package id.monpres.app.ui.auth.register
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.androidbroadcast.vbpd.viewBinding
+import id.monpres.app.AuthViewModel
 import id.monpres.app.LoginActivity
-import id.monpres.app.MainActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentRegisterBinding
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
+import kotlinx.coroutines.launch
 
 
 class RegisterFragment : Fragment(R.layout.fragment_register) {
@@ -30,6 +33,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
     private val binding by viewBinding(FragmentRegisterBinding::bind)
 
     private val viewModel: RegisterViewModel by viewModels()
+    private val authViewModel: AuthViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,33 +52,50 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
             InsetsWithKeyboardCallback(requireActivity().window, 0, null)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root, insetsWithKeyboardCallback)
 
-        /* Observers */
-        // Auth result
-        viewModel.authResult.observe(viewLifecycleOwner) { result ->
-            result?.onSuccess {
-                // Navigate to the next screen or update UI
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.sign_up_successful),
-                    Toast.LENGTH_SHORT
-                ).show()
+        setupObservers()
+        setupListeners()
+        binding.registerInputFullName.onFocusChangeListener =
+            View.OnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    validateFullName()
+                }
+            }
+    }
 
-                val intent = Intent(activity, MainActivity::class.java)
-                startActivity(intent)
-                activity?.finish()  // Finish the current activity so the user can't navigate back to the login screen
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                authViewModel.registerState.collect { registerState ->
+                    when (registerState) {
+                        is AuthViewModel.RegisterState.Loading -> {
+                            binding.registerProgressIndicatorLoading.visibility = View.VISIBLE
+                            binding.registerButton.isEnabled = false
+                        }
 
-            }?.onFailure { exception ->
-                Log.e(TAG, "Error during sign-up", exception)
+                        is AuthViewModel.RegisterState.Success -> {
+                            binding.registerProgressIndicatorLoading.visibility = View.GONE
+                            binding.registerButton.isEnabled = true
+                            // Navigation is handled by AuthState in Activity
+                        }
 
-                // Show error message
-                Toast.makeText(requireContext(), exception.message, Toast.LENGTH_SHORT).show()
+                        is AuthViewModel.RegisterState.Error -> {
+                            binding.registerProgressIndicatorLoading.visibility = View.GONE
+                            binding.registerButton.isEnabled = true
+//                            Toast.makeText(requireContext(), registerState.message, Toast.LENGTH_SHORT)
+//                                .show()
+                        }
+
+                        else -> {
+                            binding.registerProgressIndicatorLoading.visibility = View.GONE
+                            binding.registerButton.isEnabled = true
+                        }
+                    }
+                }
             }
         }
-        // Loading indicator visibility
-        viewModel.progressVisibility.observe(viewLifecycleOwner) { isVisible ->
-            binding.registerProgressIndicatorLoading.visibility = if (isVisible) View.VISIBLE else View.GONE
-        }
+    }
 
+    private fun setupListeners() {
         /* Listeners */
         binding.registerCheckBoxTcAgreement.setOnCheckedChangeListener { buttonView, isChecked ->
             run {
@@ -109,7 +130,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
                 val password = binding.registerInputPassword.text.toString()
                 val cb = binding.registerCheckBoxTcAgreement.isChecked
 
-                viewModel.registerWithEmailPassword(fullName, email, password)
+                authViewModel.registerWithEmailPassword(fullName, email, password)
             } else {
                 binding.registerInputFullName.addTextChangedListener { validateFullName() }
                 binding.registerInputEmailAddress.addTextChangedListener { validateEmail() }
@@ -117,7 +138,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
             }
         }
         binding.registerGoogleButton.setOnClickListener {
-            (activity as LoginActivity).signIn()
+            (activity as LoginActivity).signInWithGoogle()
         }
         binding.registerSignInText.setOnClickListener {
             findNavController().popBackStack()
