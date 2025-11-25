@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -27,7 +28,10 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class AdminNewUsersFragment : Fragment() {
 
-    // ... Companion Object ...
+    companion object {
+        fun newInstance() = AdminNewUsersFragment()
+        private val TAG = AdminNewUsersFragment::class.simpleName
+    }
 
     private val viewModel: AdminNewUsersViewModel by viewModels()
     private var _binding: FragmentAdminNewUsersBinding? = null
@@ -57,7 +61,8 @@ class AdminNewUsersFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        setupInputs() // New
+        setupInputs()
+        setupScrollListener()
         observeViewModel()
     }
 
@@ -106,40 +111,72 @@ class AdminNewUsersFragment : Fragment() {
         }
     }
 
+    private fun setupScrollListener() {
+        binding.fragmentAdminNewUsersNestedScrollView.setOnScrollChangeListener(
+            NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
+                // Calculate if we have scrolled to the bottom
+                val diff = (v.getChildAt(0).measuredHeight - v.measuredHeight) - scrollY
+
+                // If diff is 0 (or very small), we are at the bottom
+                if (diff <= 0) {
+                    viewModel.loadMore()
+                }
+            }
+        )
+    }
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    binding.apply {
-                        // Reset visibility
-                        fragmentAdminNewUsersLinearProgressIndicator.visibility = View.GONE
-                        fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.GONE
-                        fragmentAdminNewUsersTextViewError.visibility = View.GONE
-                        fragmentAdminNewUsersLinearLayoutInfo.visibility = View.GONE
 
-                        when (state) {
-                            is UiState.Loading -> {
-                                fragmentAdminNewUsersLinearProgressIndicator.visibility = View.VISIBLE
-                                // Optional: Keep list visible while reloading if you prefer
-                            }
-                            is UiState.Success -> {
-                                fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.VISIBLE
-                                userAdapter.submitList(state.data)
-                            }
-                            is UiState.Error -> {
-                                fragmentAdminNewUsersTextViewError.visibility = View.VISIBLE
-                                fragmentAdminNewUsersTextViewError.text = state.message
-                            }
-                            is UiState.Empty -> {
-                                fragmentAdminNewUsersLinearLayoutInfo.visibility = View.VISIBLE
-                                // Update empty text based on whether search is active
-                                val isSearching = !binding.fragmentAdminNewUsersEditTextSearch.text.isNullOrBlank()
-                                fragmentAdminNewUsersTextViewInfo.text = if(isSearching)
-                                    getString(R.string.no_new_users_found)
-                                else
-                                    getString(R.string.no_new_users_found)
+                // Observe Main Data State
+                launch {
+                    viewModel.uiState.collect { state ->
+                        binding.apply {
+                            // Reset visibility
+                            fragmentAdminNewUsersLinearProgressIndicator.visibility = View.GONE
+                            fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.GONE
+                            fragmentAdminNewUsersTextViewError.visibility = View.GONE
+                            fragmentAdminNewUsersLinearLayoutInfo.visibility = View.GONE
+
+                            when (state) {
+                                is UiState.Loading -> {
+                                    fragmentAdminNewUsersLinearProgressIndicator.visibility =
+                                        View.VISIBLE
+                                    // Optional: Keep list visible while reloading if you prefer
+                                }
+
+                                is UiState.Success -> {
+                                    fragmentAdminNewUsersRecyclerViewNewUsers.visibility =
+                                        View.VISIBLE
+                                    userAdapter.submitList(state.data)
+                                }
+
+                                is UiState.Error -> {
+                                    fragmentAdminNewUsersTextViewError.visibility = View.VISIBLE
+                                    fragmentAdminNewUsersTextViewError.text = state.message
+                                }
+
+                                is UiState.Empty -> {
+                                    fragmentAdminNewUsersLinearLayoutInfo.visibility = View.VISIBLE
+                                    // Update empty text based on whether search is active
+                                    val isSearching =
+                                        !binding.fragmentAdminNewUsersEditTextSearch.text.isNullOrBlank()
+                                    fragmentAdminNewUsersTextViewInfo.text = if (isSearching)
+                                        getString(R.string.no_new_users_found)
+                                    else
+                                        getString(R.string.no_new_users_found)
+                                }
                             }
                         }
+                    }
+                }
+
+                // Observe Load More Loading State
+                launch {
+                    viewModel.isLoadingMore.collect { isLoading ->
+                        binding.fragmentAdminNewUsersProgressBarLoadMore.visibility =
+                            if (isLoading) View.VISIBLE else View.GONE
                     }
                 }
             }
