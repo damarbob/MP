@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.auth.emailverification.EmailVerificationFragment">
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
@@ -38,53 +38,53 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
+                android:layout_marginVertical="24dp"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:layout_marginVertical="24dp">
+                android:gravity="center">
 
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/fragmentEmailVerificationLottieAnimationView"
-                android:layout_width="256dp"
-                android:layout_height="256dp"
-                app:lottie_fileName="lotties/email_sent.json"
-                app:lottie_loop="true"
-                app:lottie_autoPlay="true"
-                android:contentDescription="Email Icon" />
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/fragmentEmailVerificationLottieAnimationView"
+                    android:layout_width="256dp"
+                    android:layout_height="256dp"
+                    android:contentDescription="Email Icon"
+                    app:lottie_autoPlay="true"
+                    app:lottie_fileName="lotties/email_sent.json"
+                    app:lottie_loop="true" />
             </LinearLayout>
 
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 android:text="@string/verify_your_email"
                 android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/fragmentEmailVerificationTextViewDescription"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
                 android:text="@string/we_have_sent_a_verification_link"
                 android:textAlignment="center"
-                android:textSize="16sp"
-                android:layout_marginBottom="32dp"/>
+                android:textSize="16sp" />
 
             <Button
                 android:id="@+id/fragmentEmailVerificationButtonResendEmail"
                 style="@style/Widget.Material3Expressive.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="true"
                 android:paddingVertical="16dp"
-                android:text="@string/send_email_verification"
-                android:enabled="true" />
+                android:text="@string/send_email_verification" />
 
             <TextView
                 android:id="@+id/fragmentEmailVerificationTextViewTimer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:textColor="@android:color/darker_gray"/>
+                android:textColor="@android:color/darker_gray" />
 
             <Button
                 android:id="@+id/fragmentEmailVerificationButtonLogout"
