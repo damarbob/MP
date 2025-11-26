@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.auth.adminverification.AdminVerificationFragment">
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/fragmentAdminVerificationProgressIndicatorLoading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        app:hideAnimationBehavior="outward"
+        app:showAnimationBehavior="inward"
+        app:trackThickness="6dp"
+        app:waveAmplitude="2dp"
+        app:wavelength="40dp"
+        android:visibility="invisible"
+        app:wavelengthIndeterminate="20dp" />
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/fragmentAdminVerificationNestedScrollView"
@@ -24,61 +37,172 @@
             android:paddingVertical="48dp">
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:layout_marginVertical="24dp"
                 android:layout_weight="1"
-                android:gravity="center"
-                android:layout_marginVertical="24dp">
+                android:gravity="center">
 
                 <com.airbnb.lottie.LottieAnimationView
                     android:id="@+id/fragmentAdminVerificationLottieAnimationView"
-                    android:layout_width="256dp"
+                    android:layout_width="match_parent"
                     android:layout_height="256dp"
-                    app:lottie_fileName="lotties/car_json.json"
-                    app:lottie_loop="true"
+                    android:contentDescription="Email Icon"
                     app:lottie_autoPlay="true"
-                    android:contentDescription="Email Icon" />
+                    app:lottie_fileName="lotties/car_json.json"
+                    app:lottie_loop="true" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/fragmentAdminVerificationTextViewTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
-
-            <TextView
-                android:id="@+id/fragmentAdminVerificationTextViewDescription"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAlignment="center"
-                android:textSize="16sp"
-                android:layout_marginBottom="32dp"/>
-
-            <Button
-                android:id="@+id/fragmentAdminVerificationButtonChatAdmin"
-                style="@style/Widget.Material3Expressive.Button.TonalButton"
+            <LinearLayout
+                android:id="@+id/fragmentAdminHomeLinearLayoutVerificationContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingVertical="16dp"
-                android:text="@string/chat_admin"
-                android:enabled="true" />
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/fragmentAdminVerificationTextViewTimer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textColor="@android:color/darker_gray"/>
+                <TextView
+                    android:id="@+id/fragmentAdminVerificationTextViewTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/fragmentAdminVerificationButtonLogout"
-                style="@style/Widget.Material3Expressive.Button.TextButton"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/fragmentAdminVerificationTextViewDescription"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="32dp"
+                    android:textAlignment="center"
+                    android:textSize="16sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentAdminVerificationButtonChatAdmin"
+                    style="@style/Widget.Material3Expressive.Button.TonalButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="true"
+                    android:paddingVertical="16dp"
+                    android:text="@string/chat_admin" />
+
+                <TextView
+                    android:id="@+id/fragmentAdminVerificationTextViewTimer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@android:color/darker_gray" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fragmentAdminVerificationButtonLogout"
+                        style="@style/Widget.Material3Expressive.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sign_out" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fragmentAdminVerificationButtonEditSocMed"
+                        style="@style/Widget.Material3Expressive.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/edit" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/fragmentAdminHomeLinearLayoutFormContent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/sign_out" />
+                android:divider="@drawable/divider_gap_16"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:showDividers="middle">
+
+                <TextView
+                    style="@style/Widget.App.H4.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/social_media"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+                <TextView
+                    style="@style/Widget.App.P"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/enter_your_social_media_id" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/fragmentAdminVerificationInputLayoutInstagramId"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/instagram_id"
+                    app:endIconContentDescription="@string/instagram_id"
+                    app:endIconDrawable="@drawable/open_in_new_24px"
+                    app:endIconMode="custom"
+                    app:helperText="@string/your_personal_instagram_id">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/fragmentAdminVerificationInputEditInstagramId"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/fragmentAdminVerificationInputLayoutFacebookId"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/facebook_id"
+                    app:endIconContentDescription="@string/facebook_id"
+                    app:endIconDrawable="@drawable/open_in_new_24px"
+                    app:endIconMode="custom"
+                    app:helperText="@string/your_primary_personal_facebook_id">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/fragmentAdminVerificationInputEditFacebookId"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentAdminVerificationButtonSave"
+                    style="@style/Widget.Material3Expressive.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:enabled="true"
+                    android:paddingVertical="16dp"
+                    android:text="@string/save"
+                    app:icon="@drawable/save_24px"
+                    app:iconGravity="textStart" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fragmentAdminVerificationButtonCancelEdit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:layout_marginTop="16dp"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:text="@string/cancel"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 

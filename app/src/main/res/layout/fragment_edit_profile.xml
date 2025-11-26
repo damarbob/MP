@@ -212,7 +212,7 @@
                     style="@style/Widget.App.P"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/enter_your_social_media_id_for" />
+                    android:text="@string/enter_your_social_media_id" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editProfileInputLayoutInstagramId"

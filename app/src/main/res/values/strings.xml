@@ -198,7 +198,7 @@
     <string name="social_media">Social Media</string>
     <string name="instagram_id">Instagram ID</string>
     <string name="facebook_id">Facebook ID</string>
-    <string name="enter_your_social_media_id_for">Enter your social media ID for the verification process.</string>
+    <string name="enter_your_social_media_id">Enter your social media ID for the verification process (at least 1).</string>
     <string name="your_primary_personal_facebook_id">Your primary personal Facebook ID/username (not your display name). Tap the icon to open your profile in the browser.</string>
     <string name="your_personal_instagram_id">Your personal Instagram ID/username without the @ symbol. Tap the icon to open your profile in the browser.</string>
     <string name="profile_updated_successfully">Profile updated successfully</string>

@@ -194,7 +194,7 @@
     <string name="social_media">Social Media</string>
     <string name="instagram_id">Instagram ID</string>
     <string name="facebook_id">Facebook ID</string>
-    <string name="enter_your_social_media_id_for">Masukkan ID media sosial Anda untuk proses verifikasi.</string>
+    <string name="enter_your_social_media_id">Masukkan ID media sosial Anda untuk proses verifikasi (pilih salah satu antara FB/IG atau keduanya).</string>
     <string name="your_primary_personal_facebook_id">ID/nama pengguna Facebook pribadi utama Anda (bukan nama tampilan Anda). Ketuk ikon untuk membuka profil Anda di browser.</string>
     <string name="your_personal_instagram_id">ID/nama pengguna Instagram pribadi utama Anda tanpa simbol @. Ketuk ikon untuk membuka profil Anda di browser.</string>
     <string name="profile_updated_successfully">Profil berhasil diperbarui</string>
@@ -384,6 +384,6 @@
     <string name="copied">Disalin</string>
     <string name="user_role">Peran Pengguna</string>
     <string name="reject_registration_for_x">Tolak pendaftaran untuk \'%1$s\'. Mereka tidak akan dapat lagi mengakses aplikasi ini.</string>
-    <string name="all">All</string>
-    <string name="pending">Pending</string>
+    <string name="all">Semua</string>
+    <string name="pending">Tertunda</string>
 </resources>

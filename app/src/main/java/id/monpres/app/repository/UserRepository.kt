@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.usecase.ObserveCollectionByIdUseCase
+import id.monpres.app.usecase.UpdateDataByIdUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,8 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
-    private val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase
+    private val observeCollectionByIdUseCase: ObserveCollectionByIdUseCase,
+    private val updateDataByIdUseCase: UpdateDataByIdUseCase
 ) : Repository<MontirPresisiUser>() {
 
     // Private mutable state flow to hold the user record
@@ -90,22 +92,31 @@ class UserRepository @Inject constructor(
             _userRecord.value = null
             emptyFlow()
         } else {
-        observeCollectionByIdUseCase(
-            auth.currentUser?.uid ?: throw IllegalStateException("No user is signed in"),
-            MontirPresisiUser.COLLECTION, MontirPresisiUser::class.java
-        )
-            .mapNotNull { user ->
-                setRecords(listOf(user!!), false)
-                _userRecord.value = user
-                user
-            }
+            observeCollectionByIdUseCase(
+                auth.currentUser?.uid ?: throw IllegalStateException("No user is signed in"),
+                MontirPresisiUser.COLLECTION, MontirPresisiUser::class.java
+            )
+                .mapNotNull { user ->
+                    setRecords(listOf(user!!), false)
+                    _userRecord.value = user
+                    user
+                }
 //            .distinctUntilChanged()
-            .catch {
-                Log.e(OrderServiceRepository.Companion.TAG, "Error observing user", it)
-            }
-            .flowOn(Dispatchers.IO) // Run the collection and mapping on an IO thread
+                .catch {
+                    Log.e(OrderServiceRepository.Companion.TAG, "Error observing user", it)
+                }
+                .flowOn(Dispatchers.IO) // Run the collection and mapping on an IO thread
+        }
     }
+
+    suspend fun updateUser(user: MontirPresisiUser) {
+        if (user.userId == null) throw IllegalArgumentException("User ID cannot be null")
+        else {
+            updateDataByIdUseCase(user.userId!!, MontirPresisiUser.COLLECTION, user)
+            _userRecord.value = user
+        }
     }
+
     companion object {
         private const val TAG = "UserRepository"
     }
