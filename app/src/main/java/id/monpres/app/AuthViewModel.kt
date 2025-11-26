@@ -21,6 +21,7 @@ import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetUserVerificationStatusUseCase
 import id.monpres.app.usecase.SignOutUseCase
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,11 +29,13 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -86,6 +89,8 @@ class AuthViewModel @Inject constructor(
 
     private var countdownTimer: CountDownTimer? = null
     private var authStateListener: FirebaseAuth.AuthStateListener? = null
+
+    private var adminVerificationJob: Job? = null
 
     // Sealed classes for state management
     sealed class AuthState {
@@ -167,6 +172,7 @@ class AuthViewModel @Inject constructor(
             } else {
                 // User is signed out
                 _authState.value = AuthState.Unauthenticated()
+                adminVerificationJob?.cancel()
             }
         }
 
@@ -193,6 +199,7 @@ class AuthViewModel @Inject constructor(
                         }
                         countdownTimer?.cancel()
                     } else {
+                        adminVerificationJob?.cancel()
                         _authState.value = AuthState.EmailNotVerified(updatedUser)
                     }
                 }
@@ -201,6 +208,7 @@ class AuthViewModel @Inject constructor(
                 if (user.isEmailVerified) {
                     checkAdminVerification()
                 } else {
+                    adminVerificationJob?.cancel()
                     _authState.value = AuthState.EmailNotVerified(user)
                 }
                 Log.e(TAG, "Failed to reload user: ${reloadTask.exception}")
@@ -209,12 +217,12 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun checkAdminVerification() {
-        viewModelScope.launch {
+        adminVerificationJob = viewModelScope.launch {
             try {
                 val user = getOrCreateUserUseCase(UserRole.CUSTOMER).getOrThrow()
                 // Start collecting the admin verification status
-                getUserVerificationStatusUseCase().collect { status ->
-                    Log.d(TAG, "User verification status: $status")
+                getUserVerificationStatusUseCase().collectLatest { status ->
+                    Log.d(TAG, "User verification status: $status, user: $user")
                     when (status) {
                         UserVerificationStatus.VERIFIED -> {
                             _authState.value = AuthState.FullyVerified(user)
@@ -250,6 +258,7 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _authState.value = AuthState.Error(e)
                 _errorEvent.tryEmit(e)
             }
@@ -282,6 +291,7 @@ class AuthViewModel @Inject constructor(
                 if (!createTask.isSuccessful) {
                     val errorMessage = createTask.exception?.message ?: "Registration failed"
                     _registerState.value = RegisterState.Error(errorMessage)
+                    _authState.value = AuthState.Error(createTask.exception ?: Exception(errorMessage))
                     _errorEvent.tryEmit(createTask.exception ?: Exception(errorMessage))
                     return@addOnCompleteListener
                 }
@@ -289,7 +299,8 @@ class AuthViewModel @Inject constructor(
                 val user = createTask.result?.user
                 if (user == null) {
                     _registerState.value = RegisterState.Error("User is null after registration")
-                    _errorEvent.tryEmit(Exception("User is null after registration"))
+                    _authState.value = AuthState.Error(createTask.exception ?: Exception())
+                    _errorEvent.tryEmit(createTask.exception ?: Exception())
                     return@addOnCompleteListener
                 }
 
@@ -439,26 +450,25 @@ class AuthViewModel @Inject constructor(
         onVerified: () -> Unit,
         onPendingOrRejected: () -> Unit
     ) {
-        getUserVerificationStatusUseCase().collect { status ->
-            val monpresUser = _monpresUser.filterNotNull().first()
-            Log.d(
-                TAG,
-                "Monpres user: $monpresUser, current time: ${System.currentTimeMillis()}"
-            )
-            when (status) {
-                UserVerificationStatus.VERIFIED -> {
-                    Log.d(
-                        TAG, "User is verified : ${System.currentTimeMillis()}"
-                    )
-                    onVerified()
-                }
+        val status = getUserVerificationStatusUseCase().filterNotNull().first()
+        val monpresUser = _monpresUser.filterNotNull().first()
+        Log.d(
+            TAG,
+            "Monpres user: $monpresUser, current time: ${System.currentTimeMillis()}"
+        )
+        when (status) {
+            UserVerificationStatus.VERIFIED -> {
+                Log.d(
+                    TAG, "User is verified : ${System.currentTimeMillis()}"
+                )
+                onVerified()
+            }
 
-                UserVerificationStatus.PENDING, UserVerificationStatus.REJECTED -> {
-                    if (monpresUser.role == UserRole.CUSTOMER) {
-                        onPendingOrRejected()
-                    } else {
-                        onVerified() // Other than customer, they are always verified
-                    }
+            UserVerificationStatus.PENDING, UserVerificationStatus.REJECTED -> {
+                if (monpresUser.role == UserRole.CUSTOMER) {
+                    onPendingOrRejected()
+                } else {
+                    onVerified() // Other than customer, they are always verified
                 }
             }
         }
