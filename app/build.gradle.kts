@@ -16,6 +16,13 @@ android {
     namespace = "id.monpres.app"
     compileSdk = 36
 
+    // Read GOOGLE_SERVER_CLIENT_ID from local.properties
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    }
+
     defaultConfig {
         applicationId = "id.monpres.app"
         minSdk = 24
@@ -24,25 +31,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Read GOOGLE_SERVER_CLIENT_ID from local.properties
-        val localProperties = Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localProperties.load(FileInputStream(localPropertiesFile))
-        }
-
-        // Expose to BuildConfig and resources
-        buildConfigField(
-            "String",
-            "GOOGLE_SERVER_CLIENT_ID",
-            "\"${localProperties.getProperty("GOOGLE_SERVER_CLIENT_ID")}\""
-        )
-        resValue(
-            "string",
-            "google_server_client_id",
-            localProperties.getProperty("GOOGLE_SERVER_CLIENT_ID")
-        )
     }
 
     buildTypes {
@@ -52,6 +40,26 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // --- USE THE PRE-LOADED PROPERTIES ---
+            val releaseClientId = localProperties.getProperty("GOOGLE_SERVER_CLIENT_ID_RELEASE")
+                ?: throw GradleException("GOOGLE_SERVER_CLIENT_ID_RELEASE not found in local.properties")
+
+            buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"$releaseClientId\"")
+            resValue("string", "google_server_client_id", releaseClientId)
+        }
+
+        debug {
+            // --- USE THE PRE-LOADED PROPERTIES ---
+            val debugClientId = localProperties.getProperty("GOOGLE_SERVER_CLIENT_ID")
+                ?: throw GradleException("GOOGLE_SERVER_CLIENT_ID not found in local.properties")
+
+            buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"$debugClientId\"")
+            resValue("string", "google_server_client_id", debugClientId)
+
+            // It's also good practice to add a custom application ID suffix for debug builds
+            // to allow installing both debug and release versions on the same device.
+            // applicationIdSuffix = ".debug"
         }
     }
     compileOptions {

@@ -260,7 +260,7 @@ class AuthViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _authState.value = AuthState.Error(e)
-                _errorEvent.tryEmit(e)
+                _errorEvent.emit(e)
             }
         }
     }
