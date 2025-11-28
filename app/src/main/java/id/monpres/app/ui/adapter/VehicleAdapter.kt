@@ -52,7 +52,7 @@ class VehicleAdapter(
 
         fun bind(vehicle: Vehicle, isSelected: Boolean) {
             binding.itemTwoLineTextViewTitle.text = vehicle.name
-            binding.itemTwoLineTextViewSubtitle.text = vehicle.registrationNumber
+            binding.itemTwoLineTextViewSubtitle.text = vehicle.licensePlateNumber
 
             // Visual indication for selection
             binding.root.apply {

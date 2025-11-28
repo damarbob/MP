@@ -24,6 +24,7 @@ import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import id.monpres.app.usecase.SignOutUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.coroutineContext
 
 // --- STATE CLASSES FOR UI ---
 
@@ -314,6 +316,7 @@ class MainViewModel @Inject constructor(
         } catch (exception: Exception) {
             Log.e(TAG, "Error getting user data", exception)
             _errorEvent.emit(exception)
+            coroutineContext.ensureActive()
             return null
         }
     }
