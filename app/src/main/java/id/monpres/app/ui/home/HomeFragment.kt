@@ -1,6 +1,7 @@
 package id.monpres.app.ui.home
 
 import android.os.Bundle
+import android.transition.TransitionManager
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -372,6 +373,7 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
         // This removes the reference from the ThreadLocal map causing the leak.
         (view as? ViewGroup)?.let { rootView ->
             androidx.transition.TransitionManager.endTransitions(rootView)
+            TransitionManager.endTransitions(rootView)
         }
 
         // Clean up the RecyclerView specifically

@@ -35,6 +35,7 @@ import id.monpres.app.enums.UserRole
 import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
+import id.monpres.app.model.PaymentMethod
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
@@ -322,8 +323,7 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
                 )
             )
             // Header
-            fragmentOrderServiceDetailTitle.text =
-                getString(R.string.x_x, orderService.name, orderService.status?.name)
+            fragmentOrderServiceDetailTitle.text = orderService.name
             fragmentOrderServiceDetailDate.text =
                 orderService.updatedAt.toDateTimeDisplayString(
                     dateStyle = DateFormat.MEDIUM,
@@ -363,7 +363,7 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
 
             // General info
             fragmentOrderServiceDetailInvoiceNumber.text = orderService.id ?: ""
-            fragmentOrderServiceDetailPaymentMethod.text = orderService.paymentMethod ?: ""
+            fragmentOrderServiceDetailPaymentMethod.text = PaymentMethod.getDefaultPaymentMethodById(requireContext(), orderService.paymentMethod ?: "")?.name ?: ""
             fragmentOrderServiceDetailPartner.text = orderService.partnerId ?: ""
             fragmentOrderServiceDetailVehicle.text = orderService.vehicle?.name ?: ""
             val issueEnum = orderService.issue?.let { PartnerCategory.fromName(it) }

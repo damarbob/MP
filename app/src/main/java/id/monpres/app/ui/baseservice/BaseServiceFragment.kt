@@ -12,6 +12,7 @@ import android.widget.CheckBox
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
@@ -143,19 +144,19 @@ abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
     }
 
+    private val destinationChangedListener = NavController.OnDestinationChangedListener { _, destination, _ ->
+        when (destination.id) {
+            R.id.profileFragment, R.id.monpresSettingFragment, R.id.orderServiceListFragment -> {
+                exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
+                reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
+            }
+        }
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // Set special transition to selected destinations
-        findNavController().addOnDestinationChangedListener { _, destination, _ ->
-            when (destination.id) {
-                R.id.profileFragment, R.id.monpresSettingFragment, R.id.orderServiceListFragment -> {
-                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ true)
-                    reenterTransition =
-                        MaterialSharedAxis(MaterialSharedAxis.Y, /* forward= */ false)
-                }
-            }
-        }
+        findNavController().addOnDestinationChangedListener(destinationChangedListener)
 
         // Setup vehicle dropdown
         val vehicleInputView = getVehicleAutoCompleteTextView()
@@ -393,6 +394,10 @@ abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
     }
 
     /* End of validation */
+    override fun onDestroyView() {
+        findNavController().removeOnDestinationChangedListener(destinationChangedListener)
+        super.onDestroyView()
+    }
 
     /* UI elements */
 

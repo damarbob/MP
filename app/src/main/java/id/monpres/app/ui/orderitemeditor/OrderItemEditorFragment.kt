@@ -108,7 +108,7 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
 
     private fun addAdditionalItems(isAdmin: Boolean) {
         val user = mainViewModel.getCurrentUser()
-        var distanceFee = 0.0
+        var distance = 0.0
 
         // Calculate distance fee logic (Partner only automatically, or generic calc)
         if (user?.role == UserRole.PARTNER) {
@@ -118,7 +118,16 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
                 args.orderService.selectedLocationLat ?: 0.0,
                 args.orderService.selectedLocationLng ?: 0.0
             ).toDouble()
-            distanceFee = ceil(orderDistance / 1000) * OrderItem.DISTANCE_FEE
+            distance = ceil(orderDistance / 1000)
+        }
+        if (user?.role == UserRole.ADMIN) {
+            val orderDistance = calculateAerialDistance(
+                args.orderService.partner?.locationLat?.toDouble() ?: 0.0,
+                args.orderService.partner?.locationLng?.toDouble() ?: 0.0,
+                args.orderService.selectedLocationLat ?: 0.0,
+                args.orderService.selectedLocationLng ?: 0.0
+            ).toDouble()
+            distance = ceil(orderDistance / 1000)
         }
 
         // Check if items missing and add them with correct fixed state
@@ -141,8 +150,8 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
                 OrderItem(
                     id = OrderItem.DISTANCE_FEE_ID,
                     name = getString(OrderItem.DISTANCE_FEE_NAME),
-                    price = distanceFee,
-                    quantity = 1.0,
+                    price = OrderItem.DISTANCE_FEE,
+                    quantity = distance,
                     isFixed = !isAdmin // False if Admin, True otherwise
                 )
             )

@@ -14,6 +14,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import id.monpres.app.enums.Language
 import id.monpres.app.enums.ThemeMode
+import id.monpres.app.model.PaymentMethod
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -122,7 +123,7 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     // --- Payment Method ---
     val paymentMethodId: Flow<String> = context.dataStore.data
         .map { preferences ->
-            preferences[PreferenceKeys.PAYMENT_METHOD_ID] ?: "cash" // Default to cash
+            preferences[PreferenceKeys.PAYMENT_METHOD_ID] ?: PaymentMethod.CASH_ID // Default to cash
         }
 
     suspend fun setPaymentMethodId(id: String) {

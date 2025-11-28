@@ -23,7 +23,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
 import androidx.core.graphics.scale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -75,6 +74,7 @@ import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.PaymentMethod
 import id.monpres.app.notification.OrderServiceNotification
+import id.monpres.app.state.UiState
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
@@ -87,6 +87,9 @@ import id.monpres.app.usecase.NumberFormatterUseCase
 import id.monpres.app.usecase.OpenWhatsAppUseCase
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.concurrent.TimeUnit
@@ -210,7 +213,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                     OrderItem::class.java
                 )
             else
-                bundle.getParcelableArrayList<OrderItem>(OrderItemEditorFragment.KEY_ORDER_ITEMS)
+                bundle.getParcelableArrayList(OrderItemEditorFragment.KEY_ORDER_ITEMS)
             price = OrderService.getPriceFromOrderItems(orderItems)
             Log.d(TAG, "OrderItems: $orderItems")
             observeUiStateOneShot(
@@ -243,17 +246,6 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         setupObservers()
         setupListeners()
 
-        // TODO: handle preference
-        val prefs = requireActivity().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val selectedPaymentId =
-            prefs.getString("payment_method_id", PaymentMethod.CASH_ID) ?: PaymentMethod.CASH_ID
-
-        val selectedPaymentMethod =
-            PaymentMethod.getDefaultPaymentMethodById(requireContext(), selectedPaymentId)
-        if (selectedPaymentMethod != null) {
-            viewModel.onPaymentMethodSelected(selectedPaymentMethod)
-        }
-
         handlePaymentMethodResult()
     }
 
@@ -280,32 +272,66 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
 
     private fun setupObservers() {
         Log.d(TAG, "OrderServiceId: ${args.orderServiceId}")
-        observeUiState(mainGraphViewModel.openedOrderServiceState) { data ->
-            // This 'data' is now correctly a single OrderService object.
-            orderService = data
-            orderItems = orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
-            Log.d(TAG, "Single OrderService updated: ${orderService.status}")
-
-            // This function sets up all the static UI text based on the order.
-            setupView()
-
-            // This function handles the visibility of the action button based on role and status.
-            updateUiBasedOnRoleAndStatus()
-
-            // If the order we are currently viewing is ON_THE_WAY, we need to observe its live location for UI updates.
-            if (orderService.status == OrderStatus.ON_THE_WAY) {
-                observePartnerLiveLocation()
-            }
-        }
-
+        // --- The New, Combined Observer ---
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.selectedPaymentMethod.collect { paymentMethod ->
-                    if (paymentMethod != null) {
-                        binding.fragmentServiceProcessTextViewPaymentMethod.text =
-                            paymentMethod.name
+                // Combine the order state from the MainGraphViewModel and the preferred payment method from our local ViewModel
+                mainGraphViewModel.openedOrderServiceState
+                    .combine(viewModel.preferredPaymentMethod) { orderServiceState, preferredPayment ->
+                        Pair(orderServiceState, preferredPayment)
                     }
-                }
+                    .distinctUntilChanged() // IMPORTANT: Prevents re-calculation if states are the same
+                    .collect { (orderServiceState, preferredPayment) ->
+
+                        if (orderServiceState !is UiState.Success) {
+                            // Handle loading or error state if needed
+                            return@collect
+                        }
+
+                        // This 'data' is now correctly a single OrderService object.
+                        orderService = orderServiceState.data
+                        orderItems =
+                            orderService.orderItems?.toMutableList() as ArrayList<OrderItem>?
+                        Log.d(TAG, "Single OrderService updated: ${orderService.status}")
+
+                        val effectivePaymentMethod: PaymentMethod
+                        if (!orderService.paymentMethod.isNullOrBlank()) {
+                            // Priority 1: The order document already has a payment method. This is the source of truth.
+                            effectivePaymentMethod = PaymentMethod.getDefaultPaymentMethodById(
+                                requireContext(),
+                                orderService.paymentMethod!!
+                            ) ?: PaymentMethod.getDefaultPaymentMethods(requireContext()).first()
+                            viewModel.onPaymentMethodSelected(effectivePaymentMethod)
+                        } else {
+                            // Priority 2: The order has no payment method yet, so use the user's local preference.
+                            effectivePaymentMethod = preferredPayment
+
+                            // If the order has no payment method and the current user is a customer,
+                            // automatically save their preferred method to the order.
+                            if (currentUser?.role == UserRole.CUSTOMER) {
+                                Log.d(TAG, "Auto-saving preferred payment method '${effectivePaymentMethod.id}' to order ${orderService.id}")
+                                mainGraphViewModel.updateOrderService(
+                                    orderService.copy(paymentMethod = effectivePaymentMethod.id)
+                                )
+                                    // We can launch this in a new scope so it doesn't block the collector
+                                    .launchIn(viewLifecycleOwner.lifecycleScope)
+                            }
+                        }
+                        binding.fragmentServiceProcessTextViewPaymentMethod.text =
+                            effectivePaymentMethod.name
+
+
+                        // This function sets up all the static UI text based on the order.
+                        setupView()
+
+                        // This function handles the visibility of the action button based on role and status.
+                        updateUiBasedOnRoleAndStatus()
+
+                        // If the order we are currently viewing is ON_THE_WAY, we need to observe its live location for UI updates.
+                        if (orderService.status == OrderStatus.ON_THE_WAY) {
+                            observePartnerLiveLocation()
+                        }
+                    }
             }
         }
     }
@@ -678,7 +704,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         binding.fragmentServiceProcessButtonComplete.setOnClickListener {
             findNavController().navigate(
                 ServiceProcessFragmentDirections.actionServiceProcessFragmentToOrderServiceDetailFragment(
-                    orderService
+                    orderService, currentUser
                 )
             )
         }
@@ -774,9 +800,9 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         }
 
         binding.fragmentServiceProcessButtonChangePaymentMethod.setOnClickListener {
-            val currentSelectedPaymentMethod = viewModel.selectedPaymentMethod.value
+            val currentSelectedPaymentMethod = viewModel.preferredPaymentMethod.value
             paymentMethodBottomSheet = PaymentMethodBottomSheetFragment.newInstance(
-                currentSelectedPaymentMethod?.id ?: PaymentMethod.CASH_ID // TODO: change to real id
+                currentSelectedPaymentMethod.id
             )
 
             paymentMethodBottomSheet.show(
@@ -786,15 +812,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         }
 
         binding.fragmentServiceProcessButtonPaymentGuide.setOnClickListener {
-            val currentSelectedPaymentMethod = viewModel.selectedPaymentMethod.value
-            if (currentSelectedPaymentMethod == null) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.please_select_a_payment_method_first),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
+            val currentSelectedPaymentMethod = viewModel.preferredPaymentMethod.value
             if (currentSelectedPaymentMethod.guideRes == null) {
                 Toast.makeText(
                     requireContext(),
@@ -822,7 +840,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                 // Only show toast for Android 12 and below.
                 // Android 13+ (Tiramisu) shows a system UI confirmation automatically.
                 if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-                    Toast.makeText(requireContext(), getString(R.string.copied), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), getString(R.string.copied), Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
             true
@@ -837,7 +856,6 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                     status = orderService.status?.serviceNextProcess(),
                     orderItems = orderItems,
                     price = price,
-                    paymentMethod = viewModel.selectedPaymentMethod.value?.id
                 )
             ), onEmpty = {
                 view.isLocked = true
@@ -1061,13 +1079,13 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
             if (result != null) {
                 viewModel.onPaymentMethodSelected(result)
 
-                // Save the selected payment method ID to preferences
-                val prefs =
-                    requireActivity().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                prefs.edit { putString("payment_method_id", result.id) }
+                if (!::orderService.isInitialized) return@setFragmentResultListener
 
-                // TODO: Also update the OrderService object on the backend (Firestore)
-                // viewModel.updateOrderPaymentMethod(orderService.id, result.id)
+                observeUiStateOneShot(
+                    mainGraphViewModel.updateOrderService(
+                        orderService.copy(paymentMethod = result.id)
+                    )
+                ) {}
             }
         }
     }
