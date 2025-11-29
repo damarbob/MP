@@ -136,7 +136,7 @@ class ScheduledServiceFragment : BaseServiceFragment(R.layout.fragment_scheduled
             override fun onSuccess(orderService: OrderService) {
                 orderService.id?.let {
                     findNavController().navigate(
-                        ScheduledServiceFragmentDirections.actionGlobalServiceProcessFragment(
+                        ScheduledServiceFragmentDirections.actionScheduledServiceFragmentToServiceProcessFragment(
                             it
                         )
                     )

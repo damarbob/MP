@@ -30,22 +30,25 @@ class AdminVerificationViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private val TAG = AdminVerificationViewModel::class.simpleName
+        private const val FB_ID_KEY = "facebookId"
+        private const val IG_ID_KEY = "facebookId"
+        private const val UISTATE_KEY = "facebookId"
     }
     private val _errorEvent = MutableSharedFlow<Throwable>()
     val errorEvent: SharedFlow<Throwable> = _errorEvent.asSharedFlow()
 
-    val facebookId = savedStateHandle.getStateFlow("facebookId", "")
-    val instagramId = savedStateHandle.getStateFlow("instagramId", "")
-    val uiState = savedStateHandle.getStateFlow("UiState", AdminVerificationUiState.VERIFICATION_UI.name)
+    val facebookId = savedStateHandle.getStateFlow(FB_ID_KEY, "")
+    val instagramId = savedStateHandle.getStateFlow(IG_ID_KEY, "")
+    val uiState = savedStateHandle.getStateFlow(UISTATE_KEY, AdminVerificationUiState.VERIFICATION_UI.name)
 
     fun setFacebookId(facebookId: String) {
-        savedStateHandle["facebookId"] = facebookId
+        savedStateHandle[FB_ID_KEY] = facebookId
     }
     fun setInstagramId(instagramId: String) {
-        savedStateHandle["instagramId"] = instagramId
+        savedStateHandle[IG_ID_KEY] = instagramId
     }
     fun setUiState(uiState: AdminVerificationUiState) {
-        savedStateHandle["UiState"] = uiState.name
+        savedStateHandle[UISTATE_KEY] = uiState.name
     }
 
     // Sealed classes for state

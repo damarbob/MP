@@ -57,7 +57,7 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
     private val args: OrderServiceEditFragmentArgs by navArgs()
 
-    private val orderItemAdapter = OrderItemAdapter()
+    private lateinit var orderItemAdapter: OrderItemAdapter
     private val currencyFormatter = IndonesianCurrencyFormatter()
 
     private val pickLocationLauncher = registerForActivityResult(
@@ -94,6 +94,12 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
 
     private fun setupUI() {
 
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceEditFabSave) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -186,6 +192,7 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
         }
 
         // Order Items Recycler
+        orderItemAdapter = OrderItemAdapter()
         binding.fragmentOrderServiceEditRecyclerViewOrderItemsSummary.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = orderItemAdapter

@@ -51,20 +51,20 @@ import com.google.firebase.auth.auth
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.databinding.ActivityMainBinding
-import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.Language
 import id.monpres.app.enums.ThemeMode
+import id.monpres.app.enums.UserRole
 import id.monpres.app.libraries.ActivityRestartable
 import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.service.OrderServiceLocationTrackingService
-import id.monpres.app.state.NavigationGraphState
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
 import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -212,7 +212,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
     }
 
     private fun setupAppBar() {
-        appBarConfiguration = AppBarConfiguration(navController.graph, drawerLayout)
+        appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.homeFragment,
+                R.id.partnerHomeFragment,
+                R.id.adminHomeFragment
+            ), drawerLayout
+        )
         setSupportActionBar(binding.activityMainToolbar)
         setupActionBarWithNavController(navController, appBarConfiguration)
     }
@@ -395,17 +401,24 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             }
         }
 
-        // --- Navigation Graph Observer ---
+        // --- Navigation Observer ---
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.navigationGraphState.collect { state ->
-                    when (state) {
-                        is NavigationGraphState.Loading -> { /* Handled by mainLoadingState */
-                        }
+            // Use first() to get the initial graph and set it only once.
+            // This is the key to preventing the reset on configuration change.
+            val roleNavigation = viewModel.roleNavigation.filterNotNull().first()
 
-                        is NavigationGraphState.Admin -> updateNavigationTree(R.id.adminHomeFragment)
-                        is NavigationGraphState.Partner -> updateNavigationTree(R.id.partnerHomeFragment)
-                        is NavigationGraphState.Customer -> updateNavigationTree(R.id.homeFragment)
+            Log.d(TAG, "Setting initial navigation graph: ${roleNavigation.name}")
+            when (roleNavigation) {
+                UserRole.CUSTOMER -> {}
+                UserRole.PARTNER -> {
+                    if (navController.currentDestination?.id == R.id.homeFragment) {
+                        navController.navigate(NavMainDirections.actionGlobalPartnerHomeFragment())
+                    }
+                }
+
+                UserRole.ADMIN -> {
+                    if (navController.currentDestination?.id == R.id.homeFragment) {
+                        navController.navigate(NavMainDirections.actionGlobalAdminHomeFragment())
                     }
                 }
             }
@@ -595,7 +608,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 R.id.activityMainDrawerMenuProfile -> navController.navigate(R.id.action_global_profileFragment)
                 R.id.activityMainDrawerMenuOrder -> navController.navigate(R.id.action_global_orderServiceListFragment)
 
-                R.id.activityMainDrawerMenuSettings -> navController.navigate(R.id.action_global_monpresSettingFragment)
+                R.id.activityMainDrawerMenuSettings -> navController.navigate(NavMainDirections.actionGlobalMonpresSettingFragment())
             }
             drawerLayout.close()
             true

@@ -15,7 +15,6 @@ import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.ConnectionState
-import id.monpres.app.state.NavigationGraphState
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
 import id.monpres.app.usecase.GetOrCreateUserIdentityUseCase
 import id.monpres.app.usecase.GetOrCreateUserUseCase
@@ -97,9 +96,11 @@ class MainViewModel @Inject constructor(
     val language = appPreferences.language
 
     // --- STATE FLOWS ---
-    private val _navigationGraphState =
-        MutableStateFlow<NavigationGraphState>(NavigationGraphState.Loading)
-    val navigationGraphState: StateFlow<NavigationGraphState> = _navigationGraphState.asStateFlow()
+//    private val _navigationGraphState =
+//        MutableStateFlow<NavigationGraphState>(NavigationGraphState.Loading)
+//    val navigationGraphState: StateFlow<NavigationGraphState> = _navigationGraphState.asStateFlow()
+    private val _roleNavigation = MutableStateFlow<UserRole?>(null)
+    val roleNavigation: StateFlow<UserRole?> = _roleNavigation.asStateFlow()
 
     private val _dialogState = MutableStateFlow<DialogState>(DialogState.None)
     val dialogState: StateFlow<DialogState> = _dialogState.asStateFlow()
@@ -322,18 +323,26 @@ class MainViewModel @Inject constructor(
     }
 
     private fun determineNavigationGraph(user: MontirPresisiUser) {
-        when (user.role) {
-            UserRole.ADMIN -> _navigationGraphState.value =
-                NavigationGraphState.Admin(R.navigation.nav_main)
-
-            UserRole.PARTNER -> _navigationGraphState.value =
-                NavigationGraphState.Partner(R.navigation.nav_main)
-
-            UserRole.CUSTOMER -> _navigationGraphState.value =
-                NavigationGraphState.Customer(R.navigation.nav_main)
-
-            null -> _navigationGraphState.value =
-                NavigationGraphState.Customer(R.navigation.nav_main)
+//        when (user.role) {
+//            UserRole.ADMIN -> _navigationGraphState.value =
+//                NavigationGraphState.Admin(R.navigation.nav_main)
+//
+//            UserRole.PARTNER -> _navigationGraphState.value =
+//                NavigationGraphState.Partner(R.navigation.nav_main)
+//
+//            UserRole.CUSTOMER -> _navigationGraphState.value =
+//                NavigationGraphState.Customer(R.navigation.nav_main)
+//
+//            null -> _navigationGraphState.value =
+//                NavigationGraphState.Customer(R.navigation.nav_main)
+//        }
+        viewModelScope.launch {
+            val graph = when (user.role) {
+                UserRole.CUSTOMER, null -> UserRole.CUSTOMER
+                UserRole.PARTNER -> UserRole.PARTNER
+                UserRole.ADMIN -> UserRole.ADMIN
+            }
+            _roleNavigation.value = graph
         }
     }
 

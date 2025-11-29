@@ -46,8 +46,8 @@ class OrderItemEditorAdapter(
                     else -> item.name
                 }
             binding.orderItemEditorTextViewQuantity.text = "x${item.quantity}"
-            binding.orderItemEditorTextViewPrice.text = "${indonesianCurrencyFormatter(item.price)}"
-            binding.orderItemEditorTextViewSubtotal.text = "${indonesianCurrencyFormatter(item.subtotal)}"
+            binding.orderItemEditorTextViewPrice.text = indonesianCurrencyFormatter(item.price)
+            binding.orderItemEditorTextViewSubtotal.text = indonesianCurrencyFormatter(item.subtotal)
 
             binding.orderItemEditorButtonEdit.visibility = if (item.isFixed) ViewGroup.GONE else ViewGroup.VISIBLE
             binding.orderItemEditorButtonDelete.visibility = if (item.isFixed) ViewGroup.GONE else ViewGroup.VISIBLE

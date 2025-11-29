@@ -25,6 +25,7 @@ import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.usecase.OpenWhatsAppUseCase
+import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import id.monpres.app.utils.hideKeyboard
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -141,9 +142,9 @@ class AdminVerificationFragment : BaseFragment(R.layout.fragment_admin_verificat
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect {
-                    val state = AdminVerificationViewModel.AdminVerificationUiState.valueOf(it)
+                    val state = enumByNameIgnoreCaseOrNull<AdminVerificationViewModel.AdminVerificationUiState>(it)
                     when(state) {
-                        AdminVerificationViewModel.AdminVerificationUiState.VERIFICATION_UI -> {
+                        AdminVerificationViewModel.AdminVerificationUiState.VERIFICATION_UI, null -> {
                             showEditSocMed(false)
                         }
                         AdminVerificationViewModel.AdminVerificationUiState.EDIT_FORM_UI -> {

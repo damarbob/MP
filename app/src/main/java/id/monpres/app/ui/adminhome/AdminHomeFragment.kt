@@ -91,11 +91,11 @@ class AdminHomeFragment : Fragment(R.layout.fragment_admin_home) {
                     "manage_new_users" -> {
                         // Navigate to AdminNewUsersFragment
                         findNavController().navigate(
-                            R.id.action_adminHomeFragment_to_adminNewUsersFragment
+                            AdminHomeFragmentDirections.actionAdminHomeFragmentToAdminNewUsersFragment()
                         )
                     }
                     "manage_orders" -> {
-                        // Navigate to AdminNewUsersFragment
+                        // Navigate to order service list
                         findNavController().navigate(
                             R.id.action_global_orderServiceListFragment
                         )
