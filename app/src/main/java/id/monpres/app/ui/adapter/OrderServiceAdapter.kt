@@ -8,6 +8,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.ItemTwoLineBinding
 import id.monpres.app.model.OrderService
@@ -37,19 +38,27 @@ class OrderServiceAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(orderService: OrderService) {
             val date = orderService.updatedAt.toDateTimeDisplayString()
-            binding.itemTwoLineImageViewImage.setImageDrawable(AppCompatResources.getDrawable(binding.root.context, R.drawable.build_24px))
-            binding.itemTwoLineTextViewTitle.text = orderService.name
+            binding.itemTwoLineImageViewImage.setImageDrawable(
+                AppCompatResources.getDrawable(
+                    binding.root.context,
+                    R.drawable.build_24px
+                )
+            )
+            binding.itemTwoLineTextViewTitle.text =
+                MainApplication.services?.find { it.id == orderService.serviceId }?.name
             binding.itemTwoLineTextViewSubtitle.text =
                 "${orderService.vehicle?.name} - $date"
 
             binding.itemTwoLineTextViewFirstLabel.text =
                 if (orderService.price != null) indonesianCurrencyFormatter(orderService.price!!) else ""
-            binding.itemTwoLineTextViewSecondLabel.text = (orderService.status?.getLabel(context) ?: "")
+            binding.itemTwoLineTextViewSecondLabel.text =
+                (orderService.status?.getLabel(context) ?: "")
             binding.itemTwoLineTextViewFirstLabel.isSelected = true
             binding.itemTwoLineTextViewSecondLabel.isSelected = true
             binding.itemTwoLineTextViewSubtitle.isSelected = true
 
-            binding.root.transitionName = context.getString(R.string.transition_name_item, orderService.id)
+            binding.root.transitionName =
+                context.getString(R.string.transition_name_item, orderService.id)
             binding.root.setOnClickListener {
                 onItemClick(orderService, binding.root)
             }
