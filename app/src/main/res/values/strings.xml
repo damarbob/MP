@@ -393,4 +393,5 @@
     <string name="reject_registration_for_x">Reject registration for \'%1$s\'. They will no longer be able to access this application.</string>
     <string name="all">All</string>
     <string name="pending">Pending</string>
+    <string name="brand_name">Brand name</string>
 </resources>

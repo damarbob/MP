@@ -3,6 +3,7 @@ package id.monpres.app.ui.editvehicle
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.ViewCompat
@@ -27,6 +28,8 @@ import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.utils.hideKeyboard
 import id.monpres.app.utils.markRequiredInRed
+import id.monpres.app.utils.requestFocusAndShowKeyboard
+import id.monpres.app.utils.showKeyboard
 
 @AndroidEntryPoint
 class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
@@ -110,53 +113,74 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
 
         binding.fragmentEditVehicleButtonSave.setOnClickListener {
             // Check if form is valid
-            if (isFormValid()) {
-                it.isEnabled = false
-                val editedVehicle = Vehicle(id = vehicle?.id ?: "")
-                with(binding) {
-                    editedVehicle.apply {
-                        name =
-                            fragmentEditVehicleTextInputLayoutVehicleName.editText?.text.toString()
-                        registrationNumber =
-                            fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.toString()
-                        licensePlateNumber =
-                            fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.text.toString()
-                        year =
-                            fragmentEditVehicleTextInputLayoutVehicleYear.editText?.text.toString()
-                        engineCapacity =
-                            fragmentEditVehicleTextInputLayoutVehicleEngineCapacity.editText?.text.toString()
-                        powerOutput =
-                            fragmentEditVehicleTextInputLayoutVehiclePowerOutput.editText?.text.toString()
-                        seat =
-                            fragmentEditVehicleTextInputLayoutVehicleSeat.editText?.text.toString()
-                        typeId = vehicleTypes.find { type ->
-                            type.name.equals(
-                                fragmentEditVehicleDropdownVehicleType.text.toString(),
-                                true
-                            )
-                        }?.id
-                        transmission =
-                            VehicleTransmission.fromLabel(requireContext(), fragmentEditVehicleDropdownVehicleTransmission.text.toString())?.name
-                        wheelDrive = fragmentEditVehicleDropdownVehicleWheelDrive.text.toString()
-                        powerSource =
-                            VehiclePowerSource.fromLabel(requireContext(), fragmentEditVehicleDropdownVehiclePowerSource.text.toString())?.name
-                    }
-                }
+            updateVehicle(it)
+        }
+    }
 
-                // Update vehicle
-                observeUiStateOneShot(
-                    mainGraphViewModel.updateVehicle(editedVehicle),
-                    {
-                        it.isEnabled = true
-                    }) {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.vehicle_updated), Toast.LENGTH_SHORT
-                    ).show()
-                    findNavController().popBackStack()
+    private fun updateVehicle(view: View) {
+        if (isFormValid()) {
+            view.isEnabled = false
+            val editedVehicle = Vehicle(id = vehicle?.id ?: "")
+            with(binding) {
+                editedVehicle.apply {
+                    name =
+                        fragmentEditVehicleTextInputLayoutVehicleName.editText?.text.toString()
+                    registrationNumber =
+                        fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.text.toString()
+                    licensePlateNumber =
+                        fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.text.toString()
+                    year =
+                        fragmentEditVehicleTextInputLayoutVehicleYear.editText?.text.toString()
+                    engineCapacity =
+                        fragmentEditVehicleTextInputLayoutVehicleEngineCapacity.editText?.text.toString()
+                    powerOutput =
+                        fragmentEditVehicleTextInputLayoutVehiclePowerOutput.editText?.text.toString()
+                    seat =
+                        fragmentEditVehicleTextInputLayoutVehicleSeat.editText?.text.toString()
+                    typeId = vehicleTypes.find { type ->
+                        type.name.equals(
+                            fragmentEditVehicleDropdownVehicleType.text.toString(),
+                            true
+                        )
+                    }?.id
+                    transmission =
+                        VehicleTransmission.fromLabel(
+                            requireContext(),
+                            fragmentEditVehicleDropdownVehicleTransmission.text.toString()
+                        )?.name
+                    wheelDrive = fragmentEditVehicleDropdownVehicleWheelDrive.text.toString()
+                    powerSource =
+                        VehiclePowerSource.fromLabel(
+                            requireContext(),
+                            fragmentEditVehicleDropdownVehiclePowerSource.text.toString()
+                        )?.name
                 }
-            } else {
-                it.isEnabled = true
+            }
+
+            // Update vehicle
+            observeUiStateOneShot(
+                mainGraphViewModel.updateVehicle(editedVehicle),
+                {
+                    view.isEnabled = true
+                }) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.vehicle_updated), Toast.LENGTH_SHORT
+                ).show()
+                findNavController().popBackStack()
+            }
+        } else {
+            view.isEnabled = true
+            with(binding) {
+                when {
+                    fragmentEditVehicleTextInputLayoutVehicleName.isErrorEnabled -> fragmentEditVehicleTextInputLayoutVehicleName.editText?.requestFocusAndShowKeyboard()
+                    fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.isErrorEnabled -> fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.requestFocusAndShowKeyboard()
+                    fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.isErrorEnabled -> fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.requestFocusAndShowKeyboard()
+                    fragmentEditVehicleTextInputLayoutVehicleType.isErrorEnabled -> fragmentEditVehicleDropdownVehicleType.requestFocus()
+                    fragmentEditVehicleTextInputLayoutVehiclePowerSource.isErrorEnabled -> fragmentEditVehicleDropdownVehiclePowerSource.requestFocus()
+                    fragmentEditVehicleTextInputLayoutVehicleTransmission.isErrorEnabled -> fragmentEditVehicleDropdownVehicleTransmission.requestFocus()
+                    fragmentEditVehicleTextInputLayoutVehicleWheelDrive.isErrorEnabled -> fragmentEditVehicleDropdownVehicleWheelDrive.requestFocus()
+                }
             }
         }
     }
@@ -182,7 +206,10 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
         // Find the corresponding enum entry for the vehicle's transmission string
         VehicleTransmission.entries.find { it.name == vehicle?.transmission }?.let { transmission ->
             // This block only executes if a non-null transmission is found
-            binding.fragmentEditVehicleDropdownVehicleTransmission.setText(getString(transmission.label), false)
+            binding.fragmentEditVehicleDropdownVehicleTransmission.setText(
+                getString(transmission.label),
+                false
+            )
         }
 
         // Set default value for wheel drive
@@ -190,7 +217,10 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
 
         // Set default value for power source
         VehiclePowerSource.entries.find { it.name == vehicle?.powerSource }?.let { powerSource ->
-            binding.fragmentEditVehicleDropdownVehiclePowerSource.setText(getString(powerSource.label), false)
+            binding.fragmentEditVehicleDropdownVehiclePowerSource.setText(
+                getString(powerSource.label),
+                false
+            )
         }
     }
 
@@ -229,23 +259,55 @@ class EditVehicleFragment : BaseFragment(R.layout.fragment_edit_vehicle) {
 
     private fun setupFormListener() {
         // Setup form validation on text change
-        binding.fragmentEditVehicleTextInputLayoutVehicleName.editText?.addTextChangedListener { validateName() }
-        binding.fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.addTextChangedListener { validateRegistrationNumber() }
-        binding.fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.addTextChangedListener { validateLicensePlateNumber() }
-        binding.fragmentEditVehicleDropdownVehicleType.addTextChangedListener { validateVehicleType() }
-        binding.fragmentEditVehicleDropdownVehiclePowerSource.addTextChangedListener { validateVehiclePowerSource() }
-        binding.fragmentEditVehicleDropdownVehicleTransmission.addTextChangedListener { validateVehicleTransmission() }
-        binding.fragmentEditVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
+        with(binding) {
+            fragmentEditVehicleTextInputLayoutVehicleName.editText?.addTextChangedListener { if (fragmentEditVehicleTextInputLayoutVehicleName.isErrorEnabled) validateName() }
+            fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.addTextChangedListener { if (fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.isErrorEnabled) validateRegistrationNumber() }
+            fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.addTextChangedListener { if (fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.isErrorEnabled) validateLicensePlateNumber() }
+            fragmentEditVehicleDropdownVehicleType.addTextChangedListener { validateVehicleType() }
+            fragmentEditVehicleDropdownVehiclePowerSource.addTextChangedListener { validateVehiclePowerSource() }
+            fragmentEditVehicleDropdownVehicleTransmission.addTextChangedListener { validateVehicleTransmission() }
+            fragmentEditVehicleDropdownVehicleWheelDrive.addTextChangedListener { validateVehicleWheelDrive() }
 
-        listOf(
-            binding.fragmentEditVehicleDropdownVehicleType,
-            binding.fragmentEditVehicleDropdownVehicleTransmission,
-            binding.fragmentEditVehicleDropdownVehicleWheelDrive,
-            binding.fragmentEditVehicleDropdownVehiclePowerSource,
-        ).forEach { autoCompleteTextView ->
-            autoCompleteTextView.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
-                if (hasFocus) {
-                    v.hideKeyboard(requireActivity())
+            fragmentEditVehicleTextInputLayoutVehicleName.editText?.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    validateName()
+                    fragmentEditVehicleTextInputLayoutVehicleName.editText?.hint = null
+                } else {
+                    fragmentEditVehicleTextInputLayoutVehicleName.editText?.hint = getString(R.string.brand_name)
+                    fragmentEditVehicleTextInputLayoutVehicleName.editText?.showKeyboard()
+                }
+            }
+            fragmentEditVehicleTextInputLayoutVehicleRegistrationNumber.editText?.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    validateRegistrationNumber()
+                }
+            }
+            fragmentEditVehicleTextInputLayoutVehicleLicensePlateNumber.editText?.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    validateLicensePlateNumber()
+                }
+            }
+
+            listOf(
+                fragmentEditVehicleDropdownVehicleType,
+                fragmentEditVehicleDropdownVehicleTransmission,
+                fragmentEditVehicleDropdownVehicleWheelDrive,
+                fragmentEditVehicleDropdownVehiclePowerSource,
+            ).forEach { autoCompleteTextView ->
+                autoCompleteTextView.onFocusChangeListener =
+                    View.OnFocusChangeListener { v, hasFocus ->
+                        if (hasFocus) {
+                            v.hideKeyboard()
+                        }
+                    }
+            }
+
+            fragmentEditVehicleTextInputLayoutVehiclePowerOutput.editText?.setOnEditorActionListener { editText, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    updateVehicle(editText)
+                    true
+                } else {
+                    false
                 }
             }
         }

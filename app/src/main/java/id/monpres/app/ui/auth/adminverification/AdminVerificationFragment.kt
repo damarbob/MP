@@ -212,7 +212,7 @@ class AdminVerificationFragment : BaseFragment(R.layout.fragment_admin_verificat
         }
 
         binding.fragmentAdminVerificationButtonSave.setOnClickListener { button ->
-            button.hideKeyboard(requireContext())
+            button.hideKeyboard()
             if (isFormValid()) {
                 button.isEnabled = false
                 val facebookId =

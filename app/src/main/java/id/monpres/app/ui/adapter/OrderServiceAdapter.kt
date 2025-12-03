@@ -1,6 +1,5 @@
 package id.monpres.app.ui.adapter
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +15,6 @@ import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.utils.toDateTimeDisplayString
 
 class OrderServiceAdapter(
-    private val context: Context,
     private val onItemClick: (OrderService, View) -> Unit // Regular click
 ) : ListAdapter<OrderService, OrderServiceAdapter.ViewHolder>(OrderServiceDiffCallback()) {
 
@@ -52,13 +50,13 @@ class OrderServiceAdapter(
             binding.itemTwoLineTextViewFirstLabel.text =
                 if (orderService.price != null) indonesianCurrencyFormatter(orderService.price!!) else ""
             binding.itemTwoLineTextViewSecondLabel.text =
-                (orderService.status?.getLabel(context) ?: "")
+                (orderService.status?.getLabel(binding.root.context) ?: "")
             binding.itemTwoLineTextViewFirstLabel.isSelected = true
             binding.itemTwoLineTextViewSecondLabel.isSelected = true
             binding.itemTwoLineTextViewSubtitle.isSelected = true
 
             binding.root.transitionName =
-                context.getString(R.string.transition_name_item, orderService.id)
+                binding.root.context.getString(R.string.transition_name_item, orderService.id)
             binding.root.setOnClickListener {
                 onItemClick(orderService, binding.root)
             }

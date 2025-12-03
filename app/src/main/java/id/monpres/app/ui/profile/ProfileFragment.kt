@@ -129,7 +129,7 @@ class ProfileFragment : BaseFragment(R.layout.fragment_edit_profile) {
             val address = binding.editProfileInputEditAddress.text.toString()
             val instagramId = binding.editProfileInputEditInstagramId.text.toString()
             val facebookId = binding.editProfileInputEditFacebookId.text.toString()
-            it.hideKeyboard(requireActivity())
+            it.hideKeyboard()
 
             // Validate inputs (only necessary ones)
             if (!validateWhatsAppNumber()) {

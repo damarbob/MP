@@ -331,7 +331,7 @@ abstract class BaseServiceFragment(layoutId: Int) : Fragment(layoutId) {
     /* Validation */
 
     protected fun isValidated(): Boolean =
-        validateLocation() && validateLocationConsent() && validateVehicle() && validateIssue() && validateSelectedPartner()
+        validateLocation() && validateLocationConsent() && validateIssue() && validateVehicle() && validateSelectedPartner()
 
     protected fun validateLocation(): Boolean {
         return if (selectedLocationPoint == null) {

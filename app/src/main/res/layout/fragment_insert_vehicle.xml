@@ -21,22 +21,20 @@
             android:id="@+id/fragmentInsertVehicleConstraintLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
+            android:paddingVertical="16dp">
 
             <LinearLayout
                 android:id="@+id/fragmentInsertVehicleLinearLayout"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:maxWidth="@dimen/input_field_max_width"
-                android:minWidth="@dimen/input_field_max_width"
                 android:orientation="vertical"
                 android:padding="16dp"
-                app:layout_constraintBottom_toTopOf="@+id/fragmentInsertVehicleButtonSave"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_chainStyle="packed">
+                app:layout_constraintWidth_max="@dimen/input_field_max_width">
 
                 <!-- Name -->
                 <com.google.android.material.textfield.TextInputLayout
@@ -44,7 +42,6 @@
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_between_input_field"
                     android:hint="@string/name">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -253,23 +250,17 @@
                     </com.google.android.material.textfield.TextInputLayout>
                 </GridLayout>
 
-            </LinearLayout>
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentInsertVehicleButtonSave"
                 style="@style/Widget.Material3Expressive.Button"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/space_between_input_field"
+                android:layout_marginTop="@dimen/space_between_input_field"
                 android:text="@string/save"
                 app:icon="@drawable/save_24px"
-                app:iconGravity="textStart"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/fragmentInsertVehicleLinearLayout"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:layout_constraintWidth_max="@dimen/input_field_max_width" />
+                app:iconGravity="textStart" />
+            </LinearLayout>
+
 
             <!--<com.google.android.material.button.MaterialButton
                 android:id="@+id/fragmentInsertVehicleButtonTry"

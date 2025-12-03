@@ -44,4 +44,9 @@ class ServiceProcessViewModel @Inject constructor(
     fun observePartnerLocation(orderId: String) =
         livePartnerLocationRepository.observeLiveLocation(orderId)
 
+    fun updatePartnerLiveLocation(orderId: String, lat: Double, lng: Double) {
+        viewModelScope.launch {
+            livePartnerLocationRepository.updateLiveLocation(orderId, lat, lng)
+        }
+    }
 }

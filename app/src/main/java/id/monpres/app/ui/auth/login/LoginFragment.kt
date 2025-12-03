@@ -2,6 +2,7 @@ package id.monpres.app.ui.auth.login
 
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.widget.doAfterTextChanged
@@ -22,6 +23,8 @@ import id.monpres.app.LoginActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentLoginBinding
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
+import id.monpres.app.utils.hideKeyboard
+import id.monpres.app.utils.requestFocusAndShowKeyboard
 import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
@@ -105,6 +108,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             val email = binding.loginInputEmailAddress.text.toString()
 
             if (validateEmail()) {
+                it.hideKeyboard()
                 // Show confirmation dialog
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(getString(R.string.forgot_password))
@@ -131,16 +135,13 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         }
         binding.loginButton.setOnClickListener {
-            if (isValidated()) {
-
-                val email = binding.loginInputEmailAddress.text.toString()
-                val password = binding.loginInputPassword.text.toString()
-
-                authViewModel.loginWithEmailPassword(email, password)
-            } else {
-                binding.loginInputEmailAddress.doAfterTextChanged { validateEmail() }
-                binding.loginInputPassword.doAfterTextChanged { validatePassword() }
-            }
+            login(it)
+        }
+        binding.loginInputPassword.setOnEditorActionListener { editText, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                login(editText)
+                true
+            } else false
         }
         binding.loginEmailButton.setOnClickListener {
             viewModel.toggleFormLayoutState()
@@ -151,12 +152,65 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         binding.loginSignUpText.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
+
+        setupHybridValidation()
+    }
+
+    private fun setupHybridValidation() {
+        // 1. EMAIL SETUP
+        binding.loginInputEmailAddress.setOnFocusChangeListener { _, hasFocus ->
+            // Validate on Blur (when user leaves)
+            if (!hasFocus) {
+                validateEmail()
+            }
+        }
+
+        binding.loginInputEmailAddress.doAfterTextChanged {
+            // Clear on Change: Only validate input while typing IF there is already an error.
+            // This makes the red text disappear the moment they fix it.
+            if (binding.loginTextInputLayoutEmail.isErrorEnabled) {
+                validateEmail()
+            }
+        }
+
+        // 2. PASSWORD SETUP
+        binding.loginInputPassword.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validatePassword()
+            }
+        }
+
+        binding.loginInputPassword.doAfterTextChanged {
+            if (binding.loginTextInputLayoutPassword.isErrorEnabled) {
+                validatePassword()
+            }
+        }
+    }
+
+    private fun login(view: View) {
+        // Hide keyboard first
+        view.hideKeyboard()
+
+        if (isValidated()) {
+            val email = binding.loginInputEmailAddress.text.toString()
+            val password = binding.loginInputPassword.text.toString()
+
+            authViewModel.loginWithEmailPassword(email, password)
+        } else {
+            with(binding) {
+                when {
+                    loginTextInputLayoutEmail.isErrorEnabled -> loginInputEmailAddress.requestFocusAndShowKeyboard()
+                    loginTextInputLayoutPassword.isErrorEnabled -> loginInputPassword.requestFocusAndShowKeyboard()
+                }
+            }
+        }
     }
 
     private fun isValidated(): Boolean {
-        val isEmailValid = validateEmail()
-        val isPasswordValid = validatePassword()
-        return isEmailValid && isPasswordValid
+        val isEmailValidated = validateEmail()
+        val isPasswordValidated = validatePassword()
+
+        return isEmailValidated && isPasswordValidated
     }
 
     private fun validateEmail(): Boolean {

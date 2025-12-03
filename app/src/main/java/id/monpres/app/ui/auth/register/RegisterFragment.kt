@@ -3,9 +3,10 @@ package id.monpres.app.ui.auth.register
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
-import androidx.core.widget.addTextChangedListener
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -21,6 +22,8 @@ import id.monpres.app.LoginActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentRegisterBinding
 import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
+import id.monpres.app.utils.hideKeyboard
+import id.monpres.app.utils.requestFocusAndShowKeyboard
 import kotlinx.coroutines.launch
 
 
@@ -54,12 +57,6 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
 
         setupObservers()
         setupListeners()
-        binding.registerInputFullName.onFocusChangeListener =
-            View.OnFocusChangeListener { v, hasFocus ->
-                if (!hasFocus) {
-                    validateFullName()
-                }
-            }
     }
 
     private fun setupObservers() {
@@ -123,25 +120,76 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
             }
         }
         binding.registerButton.setOnClickListener {
-            if (isValidated()) {
-
-                val fullName = binding.registerInputFullName.text.toString()
-                val email = binding.registerInputEmailAddress.text.toString()
-                val password = binding.registerInputPassword.text.toString()
-                val cb = binding.registerCheckBoxTcAgreement.isChecked
-
-                authViewModel.registerWithEmailPassword(fullName, email, password)
-            } else {
-                binding.registerInputFullName.addTextChangedListener { validateFullName() }
-                binding.registerInputEmailAddress.addTextChangedListener { validateEmail() }
-                binding.registerInputPassword.addTextChangedListener { validatePassword() }
-            }
+            register(it)
+        }
+        binding.registerInputPassword.setOnEditorActionListener { editText, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                register(editText)
+                true
+            } else false
         }
         binding.registerGoogleButton.setOnClickListener {
             (activity as LoginActivity).signInWithGoogle()
         }
         binding.registerSignInText.setOnClickListener {
             findNavController().popBackStack()
+        }
+
+        binding.registerInputFullName.doAfterTextChanged {
+            if (binding.registerTextInputLayoutFullName.isErrorEnabled) {
+                validateFullName()
+            }
+        }
+
+        binding.registerInputEmailAddress.doAfterTextChanged {
+            if (binding.registerTextInputLayoutEmail.isErrorEnabled) {
+                validateEmail()
+            }
+        }
+
+        binding.registerInputPassword.doAfterTextChanged {
+            if (binding.registerTextInputLayoutPassword.isErrorEnabled) {
+                validatePassword()
+            }
+        }
+
+        binding.registerInputFullName.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    validateFullName()
+                }
+            }
+        binding.registerInputEmailAddress.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    validateEmail()
+                }
+            }
+        binding.registerInputPassword.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    validatePassword()
+                }
+            }
+    }
+
+    private fun register(view: View) {
+        view.hideKeyboard()
+
+        if (isValidated()) {
+            // If we reach here, everything is valid
+            val fullName = binding.registerInputFullName.text.toString()
+            val email = binding.registerInputEmailAddress.text.toString()
+            val password = binding.registerInputPassword.text.toString()
+            val cb = binding.registerCheckBoxTcAgreement.isChecked
+
+            authViewModel.registerWithEmailPassword(fullName, email, password)
+        } else {
+            with(binding) {
+                when {
+                    registerTextInputLayoutFullName.isErrorEnabled -> registerInputFullName.requestFocusAndShowKeyboard()
+                    registerTextInputLayoutEmail.isErrorEnabled -> registerInputEmailAddress.requestFocusAndShowKeyboard()
+                    registerTextInputLayoutPassword.isErrorEnabled -> registerInputPassword.requestFocusAndShowKeyboard()
+                    !registerCheckBoxTcAgreement.isChecked -> registerCheckBoxTcAgreement.requestFocus()
+                }
+            }
         }
     }
 
@@ -182,6 +230,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
 
             else -> {
                 binding.registerTextInputLayoutEmail.isErrorEnabled = false
+                // Do not clear focus here, it interrupts typing flow
                 true
             }
         }
@@ -217,7 +266,7 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
             // Show error on the CheckBox
             cb.error = resources.getString(R.string.terms_must_be_accepted)
             // Optionally request focus so the user sees it
-            cb.requestFocus()
+            // cb.requestFocus()
             false
         } else {
             // Clear any previous error
