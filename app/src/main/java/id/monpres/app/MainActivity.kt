@@ -408,16 +408,23 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             val roleNavigation = viewModel.roleNavigation.filterNotNull().first()
 
             Log.d(TAG, "Setting initial navigation graph: ${roleNavigation.name}")
+
+            val homeBackStackEntry = try {
+                navController.getBackStackEntry(R.id.homeFragment)
+            } catch (_: Exception) {
+                null
+            }
+
             when (roleNavigation) {
                 UserRole.CUSTOMER -> {}
                 UserRole.PARTNER -> {
-                    if (navController.currentDestination?.id == R.id.homeFragment) {
+                    if (homeBackStackEntry != null) {
                         navController.navigate(NavMainDirections.actionGlobalPartnerHomeFragment())
                     }
                 }
 
                 UserRole.ADMIN -> {
-                    if (navController.currentDestination?.id == R.id.homeFragment) {
+                    if (homeBackStackEntry != null) {
                         navController.navigate(NavMainDirections.actionGlobalAdminHomeFragment())
                     }
                 }

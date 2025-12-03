@@ -2,7 +2,9 @@ package id.monpres.app.ui.orderservicelist
 
 import android.content.Context
 import android.os.Bundle
+import android.transition.TransitionManager
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
@@ -75,7 +77,7 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
     }
 
     private fun setupRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService, root ->
+        orderServiceAdapter = OrderServiceAdapter { orderService, root ->
             navigateToDetail(orderService, root)
         }
 
@@ -226,6 +228,16 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
     }
 
     override fun onDestroyView() {
+        // Crucial: Force the Transition Manager to stop tracking the root layout
+        // This removes the reference from the ThreadLocal map causing the leak.
+        (view as? ViewGroup)?.let { rootView ->
+            androidx.transition.TransitionManager.endTransitions(rootView)
+            TransitionManager.endTransitions(rootView)
+        }
+
+        // Clean up the RecyclerView specifically
+        // This prevents the Adapter from holding onto ViewHolders that might still
+        // have transition tags on them.
         binding.fragmentOrderServiceListRecyclerViewOrderServiceList.adapter = null
         super.onDestroyView()
     }

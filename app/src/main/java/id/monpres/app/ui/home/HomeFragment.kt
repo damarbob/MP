@@ -33,6 +33,7 @@ import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
 import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.model.OrderService
 import id.monpres.app.model.Vehicle
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
@@ -278,39 +279,8 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
     }
 
     fun setupOrderServiceRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService, root ->
-            when (orderService.status) {
-                in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
-                    exitTransition = MaterialElevationScale(false)
-                    reenterTransition = MaterialElevationScale(true)
-                    val orderDetailTransitionName =
-                        getString(R.string.order_detail_transition_name)
-                    val extras = FragmentNavigatorExtras(root to orderDetailTransitionName)
-                    // The status is closed (completed, cancelled, returned, failed)
-                    val directions =
-                        HomeFragmentDirections.actionHomeFragmentToOrderServiceDetailFragment(
-                            orderService, mainGraphViewModel.getCurrentUser()
-                        )
-                    findNavController().navigate(
-                        directions, extras
-                    )
-                }
-
-                else -> {
-                    exitTransition = MaterialElevationScale(false)
-                    reenterTransition = MaterialElevationScale(true)
-                    val serviceProcessTransitionName =
-                        getString(R.string.service_process_transition_name)
-                    val extras = FragmentNavigatorExtras(root to serviceProcessTransitionName)
-                    val directions =
-                        HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(
-                            orderService.id!!
-                        )
-                    findNavController().navigate(
-                        directions, extras
-                    )
-                }
-            }
+        orderServiceAdapter = OrderServiceAdapter { orderService, root ->
+            navigateToDetail(orderService, root)
         }
 
         binding.fragmentHomeRecyclerViewHistory.apply {
@@ -318,6 +288,30 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
             adapter = orderServiceAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
+    }
+
+    private fun navigateToDetail(orderService: OrderService, root: View) {
+        val isClosed =
+            orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED }
+
+        exitTransition = MaterialElevationScale(false)
+        reenterTransition = MaterialElevationScale(true)
+
+        val transitionName =
+            if (isClosed) getString(R.string.order_detail_transition_name) else getString(R.string.service_process_transition_name)
+        val extras = FragmentNavigatorExtras(root to transitionName)
+
+        val directions = if (isClosed) {
+            HomeFragmentDirections.actionHomeFragmentToOrderServiceDetailFragment(
+                orderService, mainGraphViewModel.getCurrentUser()
+            )
+        } else {
+            HomeFragmentDirections.actionHomeFragmentToServiceProcessFragment(
+                orderService.id!!
+            )
+        }
+
+        findNavController().navigate(directions, extras)
     }
 
     fun setupOrderServiceObservers() {

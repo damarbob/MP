@@ -386,4 +386,5 @@
     <string name="reject_registration_for_x">Tolak pendaftaran untuk \'%1$s\'. Mereka tidak akan dapat lagi mengakses aplikasi ini.</string>
     <string name="all">Semua</string>
     <string name="pending">Tertunda</string>
+    <string name="brand_name">Nama merek dsb</string>
 </resources>

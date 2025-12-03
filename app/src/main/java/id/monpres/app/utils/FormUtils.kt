@@ -6,6 +6,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.RadioGroup
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.text.buildSpannedString
@@ -35,9 +36,20 @@ fun CheckBox.markRequiredInRed() {
     }
 }
 
-fun View.hideKeyboard(context: Context) {
+fun View.hideKeyboard() {
     val imm = getSystemService(context, InputMethodManager::class.java)
-    imm?.hideSoftInputFromWindow(this.windowToken, 0)
+    imm?.hideSoftInputFromWindow(windowToken, 0)
+    this.clearFocus()
+}
+
+fun View.showKeyboard() {
+    val imm = getSystemService(context, InputMethodManager::class.java)
+    imm?.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
+}
+
+fun EditText.requestFocusAndShowKeyboard() {
+    requestFocus()
+    showKeyboard()
 }
 
 /**

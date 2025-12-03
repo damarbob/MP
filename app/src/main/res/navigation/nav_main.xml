@@ -217,7 +217,7 @@
     <fragment
         android:id="@+id/orderServiceListFragment"
         android:name="id.monpres.app.ui.orderservicelist.OrderServiceListFragment"
-        android:label="History"
+        android:label="@string/orders"
         tools:layout="@layout/fragment_order_service_list">
         <action
             android:id="@+id/action_orderServiceListFragment_to_orderServiceDetailFragment"

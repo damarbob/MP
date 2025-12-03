@@ -28,6 +28,7 @@ import com.google.android.material.color.MaterialColors
 import com.google.android.material.transition.MaterialContainerTransform
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
+import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
 import id.monpres.app.enums.PartnerCategory
@@ -323,7 +324,7 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
                 )
             )
             // Header
-            fragmentOrderServiceDetailTitle.text = orderService.name
+            fragmentOrderServiceDetailTitle.text = MainApplication.services?.find { it.id == orderService.serviceId }?.name
             fragmentOrderServiceDetailDate.text =
                 orderService.updatedAt.toDateTimeDisplayString(
                     dateStyle = DateFormat.MEDIUM,

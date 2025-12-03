@@ -1,7 +1,9 @@
 package id.monpres.app.ui.partnerhome
 
 import android.os.Bundle
+import android.transition.TransitionManager
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
@@ -25,6 +27,7 @@ import id.monpres.app.databinding.FragmentPartnerHomeBinding
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.model.Banner
+import id.monpres.app.model.OrderService
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.BannerAdapter
@@ -113,45 +116,38 @@ class PartnerHomeFragment : BaseFragment(R.layout.fragment_partner_home) {
     }
 
     private fun setupOrderServiceRecyclerView() {
-        orderServiceAdapter = OrderServiceAdapter(requireContext()) { orderService, root ->
-            when (orderService.status) {
-                in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED } -> {
-                    exitTransition = MaterialElevationScale(false)
-                    reenterTransition = MaterialElevationScale(true)
-                    val orderDetailTransitionName =
-                        getString(R.string.order_detail_transition_name)
-                    val extras = FragmentNavigatorExtras(root to orderDetailTransitionName)
-                    // The status is closed (completed, cancelled, returned, failed)
-                    val directions =
-                        PartnerHomeFragmentDirections.actionPartnerHomeFragmentToOrderServiceDetailFragment(
-                            orderService, mainGraphViewModel.getCurrentUser()
-                        )
-                    findNavController().navigate(
-                        directions, extras
-                    )
-                }
-
-                else -> {
-                    exitTransition = MaterialElevationScale(false)
-                    reenterTransition = MaterialElevationScale(true)
-                    val serviceProcessTransitionName =
-                        getString(R.string.service_process_transition_name)
-                    val extras = FragmentNavigatorExtras(root to serviceProcessTransitionName)
-                    val directions =
-                        PartnerHomeFragmentDirections.actionPartnerHomeFragmentToServiceProcessFragment(
-                            orderService.id!!
-                        )
-                    findNavController().navigate(
-                        directions, extras
-                    )
-                }
-            }
+        orderServiceAdapter = OrderServiceAdapter { orderService, root ->
+            navigateToDetail(orderService, root)
         }
         binding.fragmentPartnerHomeRecyclerViewOrderService.apply {
             addItemDecoration(SpacingItemDecoration(2))
             adapter = orderServiceAdapter
             layoutManager = LinearLayoutManager(requireContext())
         }
+    }
+
+    private fun navigateToDetail(orderService: OrderService, root: View) {
+        val isClosed =
+            orderService.status in OrderStatus.entries.filter { it.type == OrderStatusType.CLOSED }
+
+        exitTransition = MaterialElevationScale(false)
+        reenterTransition = MaterialElevationScale(true)
+
+        val transitionName =
+            if (isClosed) getString(R.string.order_detail_transition_name) else getString(R.string.service_process_transition_name)
+        val extras = FragmentNavigatorExtras(root to transitionName)
+
+        val directions = if (isClosed) {
+            PartnerHomeFragmentDirections.actionPartnerHomeFragmentToOrderServiceDetailFragment(
+                orderService, mainGraphViewModel.getCurrentUser()
+            )
+        } else {
+            PartnerHomeFragmentDirections.actionPartnerHomeFragmentToServiceProcessFragment(
+                orderService.id!!
+            )
+        }
+
+        findNavController().navigate(directions, extras)
     }
 
     private fun setupObservers() {
@@ -197,6 +193,21 @@ class PartnerHomeFragment : BaseFragment(R.layout.fragment_partner_home) {
                 fragmentPartnerHomeRecyclerViewOrderService.visibility = View.VISIBLE
             }
         }
+    }
+
+    override fun onDestroyView() {
+        // Crucial: Force the Transition Manager to stop tracking the root layout
+        // This removes the reference from the ThreadLocal map causing the leak.
+        (view as? ViewGroup)?.let { rootView ->
+            androidx.transition.TransitionManager.endTransitions(rootView)
+            TransitionManager.endTransitions(rootView)
+        }
+
+        // Clean up the RecyclerView specifically
+        // This prevents the Adapter from holding onto ViewHolders that might still
+        // have transition tags on them.
+        binding.fragmentPartnerHomeRecyclerViewOrderService.adapter = null
+        super.onDestroyView()
     }
 
     override val progressIndicator: LinearProgressIndicator

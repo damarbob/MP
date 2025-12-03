@@ -256,7 +256,7 @@
                             <com.google.android.material.textfield.TextInputEditText
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:imeOptions="actionNext"
+                                android:imeOptions="actionDone"
                                 android:inputType="number"
                                 android:minHeight="@dimen/input_field_min_height" />
                         </com.google.android.material.textfield.TextInputLayout>
@@ -269,15 +269,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginVertical="@dimen/space_between_input_field"
-
-                        android:layout_marginBottom="16dp"
                         android:text="@string/save"
                         app:icon="@drawable/save_24px"
-                        app:iconGravity="textStart"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="1.0"
-                        app:layout_constraintStart_toStartOf="parent" />
+                        app:iconGravity="textStart"/>
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>

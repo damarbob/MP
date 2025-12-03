@@ -8,8 +8,13 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.location.Location
 import android.net.Uri
 import android.os.Build
@@ -22,7 +27,9 @@ import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -43,6 +50,7 @@ import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
 import com.google.android.gms.location.Priority
 import com.google.android.gms.location.SettingsClient
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.Task
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -54,7 +62,10 @@ import com.google.firebase.firestore.GeoPoint
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.EdgeInsets
+import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.ncorti.slidetoact.SlideToActView
@@ -87,10 +98,13 @@ import id.monpres.app.usecase.NumberFormatterUseCase
 import id.monpres.app.usecase.OpenWhatsAppUseCase
 import id.monpres.app.utils.capitalizeWords
 import id.monpres.app.utils.toDateTimeDisplayString
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.DateFormat
 import java.util.concurrent.TimeUnit
 
@@ -106,6 +120,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         const val MINIMUM_DISTANCE_TO_START_SERVICE = 50f
     }
 
+    private var partnerPointAnnotation: PointAnnotation? = null
+    private var observePartnerLiveLocationJob: Job? = null
     private val viewModel: ServiceProcessViewModel by viewModels()
     private val mainGraphViewModel: MainGraphViewModel by activityViewModels()
 
@@ -309,7 +325,10 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                             // If the order has no payment method and the current user is a customer,
                             // automatically save their preferred method to the order.
                             if (currentUser?.role == UserRole.CUSTOMER) {
-                                Log.d(TAG, "Auto-saving preferred payment method '${effectivePaymentMethod.id}' to order ${orderService.id}")
+                                Log.d(
+                                    TAG,
+                                    "Auto-saving preferred payment method '${effectivePaymentMethod.id}' to order ${orderService.id}"
+                                )
                                 mainGraphViewModel.updateOrderService(
                                     orderService.copy(paymentMethod = effectivePaymentMethod.id)
                                 )
@@ -328,8 +347,11 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                         updateUiBasedOnRoleAndStatus()
 
                         // If the order we are currently viewing is ON_THE_WAY, we need to observe its live location for UI updates.
-                        if (orderService.status == OrderStatus.ON_THE_WAY) {
+                        if (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED) {
                             observePartnerLiveLocation()
+                        } else {
+                            observePartnerLiveLocationJob?.cancel()
+                            observePartnerLiveLocationJob = null
                         }
                     }
             }
@@ -367,7 +389,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                 showCancelButton(status == OrderStatus.ORDER_PLACED)
                 showActionButton(!isClosed)
 
-                if (status == OrderStatus.ON_THE_WAY) {
+                if (status == OrderStatus.ON_THE_WAY || status == OrderStatus.ORDER_PLACED) {
                     checkLocationSettingsAndStartService()
                 }
             }
@@ -403,15 +425,18 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
 
     private fun observePartnerLiveLocation() {
         // Launch a new collector for the live location
-        lifecycleScope.launch {
+        observePartnerLiveLocationJob = lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                orderService.id?.let { viewModel.observePartnerLocation(it) }
-                    ?.collect { livePartnerLocation ->
+                orderService.id?.let {
+                    Log.d(TAG, "OrderServiceId: $it")
+                    viewModel.observePartnerLocation(it).collect { livePartnerLocation ->
                         val partnerGeoPoint = livePartnerLocation.location ?: return@collect
                         Log.d(TAG, "Customer received partner location: $partnerGeoPoint")
 
                         updateDistanceAndProgress(partnerGeoPoint)
+                        updateMap(partnerGeoPoint)
                     }
+                }
             }
         }
     }
@@ -431,6 +456,10 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         val initialDistance = getInitialDistance(targetLoc)
         val currentDistance = partnerLoc.distanceTo(targetLoc)
         val progress = calculateProgress(initialDistance, currentDistance)
+        Log.d(
+            TAG,
+            "initialDistance: $initialDistance, currentDistance: $currentDistance, progress: $progress"
+        )
 
         aerialDistanceToTargetInMeters = currentDistance
 
@@ -441,10 +470,6 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         binding.fragmentServiceProcessTextViewCurrentDistance.text =
             getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance))
 
-        binding.fragmentServiceProcessTextViewWarningMessage.text = getString(
-            R.string.haven_t_arrived_at_the_location_yet,
-            numberFormatterUseCase(aerialDistanceToTargetInMeters)
-        )
         binding.fragmentServiceProcessTextViewWarningMessage.text = getString(
             R.string.haven_t_arrived_at_the_location_yet,
             numberFormatterUseCase(aerialDistanceToTargetInMeters)
@@ -570,43 +595,78 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                 if (currentUser?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
 
             // Mapbox
-            fragmentServiceProcessMapView.mapboxMap.setCamera(
-                CameraOptions.Builder()
-                    .center(
-                        Point.fromLngLat(
-                            orderService.selectedLocationLng ?: 0.0,
-                            orderService.selectedLocationLat ?: 0.0
-                        )
-                    )
-                    .pitch(0.0)
-                    .zoom(12.0)
-                    .bearing(0.0)
-                    .build()
+            setupMap()
+        }
+    }
+
+    private fun setupMap() {
+        with(binding) {
+//            fragmentServiceProcessMapView.mapboxMap.setCamera(
+//                CameraOptions.Builder()
+//                    .center(
+//                        Point.fromLngLat(
+//                            orderService.selectedLocationLng ?: 0.0,
+//                            orderService.selectedLocationLat ?: 0.0
+//                        )
+//                    )
+//                    .pitch(0.0)
+//                    .zoom(12.0)
+//                    .bearing(0.0)
+//                    .build()
+//            )
+//            val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.mp_marker)
+//            val desiredWidth = 60 // in pixels
+//            val desiredHeight = 96 // in pixels
+//
+//            val resizedBitmap = originalBitmap.scale(desiredWidth, desiredHeight, false)
+//
+//            // Create an instance of the Annotation API and get the PointAnnotationManager.
+//            val annotationApi = fragmentServiceProcessMapView.annotations
+//            val pointAnnotationManager = annotationApi.createPointAnnotationManager()
+//
+//            // Set options for the resulting symbol layer.
+//            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+//                // Define a geographic coordinate.
+//                .withPoint(
+//                    Point.fromLngLat(
+//                        orderService.selectedLocationLng ?: 0.0,
+//                        orderService.selectedLocationLat ?: 0.0
+//                    )
+//                )
+//                // Specify the bitmap you assigned to the point annotation
+//                // The bitmap will be added to map style automatically.
+//                .withIconImage(resizedBitmap)
+//            // Add the resulting pointAnnotation to the map.
+//            pointAnnotationManager.create(pointAnnotationOptions)
+
+            // Mapbox - Create both points
+            val selectedPoint = Point.fromLngLat(
+                orderService.selectedLocationLng ?: 0.0,
+                orderService.selectedLocationLat ?: 0.0
             )
-            val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.mp_marker)
-            val desiredWidth = 60 // in pixels
-            val desiredHeight = 96 // in pixels
 
-            val resizedBitmap = originalBitmap.scale(desiredWidth, desiredHeight, false)
-
-            // Create an instance of the Annotation API and get the PointAnnotationManager.
+            // Create Annotation API instance
             val annotationApi = fragmentServiceProcessMapView.annotations
             val pointAnnotationManager = annotationApi.createPointAnnotationManager()
 
-            // Set options for the resulting symbol layer.
-            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
-                // Define a geographic coordinate.
-                .withPoint(
-                    Point.fromLngLat(
-                        orderService.selectedLocationLng ?: 0.0,
-                        orderService.selectedLocationLat ?: 0.0
-                    )
-                )
-                // Specify the bitmap you assigned to the point annotation
-                // The bitmap will be added to map style automatically.
-                .withIconImage(resizedBitmap)
-            // Add the resulting pointAnnotation to the map.
-            pointAnnotationManager.create(pointAnnotationOptions)
+            // Clear existing annotations if needed
+            pointAnnotationManager.deleteAll()
+
+            // Add marker for SELECTED LOCATION
+            val selectedMarkerBitmap = BitmapFactory.decodeResource(
+                resources,
+                R.drawable.mp_marker  // Your existing marker for selected location
+            ).scale(60, 96, false)
+
+            val selectedAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                .withPoint(selectedPoint)
+                .withIconImage(selectedMarkerBitmap)
+                .withIconAnchor(IconAnchor.BOTTOM)
+
+            // Add annotations to map
+            pointAnnotationManager.create(selectedAnnotationOptions)
+
+            updateMap()
 
             fragmentServiceProcessMapView.setOnTouchListener { view, event ->
                 view.performClick()
@@ -624,6 +684,70 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                     fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(false)
                 }
                 false // Return false to allow MapView to handle the touch
+            }
+        }
+    }
+
+    private fun updateMap(partnerGeoPoint: GeoPoint? = null) {
+        with(binding) {
+            val annotationApi = fragmentServiceProcessMapView.annotations
+            val pointAnnotationManager = annotationApi.createPointAnnotationManager()
+
+            if (partnerGeoPoint != null) {
+
+                val userPoint = Point.fromLngLat(
+                    partnerGeoPoint.longitude,
+                    partnerGeoPoint.latitude
+                )
+
+                // Update or create user annotation
+                partnerPointAnnotation?.let { existingAnnotation ->
+                    // Update existing annotation
+                    existingAnnotation.point = userPoint
+                    pointAnnotationManager.update(existingAnnotation)
+                } ?: run {
+                    // Create new annotation
+                    val partnerMarkerBitmap =
+                        BitmapFactory.decodeResource(
+                            resources,
+                            R.drawable.mp_custom_marker  // Your existing marker for selected location
+                        ).scale(80,80,false)
+
+                            val userAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                        .withPoint(userPoint)
+                        .withIconImage(partnerMarkerBitmap)
+                        .withIconAnchor(IconAnchor.CENTER)
+
+                    partnerPointAnnotation = pointAnnotationManager.create(userAnnotationOptions)
+                }
+
+                // Optional: Recalculate bounds if you want camera to follow
+                val selectedPoint = Point.fromLngLat(
+                    orderService.selectedLocationLng ?: 0.0,
+                    orderService.selectedLocationLat ?: 0.0
+                )
+
+                val coordinates = listOf(selectedPoint, userPoint)
+                fragmentServiceProcessMapView.mapboxMap.cameraForCoordinates(
+                    coordinates, CameraOptions.Builder().padding(EdgeInsets(100.0, 100.0, 100.0, 100.0)).build(),
+                    EdgeInsets(100.0, 100.0, 100.0, 100.0), null, null
+                ) {
+                    fragmentServiceProcessMapView.mapboxMap.setCamera(it)
+                }
+            } else {
+                fragmentServiceProcessMapView.mapboxMap.setCamera(
+                    CameraOptions.Builder()
+                        .center(
+                            Point.fromLngLat(
+                                orderService.selectedLocationLng ?: 0.0,
+                                orderService.selectedLocationLat ?: 0.0
+                            )
+                        )
+                        .pitch(0.0)
+                        .zoom(12.0)
+                        .bearing(0.0)
+                        .build()
+                )
             }
         }
     }
@@ -922,6 +1046,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
     private fun checkLocationSettingsAndStartService() {
         if (ContextCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             // Permission is granted, now check if the GPS setting is enabled.
@@ -942,6 +1068,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
      * Checks if the device's location services are enabled and either starts the tracking service
      * or prompts the user to enable them.
      */
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun checkDeviceLocationSettings() {
         val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY, TimeUnit.SECONDS.toMillis(30)
@@ -954,7 +1081,9 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         task.addOnSuccessListener {
             // All location settings are satisfied. The environment is ready.
             Log.d(TAG, "Location settings are satisfied.")
-//            startLocationService(OrderServiceLocationTrackingService.MODE_PARTNER)
+            if (orderService.status == OrderStatus.ORDER_PLACED) {
+                updateLocation()
+            }
         }
 
         task.addOnFailureListener { exception ->
@@ -966,8 +1095,30 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                         IntentSenderRequest.Builder(exception.resolution).build()
                     // The result of this dialog will be handled by 'locationSettingsRequestLauncher'.
                     locationSettingsRequestLauncher.launch(intentSenderRequest)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Ignore the error.
+                }
+            }
+        }
+    }
+
+    @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    private fun updateLocation() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val result =
+                LocationServices.getFusedLocationProviderClient(requireContext())
+                    .getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        CancellationTokenSource().token
+                    ).await()
+            result.let {
+                orderService.id?.let { orderId ->
+                    Log.d(TAG, "Location updated: $it")
+                    viewModel.updatePartnerLiveLocation(
+                        orderId,
+                        it.latitude,
+                        it.longitude
+                    )
                 }
             }
         }
@@ -1093,6 +1244,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
     override fun onDestroyView() {
         super.onDestroyView()
         mainGraphViewModel.stopObservingOpenedOrder()
+        observePartnerLiveLocationJob?.cancel()
+        observePartnerLiveLocationJob = null
     }
 
     override val progressIndicator: LinearProgressIndicator
@@ -1101,5 +1254,57 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
     override fun getCurrentOrderService(): OrderService? {
         // Return the local variable we already have populated
         return if (::orderService.isInitialized) orderService else null
+    }
+
+    // on below line we are creating a function to get bitmap
+// from image and passing params as context and an int for drawable.
+    private fun getBitmapFromImage(context: Context, drawable: Int): Bitmap {
+// Get the drawable
+        val db = ContextCompat.getDrawable(context, drawable)
+
+        // Get theme colors - alternative method using MaterialColors if available
+        val secondaryContainerColor = MaterialColors.getColor(
+            context,
+            com.google.android.material.R.attr.colorTertiaryContainer,
+            Color.GRAY
+        )
+        val onSecondaryContainerColor = MaterialColors.getColor(
+            context,
+            com.google.android.material.R.attr.colorOnTertiaryContainer,
+            Color.BLACK
+        )
+
+        // Create bitmap
+        val bit = createBitmap(db!!.intrinsicWidth, db.intrinsicHeight)
+
+        // Create canvas
+        val canvas = Canvas(bit)
+
+        // Draw rounded background
+        val cornerRadius = dpToPx(context, 8f) // 8dp corner radius
+        val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = secondaryContainerColor
+            style = Paint.Style.FILL
+        }
+
+        canvas.drawRect(
+            0f, 0f,
+            canvas.width.toFloat(), canvas.height.toFloat(),
+//            cornerRadius, cornerRadius,
+            backgroundPaint
+        )
+
+        // Apply color filter to drawable
+        db.setBounds(0, 0, canvas.width, canvas.height)
+        db.colorFilter = PorterDuffColorFilter(onSecondaryContainerColor, PorterDuff.Mode.SRC_ATOP)
+
+        // Draw drawable
+        db.draw(canvas)
+
+        return bit
+    }
+
+    private fun dpToPx(context: Context, dp: Float): Float {
+        return dp * context.resources.displayMetrics.density
     }
 }

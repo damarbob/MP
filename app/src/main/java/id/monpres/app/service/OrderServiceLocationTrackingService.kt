@@ -61,7 +61,7 @@ class OrderServiceLocationTrackingService : Service() {
         const val MODE_CUSTOMER = "MODE_CUSTOMER"
 
 
-        private const val UPDATE_INTERVAL_SECOND = 30L
+        private const val UPDATE_INTERVAL_SECOND = 60L
         private const val MIN_UPDATE_DISTANCE_METER = 20f
         private const val FOREGROUND_SERVICE_ID: Int = 12341234
     }
