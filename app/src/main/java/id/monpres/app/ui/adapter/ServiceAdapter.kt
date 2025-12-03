@@ -50,6 +50,15 @@ class ServiceAdapter(
                 itemServiceTextViewSubtitle.text = service.description
                 itemServiceImageViewImage.visibility = View.VISIBLE
 
+                // TODO: Replace deprecated getIdentifier with a better solution
+                val resId = root.context.resources.getIdentifier(
+                    service.iconKey,
+                    "drawable",
+                    root.context.packageName
+                )
+                itemServiceImageViewImage.setImageResource(resId)
+
+
                 // Set click listener on root view of item layout
                 root.setOnClickListener {
                     serviceClickListener?.onServiceClicked(service.id)

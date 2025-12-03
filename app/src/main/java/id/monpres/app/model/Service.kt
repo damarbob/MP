@@ -11,4 +11,7 @@ data class Service(
     var imageUris: List<String>? = null,
     var searchTokens: List<String>? = null,
     var categoryId: String? = null,
+
+    // The icon drawable key, e.g. "home_repair_service_24px"
+    var iconKey: String? = null,
 )

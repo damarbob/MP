@@ -71,7 +71,8 @@ class MainApplication : Application() {
                 true,
                 imageUris = null,
                 searchTokens = null,
-                categoryId = "1"
+                categoryId = "1",
+                iconKey = "next_week_24px",
             ),
             Service(
                 "2",
@@ -81,9 +82,9 @@ class MainApplication : Application() {
                 -1.0,
                 true,
                 true,
-                imageUris = null,
                 searchTokens = null,
-                categoryId = "2"
+                categoryId = "2",
+                iconKey = "home_repair_service_24px",
             ),
 //            Service(
 //                "3",
