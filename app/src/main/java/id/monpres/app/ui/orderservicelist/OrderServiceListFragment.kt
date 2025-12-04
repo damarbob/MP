@@ -40,6 +40,7 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
 
     companion object {
         fun newInstance() = OrderServiceListFragment()
+        private val TAG = OrderServiceListFragment::class.simpleName
     }
 
     // We still keep MainGraphViewModel if you need it for shared data,
@@ -71,7 +72,12 @@ class OrderServiceListFragment : BaseFragment(R.layout.fragment_order_service_li
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceListRecyclerViewOrderServiceList) { v, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             // Only apply bottom padding to RecyclerView so it clips correctly but content scrolls behind nav bar
-            v.setPadding(0, 0, 0, insets.bottom + 150) // +150 for safety space
+            v.setPadding(
+                v.paddingLeft,
+                v.paddingTop,
+                v.paddingRight,
+                insets.bottom + 150
+            ) // +150 for safety space
             windowInsets
         }
     }

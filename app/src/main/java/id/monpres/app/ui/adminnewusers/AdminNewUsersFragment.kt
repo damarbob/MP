@@ -7,13 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import androidx.core.widget.NestedScrollView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminNewUsersBinding
@@ -60,10 +62,25 @@ class AdminNewUsersFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupInsets()
         setupRecyclerView()
         setupInputs()
         setupScrollListener()
         observeViewModel()
+    }
+
+    private fun setupInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentAdminNewUsersRecyclerViewNewUsers) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Only apply bottom padding to RecyclerView so it clips correctly but content scrolls behind nav bar
+            v.setPadding(
+                v.paddingLeft,
+                v.paddingTop,
+                v.paddingRight,
+                insets.bottom + 150
+            ) // +150 for safety space
+            windowInsets
+        }
     }
 
     private fun setupInputs() {
@@ -112,17 +129,25 @@ class AdminNewUsersFragment : Fragment() {
     }
 
     private fun setupScrollListener() {
-        binding.fragmentAdminNewUsersNestedScrollView.setOnScrollChangeListener(
-            NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
-                // Calculate if we have scrolled to the bottom
-                val diff = (v.getChildAt(0).measuredHeight - v.measuredHeight) - scrollY
+        binding.fragmentAdminNewUsersRecyclerViewNewUsers.apply {
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
 
-                // If diff is 0 (or very small), we are at the bottom
-                if (diff <= 0) {
-                    viewModel.loadMore()
+                    // FIX: Cast the layoutManager to LinearLayoutManager
+                    val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+
+                    val visibleItemCount = layoutManager.childCount
+                    val totalItemCount = layoutManager.itemCount
+                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+
+                    // Trigger load when within 3 items of bottom
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 3 && firstVisibleItemPosition >= 0) {
+                        viewModel.loadMore()
+                    }
                 }
-            }
-        )
+            })
+        }
     }
 
     private fun observeViewModel() {
@@ -134,16 +159,15 @@ class AdminNewUsersFragment : Fragment() {
                     viewModel.uiState.collect { state ->
                         binding.apply {
                             // Reset visibility
-                            fragmentAdminNewUsersLinearProgressIndicator.visibility = View.GONE
+                            fragmentAdminNewUsersProgressBarCenter.visibility = View.GONE
                             fragmentAdminNewUsersRecyclerViewNewUsers.visibility = View.GONE
                             fragmentAdminNewUsersTextViewError.visibility = View.GONE
                             fragmentAdminNewUsersLinearLayoutInfo.visibility = View.GONE
 
                             when (state) {
                                 is UiState.Loading -> {
-                                    fragmentAdminNewUsersLinearProgressIndicator.visibility =
+                                    fragmentAdminNewUsersProgressBarCenter.visibility =
                                         View.VISIBLE
-                                    // Optional: Keep list visible while reloading if you prefer
                                 }
 
                                 is UiState.Success -> {
@@ -175,7 +199,7 @@ class AdminNewUsersFragment : Fragment() {
                 // Observe Load More Loading State
                 launch {
                     viewModel.isLoadingMore.collect { isLoading ->
-                        binding.fragmentAdminNewUsersProgressBarLoadMore.visibility =
+                        binding.fragmentAdminNewUsersLinearProgressIndicator.visibility =
                             if (isLoading) View.VISIBLE else View.GONE
                     }
                 }

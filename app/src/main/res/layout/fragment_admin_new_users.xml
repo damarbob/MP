@@ -33,142 +33,126 @@
             android:textAlignment="center" />
     </LinearLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/fragmentAdminNewUsersNestedScrollView"
+    <LinearLayout
+        android:id="@+id/fragmentAdminNewUsersLinearLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:isScrollContainer="true"
-        android:overScrollMode="always">
+        android:orientation="vertical"
+        android:paddingBottom="16dp">
 
         <LinearLayout
-            android:id="@+id/fragmentAdminNewUsersLinearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:elevation="2dp"
             android:orientation="vertical"
-            android:paddingBottom="16dp">
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp">
 
-            <LinearLayout
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragmentAdminNewUsersInputLayoutSearch"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?android:attr/colorBackground"
-                android:elevation="2dp"
-                android:orientation="vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="16dp"
-                android:paddingBottom="8dp">
+                android:hint="@string/search"
+                app:endIconMode="clear_text"
+                app:startIconDrawable="@drawable/search_24px">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/fragmentAdminNewUsersInputLayoutSearch"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/fragmentAdminNewUsersEditTextSearch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/search"
-                    app:endIconMode="clear_text"
-                    app:startIconDrawable="@drawable/search_24px">
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/fragmentAdminNewUsersEditTextSearch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:imeOptions="actionSearch" />
-                </com.google.android.material.textfield.TextInputLayout>
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
 
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/fragmentAdminNewUsersChipGroupFilter"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:scrollbars="none">
+                    app:selectionRequired="true"
+                    app:singleLine="true"
+                    app:singleSelection="true">
 
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/fragmentAdminNewUsersChipGroupFilter"
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPending"
+                        style="@style/Widget.Material3.Chip.Filter"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:selectionRequired="true"
-                        app:singleSelection="true">
+                        android:checked="true"
+                        android:text="@string/pending" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipPending"
-                            style="@style/Widget.Material3.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true"
-                            android:text="@string/pending" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipAll"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/all" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipAll"
-                            style="@style/Widget.Material3.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/all" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipVerified"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/accepted" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipVerified"
-                            style="@style/Widget.Material3.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/accepted" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipRejected"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/rejected" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipRejected"
-                            style="@style/Widget.Material3.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/rejected" />
-
-                    </com.google.android.material.chip.ChipGroup>
-                </HorizontalScrollView>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="vertical"
-                android:paddingHorizontal="16dp">
-
-                <TextView
-                    android:id="@+id/fragmentAdminNewUsersTextViewError"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/lorem_ipsum_dolor_sit_amet"
-                    android:textColor="?attr/colorError"
-                    android:visibility="gone" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/fragmentAdminNewUsersRecyclerViewNewUsers"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clipToPadding="false"
-                    android:nestedScrollingEnabled="false"
-                    android:padding="2dp"/>
-
-                <ProgressBar
-                    android:id="@+id/fragmentAdminNewUsersProgressBarLoadMore"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="16dp"
-                    android:visibility="visible" />
-
-            </LinearLayout>
-
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
         </LinearLayout>
 
-    </androidx.core.widget.NestedScrollView>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/fragmentAdminNewUsersLinearProgressIndicator"
-        style="@style/Widget.Material3.LinearProgressIndicator"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        app:hideAnimationBehavior="outward"
-        app:layout_insetEdge="top"
-        app:showAnimationBehavior="inward" />
+            <TextView
+                android:id="@+id/fragmentAdminNewUsersTextViewError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/lorem_ipsum_dolor_sit_amet"
+                android:textColor="?attr/colorError"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/fragmentAdminNewUsersRecyclerViewNewUsers"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="16dp"
+                android:clipToPadding="false"
+                android:padding="1dp" />
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/fragmentAdminNewUsersLinearProgressIndicator"
+                style="@style/Widget.Material3.LinearProgressIndicator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                app:layout_insetEdge="top" />
+
+            <ProgressBar
+                android:id="@+id/fragmentAdminNewUsersProgressBarCenter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:visibility="visible" />
+
+        </FrameLayout>
+
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
