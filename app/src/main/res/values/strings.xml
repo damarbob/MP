@@ -394,4 +394,6 @@
     <string name="all">All</string>
     <string name="pending">Pending</string>
     <string name="brand_name">Brand name</string>
+
+    <string name="tap_on_the_map_to_select_a_location">Tap on the map to select a location</string>
 </resources>

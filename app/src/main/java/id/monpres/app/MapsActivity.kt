@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapLoaded
 import com.mapbox.maps.MapLoadedCallback
@@ -152,6 +153,7 @@ class MapsActivity : AppCompatActivity(R.layout.activity_maps), MapLoadedCallbac
             val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
                 .withPoint(point)
                 .withIconImage(redMarkerBitmap)
+                .withIconSize(0.5)
                 // Make the annotation draggable.
                 .withDraggable(false)
 
@@ -211,6 +213,11 @@ class MapsActivity : AppCompatActivity(R.layout.activity_maps), MapLoadedCallbac
     }
 
     private fun enableTapToSelect() {
+        Snackbar.make(
+            binding.main,
+            getString(R.string.tap_on_the_map_to_select_a_location), Snackbar.LENGTH_INDEFINITE
+        ).show()
+
         mapView.mapboxMap.addOnMapClickListener { point ->
 
             this.selectedLocationPoint = point // This replaces the old point if any
@@ -229,6 +236,7 @@ class MapsActivity : AppCompatActivity(R.layout.activity_maps), MapLoadedCallbac
         val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
             .withPoint(Point.fromLngLat(point.longitude(), point.latitude()))
             .withIconImage(redMarkerBitmap)
+            .withIconSize(0.5)
             // Make the annotation draggable.
             .withDraggable(false)
 
