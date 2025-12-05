@@ -162,7 +162,7 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
         }
 
         // Category
-        val categories = PartnerCategory.entries.map { it.name }
+        val categories = PartnerCategory.toListString(requireContext())
         val categoryAdapter =
             ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, categories)
 
@@ -316,7 +316,7 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
             binding.fragmentOrderServiceEditAutoCompleteTextViewIssueCategory.text.toString()
         if (currentCategory != order.issue) {
             binding.fragmentOrderServiceEditAutoCompleteTextViewIssueCategory.setText(
-                order.issue,
+                getString(PartnerCategory.fromName(order.issue!!)?.label!!),
                 false
             )
         }
