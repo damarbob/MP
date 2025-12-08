@@ -9,6 +9,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
+import id.monpres.app.utils.UserUtils
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -105,9 +106,13 @@ class GetOrCreateUserUseCase @Inject constructor(
                     updatedAt = Timestamp.now().toDate().time.toDouble(),
                     fcmTokens = listOf(token)
                 )
-                userDocRef.set(newUser).await()
-                userRepository.setCurrentUserRecord(newUser)
-                Result.success(newUser)
+
+                // Prepare the user
+                val finalNewUser = UserUtils.prepareUserForSave(newUser)
+
+                userDocRef.set(finalNewUser).await()
+                userRepository.setCurrentUserRecord(finalNewUser)
+                Result.success(finalNewUser)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in $TAG: ${e.message}", e)

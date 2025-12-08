@@ -3,6 +3,7 @@ package id.monpres.app.usecase
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.utils.UserUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,6 +33,9 @@ class UpdateUserUseCase @Inject constructor(
             onResult(Result.failure(error))
             return
         }
+
+        // Prepare the user
+        val user = UserUtils.prepareUserForSave(user)
 
         firestore
             .collection(MontirPresisiUser.COLLECTION)

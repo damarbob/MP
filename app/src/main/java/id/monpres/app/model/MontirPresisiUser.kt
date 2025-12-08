@@ -31,6 +31,8 @@ data class MontirPresisiUser(
     var instagramId: String? = null,
     var facebookId: String? = null,
 
+    var searchTokens: List<String>? = null, // For search purposes
+
     var partnerCategories: List<PartnerCategory>? = null,
 ) : Parcelable {
     companion object {

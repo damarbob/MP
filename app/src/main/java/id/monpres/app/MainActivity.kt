@@ -62,6 +62,7 @@ import id.monpres.app.repository.UserRepository
 import id.monpres.app.service.OrderServiceLocationTrackingService
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
 import id.monpres.app.usecase.GetColorFromAttrUseCase
+import id.monpres.app.usecase.MigrateUsersSearchTokens
 import id.monpres.app.utils.NetworkConnectivityObserver
 import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import kotlinx.coroutines.flow.filterNotNull
@@ -89,6 +90,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
 
     /* Use cases */
     private val getColorFromAttrUseCase = GetColorFromAttrUseCase()
+
+    @Inject
+    lateinit var migrateUsersSearchTokens: MigrateUsersSearchTokens
 
     /* UI */
     private val binding by viewBinding(ActivityMainBinding::bind)
@@ -154,6 +158,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
 
         // Pass intent to ViewModel for processing
         viewModel.setPendingIntent(intent)
+
+        /* Testing (if any) */
+        setupTesting()
+    }
+
+    private fun setupTesting() {
+        // Place testing code here
     }
 
     private fun setupWindowInsets() {

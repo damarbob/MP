@@ -16,6 +16,7 @@ import id.monpres.app.enums.UserRole
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.UiState
+import id.monpres.app.utils.UserUtils
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -107,7 +108,7 @@ class ProfileViewModel @Inject constructor(
             try {
                 _uiState.value = UiState.Loading
 
-                val user = auth.currentUser
+                val currentUser = auth.currentUser
                     ?: run {
                         _errorEvent.emit(
                             FirebaseAuthException(
@@ -119,66 +120,87 @@ class ProfileViewModel @Inject constructor(
                         return@launch
                     }
 
-                val montirPresisiUser = userRepository.userRecord.filterNotNull().first()
-                Log.d("ProfileViewModel", "montirPresisiUser: $montirPresisiUser")
+                // 1. Get current data from Repository
+                val existingUser = userRepository.userRecord.filterNotNull().first()
+                Log.d("ProfileViewModel", "montirPresisiUser: $existingUser")
 
-                if (montirPresisiUser.role == UserRole.PARTNER && _selectedCategories.value.isEmpty()) {
+                if (existingUser.role == UserRole.PARTNER && _selectedCategories.value.isEmpty()) {
                     _errorEvent.emit(IllegalArgumentException("Partner must select at least one category"))
                     return@launch
                 }
 
-                // 1. Prepare all Firestore updates in a single map
+                // 2. Prepare the basic Firestore updates map
                 val firestoreUpdates = mutableMapOf<String, Any>()
                 val location = _selectedPrimaryLocationPoint.value
 
-                if (!whatsAppNumber.isNullOrBlank()) {
-                    firestoreUpdates["phoneNumber"] = whatsAppNumber
-                }
+                // -- Standard Fields --
+                if (!whatsAppNumber.isNullOrBlank()) firestoreUpdates["phoneNumber"] =
+                    whatsAppNumber
                 if (location != null) {
                     firestoreUpdates["locationLat"] = location.latitude().toString()
                     firestoreUpdates["locationLng"] = location.longitude().toString()
                 }
-                if (!address.isNullOrBlank()) {
-                    firestoreUpdates["address"] = address
-                }
-                if (!instagramId.isNullOrBlank()) {
-                    firestoreUpdates["instagramId"] = instagramId
-                }
-                if (!facebookId.isNullOrBlank()) {
-                    firestoreUpdates["facebookId"] = facebookId
-                }
-                if (montirPresisiUser.role == UserRole.PARTNER) {
+                if (!address.isNullOrBlank()) firestoreUpdates["address"] = address
+                if (!instagramId.isNullOrBlank()) firestoreUpdates["instagramId"] = instagramId
+                if (!facebookId.isNullOrBlank()) firestoreUpdates["facebookId"] = facebookId
+                if (!fullName.isNullOrBlank()) firestoreUpdates["displayName"] = fullName
+
+                if (existingUser.role == UserRole.PARTNER) {
                     firestoreUpdates["partnerCategories"] = _selectedCategories.value.toList()
                 }
-                // Always include the active status and display name in the Firestore document
                 firestoreUpdates["active"] = active
+
+                // =================================================================================
+                // 3. GENERATE SEARCH TOKENS
+                // We construct a temporary object representing the "Future State" of the user
+                // so UserUtils can calculate the correct tokens based on the NEW values.
+                // =================================================================================
+
+                val futureUser = existingUser.copy(
+                    displayName = if (!fullName.isNullOrBlank()) fullName else existingUser.displayName,
+                    phoneNumber = if (!whatsAppNumber.isNullOrBlank()) whatsAppNumber else existingUser.phoneNumber,
+                    instagramId = if (!instagramId.isNullOrBlank()) instagramId else existingUser.instagramId,
+                    facebookId = if (!facebookId.isNullOrBlank()) facebookId else existingUser.facebookId,
+                    userId = existingUser.userId
+                        ?: currentUser.uid // Ensure ID is present for token gen
+                )
+
+                // Run the logic
+                val userWithTokens = UserUtils.prepareUserForSave(futureUser)
+
+                // Extract ONLY the searchTokens and add to our update map
+                userWithTokens.searchTokens?.let {
+                    firestoreUpdates["searchTokens"] = it
+                }
+                // =================================================================================
+
+
+                // 4. Concurrent Updates (Auth + Firestore)
                 var authJob: Deferred<Unit>? = null
-                if (!fullName.isNullOrBlank()) {
-                    firestoreUpdates["displayName"] = fullName
-                    // 2. Create the two independent asynchronous tasks
+
+                // Only update Auth Profile if name actually changed
+                if (!fullName.isNullOrBlank() && fullName != existingUser.displayName) {
                     val profileUpdateRequest = UserProfileChangeRequest.Builder()
                         .setDisplayName(fullName)
                         .build()
-
-                    // Task for updating Firebase Auth profile (returns nothing)
-                    authJob = async { user.updateProfile(profileUpdateRequest).await() }
+                    authJob = async { currentUser.updateProfile(profileUpdateRequest).await() }
                 }
 
-                // Task for updating Firestore document (returns nothing)
                 val firestoreUpdateJob = async {
                     if (firestoreUpdates.isNotEmpty()) {
                         FirebaseFirestore.getInstance()
                             .collection(MontirPresisiUser.COLLECTION)
-                            .document(user.uid)
+                            .document(currentUser.uid)
                             .update(firestoreUpdates)
                             .await()
                     }
                 }
-                // 3. Wait for both concurrent tasks to complete
+
+                // Wait for completion
                 authJob?.await()
                 firestoreUpdateJob.await()
 
-                // 4. Update the local repository cache AFTER all network operations succeed
+                // 5. Update Local Cache
                 updateLocalUserCache(
                     fullName,
                     whatsAppNumber,
@@ -189,10 +211,11 @@ class ProfileViewModel @Inject constructor(
                     facebookId
                 )
 
-                _uiState.value = UiState.Success(userRepository.getRecordByUserId(user.uid)!!)
+                // Refresh UI State
+                _uiState.value =
+                    UiState.Success(userRepository.getRecordByUserId(currentUser.uid)!!)
+
             } catch (e: Exception) {
-                // Log the actual exception for debugging
-                // Log.e("ProfileViewModel", "Failed to update profile", e)
                 _errorEvent.emit(e)
                 _uiState.value = UiState.Error("Failed to update profile")
             }
