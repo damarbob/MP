@@ -31,8 +31,8 @@ class AdminVerificationViewModel @Inject constructor(
     companion object {
         private val TAG = AdminVerificationViewModel::class.simpleName
         private const val FB_ID_KEY = "facebookId"
-        private const val IG_ID_KEY = "facebookId"
-        private const val UISTATE_KEY = "facebookId"
+        private const val IG_ID_KEY = "instagramId"
+        private const val UISTATE_KEY = "uiState"
     }
     private val _errorEvent = MutableSharedFlow<Throwable>()
     val errorEvent: SharedFlow<Throwable> = _errorEvent.asSharedFlow()

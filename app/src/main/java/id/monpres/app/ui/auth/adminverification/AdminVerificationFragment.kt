@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.widget.doOnTextChanged
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -234,28 +234,13 @@ class AdminVerificationFragment : BaseFragment(R.layout.fragment_admin_verificat
     }
 
     private fun onFormTextChanged() {
-        binding.fragmentAdminVerificationInputLayoutFacebookId.editText?.doOnTextChanged { _, _, _, _ ->
+        binding.fragmentAdminVerificationInputLayoutFacebookId.editText?.doAfterTextChanged {
             isFacebookIdValid()
             isInstagramIdValid()
         }
-        binding.fragmentAdminVerificationInputLayoutInstagramId.editText?.doOnTextChanged { _, _, _, _ ->
+        binding.fragmentAdminVerificationInputLayoutInstagramId.editText?.doAfterTextChanged {
             isInstagramIdValid()
             isFacebookIdValid()
-        }
-    }
-
-    private fun setupForm() {
-        with(binding) {
-//            fragmentAdminVerificationInputLayoutFacebookId.editText?.setText(monpresUser?.facebookId)
-//            fragmentAdminVerificationInputLayoutInstagramId.editText?.setText(monpresUser?.instagramId)
-            if (isFormValid()) {
-                fragmentAdminVerificationInputLayoutFacebookId.error = null
-                fragmentAdminVerificationInputLayoutFacebookId.isErrorEnabled = false
-                fragmentAdminVerificationInputLayoutInstagramId.error = null
-                fragmentAdminVerificationInputLayoutInstagramId.isErrorEnabled = false
-            } else {
-                onFormTextChanged()
-            }
         }
     }
 
@@ -297,7 +282,6 @@ class AdminVerificationFragment : BaseFragment(R.layout.fragment_admin_verificat
 
     private fun showEditSocMed(show: Boolean) {
         if (show) {
-            setupForm()
             binding.fragmentAdminHomeLinearLayoutFormContent.visibility = View.VISIBLE
             binding.fragmentAdminHomeLinearLayoutVerificationContent.visibility = View.GONE
             viewModel.setUiState(AdminVerificationViewModel.AdminVerificationUiState.EDIT_FORM_UI)

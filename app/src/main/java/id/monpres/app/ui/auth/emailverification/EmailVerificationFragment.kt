@@ -24,7 +24,7 @@ class EmailVerificationFragment : Fragment(R.layout.fragment_email_verification)
         fun newInstance() = EmailVerificationFragment()
     }
 
-//    private val viewModel: EmailVerificationViewModel by viewModels()
+    //    private val viewModel: EmailVerificationViewModel by viewModels()
     private val authViewModel: AuthViewModel by activityViewModels()
     private val binding by viewBinding(FragmentEmailVerificationBinding::bind)
 
@@ -82,14 +82,18 @@ class EmailVerificationFragment : Fragment(R.layout.fragment_email_verification)
                 authViewModel.emailVerificationState.collect { state ->
                     when (state) {
                         is AuthViewModel.EmailVerificationState.Sending -> {
-                            binding.emailVerificationProgressIndicatorLoading.visibility = View.VISIBLE
+                            binding.emailVerificationProgressIndicatorLoading.visibility =
+                                View.VISIBLE
                         }
+
                         is AuthViewModel.EmailVerificationState.Sent -> {
                             binding.emailVerificationProgressIndicatorLoading.visibility = View.GONE
                         }
+
                         is AuthViewModel.EmailVerificationState.Error -> {
                             binding.emailVerificationProgressIndicatorLoading.visibility = View.GONE
                         }
+
                         else -> {
                             binding.emailVerificationProgressIndicatorLoading.visibility = View.GONE
                         }
@@ -101,12 +105,20 @@ class EmailVerificationFragment : Fragment(R.layout.fragment_email_verification)
     }
 
     private fun setupListeners() {
-        binding.fragmentEmailVerificationButtonResendEmail.setOnClickListener {
-            authViewModel.sendVerificationEmail()
-        }
+        with(binding) {
+            fragmentEmailVerificationButtonResendEmail.setOnClickListener {
+                authViewModel.sendVerificationEmail()
+            }
 
-        binding.fragmentEmailVerificationButtonLogout.setOnClickListener {
-            authViewModel.logout()
+            fragmentEmailVerificationButtonLogout.setOnClickListener {
+                authViewModel.logout()
+            }
+
+            fragmentEmailVerificationButtonCheck.setOnClickListener {
+                it.isEnabled = false
+                authViewModel.checkUser()
+                it.postDelayed({ it.isEnabled = true }, 3000)
+            }
         }
     }
 }

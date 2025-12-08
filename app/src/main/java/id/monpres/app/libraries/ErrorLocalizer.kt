@@ -46,6 +46,7 @@ object ErrorLocalizer {
     private fun mapFirebaseAuthException(context: Context, exception: FirebaseAuthException): String {
         return when (exception.errorCode) {
             "ERROR_INVALID_EMAIL" -> context.getString(R.string.error_invalid_email)
+            "ERROR_INVALID_CREDENTIAL" -> context.getString(R.string.error_invalid_credential)
             "ERROR_WRONG_PASSWORD" -> context.getString(R.string.error_wrong_password)
             "ERROR_USER_NOT_FOUND" -> context.getString(R.string.error_user_not_found)
             "ERROR_USER_DISABLED" -> context.getString(R.string.error_user_disabled)

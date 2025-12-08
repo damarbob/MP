@@ -370,4 +370,9 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
         loginJob?.cancel()
         super.onDestroy()
     }
+
+    override fun onRestart() {
+        super.onRestart()
+        viewModel.checkUser()
+    }
 }

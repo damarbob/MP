@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -166,6 +167,7 @@ class AuthViewModel @Inject constructor(
     private fun setupAuthStateListener() {
         authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
+            Log.d(TAG, "User is signed in or auth state changed")
             if (user != null) {
                 // User is signed in - check email verification status
                 checkUserVerificationStatus(user)
@@ -189,9 +191,11 @@ class AuthViewModel @Inject constructor(
 
         user.reload().addOnCompleteListener { reloadTask ->
             if (reloadTask.isSuccessful) {
+                Log.d(TAG, "User reload successful")
                 val updatedUser = auth.currentUser // Get fresh user data after reload
                 if (updatedUser != null) {
                     if (updatedUser.isEmailVerified) {
+                        Log.d(TAG, "User email is verified")
                         checkAdminVerification()
                         // Clear countdown when verified
                         viewModelScope.launch {
@@ -204,8 +208,10 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             } else {
+                Log.w(TAG, "User reload failed", reloadTask.exception)
                 // Reload failed, use current user data
                 if (user.isEmailVerified) {
+                    Log.d(TAG, "User email is verified")
                     checkAdminVerification()
                 } else {
                     adminVerificationJob?.cancel()
@@ -214,6 +220,10 @@ class AuthViewModel @Inject constructor(
                 Log.e(TAG, "Failed to reload user: ${reloadTask.exception}")
             }
         }
+    }
+
+    fun checkUser() {
+        auth.currentUser?.let { checkUserVerificationStatus(it) }
     }
 
     private fun checkAdminVerification() {
@@ -275,6 +285,7 @@ class AuthViewModel @Inject constructor(
                     checkCurrentUser()
                     // AuthStateListener will automatically handle the state update
                 } else {
+                    Log.w(TAG, "Login failed: ${task.exception?.message}: ${(task.exception as FirebaseAuthException).errorCode}")
                     val errorMessage = task.exception?.message ?: "Login failed"
                     _loginState.value = LoginState.Error(errorMessage)
                     _authState.value = AuthState.Error(task.exception ?: Exception(errorMessage))
@@ -291,7 +302,8 @@ class AuthViewModel @Inject constructor(
                 if (!createTask.isSuccessful) {
                     val errorMessage = createTask.exception?.message ?: "Registration failed"
                     _registerState.value = RegisterState.Error(errorMessage)
-                    _authState.value = AuthState.Error(createTask.exception ?: Exception(errorMessage))
+                    _authState.value =
+                        AuthState.Error(createTask.exception ?: Exception(errorMessage))
                     _errorEvent.tryEmit(createTask.exception ?: Exception(errorMessage))
                     return@addOnCompleteListener
                 }

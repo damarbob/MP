@@ -387,6 +387,9 @@
     <string name="all">Semua</string>
     <string name="pending">Tertunda</string>
     <string name="brand_name">Nama merek, dll.</string>
+    <string name="open">Terbuka</string>
 
     <string name="tap_on_the_map_to_select_a_location">Ketuk peta untuk memilih lokasi</string>
+    <string name="check">Cek</string>
+    <string name="error_invalid_credential">Autentikasi salah atau kadaluarsa</string>
 </resources>

@@ -394,6 +394,9 @@
     <string name="all">All</string>
     <string name="pending">Pending</string>
     <string name="brand_name">Brand name</string>
+    <string name="open">Open</string>
 
     <string name="tap_on_the_map_to_select_a_location">Tap on the map to select a location</string>
+    <string name="check">Check</string>
+    <string name="error_invalid_credential">The supplied auth credential is incorrect, malformed or has expired</string>
 </resources>
