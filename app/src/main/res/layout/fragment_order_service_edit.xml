@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
     tools:context=".ui.orderserviceedit.OrderServiceEditFragment">
 
     <androidx.core.widget.NestedScrollView
@@ -14,40 +13,53 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
+            android:id="@+id/fragmentOrderServiceEditLinearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:divider="@drawable/divider_gap_8"
             android:orientation="vertical"
-            android:paddingBottom="100dp">
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="200dp"
+            android:showDividers="middle">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/fragmentOrderServiceEditTextInputLayoutStatus"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Material3.CardView.Filled"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
-                android:hint="@string/order_status">
+                android:layout_height="wrap_content">
 
-                <AutoCompleteTextView
-                    android:id="@+id/fragmentOrderServiceEditAutoCompleteTextViewStatus"
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/order_status"
-                    android:inputType="none" />
+                    android:padding="16dp">
 
-            </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/fragmentOrderServiceEditTextInputLayoutStatus"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/order_status">
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="16dp" />
+                        <AutoCompleteTextView
+                            android:id="@+id/fragmentOrderServiceEditAutoCompleteTextViewStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/order_status"
+                            android:inputType="none" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </FrameLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <Space style="@style/Widget.App.Space" />
 
             <TextView
                 android:id="@+id/fragmentOrderServiceEditTextViewLocationTitle"
-                style="@style/TextAppearance.Material3.TitleMedium"
+                style="@style/Widget.App.H4.Bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
                 android:text="@string/location" />
 
             <TextView
@@ -55,8 +67,6 @@
                 style="@style/TextAppearance.Material3.BodySmall"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
-                android:paddingBottom="8dp"
                 android:text="- , -"
                 android:textColor="?attr/colorOutline" />
 
@@ -64,7 +74,6 @@
                 android:id="@+id/fragmentOrderServiceEditFrameLayoutMapContainer"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
-                android:layout_marginHorizontal="16dp"
                 android:clipToOutline="true">
 
                 <com.mapbox.maps.MapView
@@ -94,8 +103,6 @@
                 android:id="@+id/fragmentOrderServiceEditTextInputLayoutAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="8dp"
                 android:hint="@string/address">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -105,17 +112,13 @@
                     android:inputType="textMultiLine" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="16dp" />
+            <Space style="@style/Widget.App.Space" />
 
             <TextView
                 android:id="@+id/fragmentOrderServiceEditTextViewIssueTitle"
-                style="@style/TextAppearance.Material3.TitleMedium"
+                style="@style/Widget.App.H4.Bold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
                 android:text="@string/issue" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -123,8 +126,6 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="8dp"
                 android:hint="@string/select_the_issue">
 
                 <AutoCompleteTextView
@@ -138,8 +139,6 @@
                 android:id="@+id/fragmentOrderServiceEditTextInputLayoutDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="8dp"
                 android:hint="@string/description">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -151,21 +150,17 @@
                     android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="16dp" />
+            <Space style="@style/Widget.App.Space" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="16dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/fragmentOrderServiceEditTextViewOrderItemTitle"
-                    style="@style/TextAppearance.Material3.TitleMedium"
+                    style="@style/Widget.App.H4.Bold"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -185,7 +180,6 @@
                 style="@style/TextAppearance.Material3.BodyLarge"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
                 android:textAlignment="viewEnd"
                 android:textStyle="bold"
                 tools:text="Rp150.000" />
@@ -194,8 +188,6 @@
                 android:id="@+id/fragmentOrderServiceEditRecyclerViewOrderItemsSummary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:paddingHorizontal="16dp"
                 tools:itemCount="2"
                 tools:listitem="@layout/item_order_item" />
 

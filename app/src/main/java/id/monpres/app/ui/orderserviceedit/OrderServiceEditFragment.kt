@@ -43,13 +43,14 @@ import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.utils.dpToPx
+import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_edit) {
 
     companion object {
-        private const val TAG = "OrderServiceEditFragment"
+        private val TAG = OrderServiceEditFragment::class.simpleName
     }
 
     private val binding by viewBinding(FragmentOrderServiceEditBinding::bind)
@@ -130,7 +131,9 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
             // Dropdown Interaction Fixes
             setOnClickListener {
                 if (adapter != null) {
-                    setAdapter(statusAdapter) // Reset filter
+                    setAdapter(statusAdapter)
+                    // Reset filter to show the full list
+                    (adapter as ArrayAdapter<*>).filter.filter(null)
                     showDropDown()
                 }
             }
@@ -179,6 +182,8 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
             setOnClickListener {
                 if (adapter != null) {
                     setAdapter(categoryAdapter)
+                    // Reset filter to show the full list
+                    (adapter as ArrayAdapter<*>).filter.filter(null)
                     showDropDown()
                 }
             }
@@ -229,7 +234,11 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
             binding.fragmentOrderServiceEditAutoCompleteTextViewIssueCategory.text.toString()
         val description =
             binding.fragmentOrderServiceEditTextInputLayoutDescription.editText?.text.toString()
-        viewModel.updateDetails(address, category, description)
+        viewModel.updateDetails(
+            address,
+            PartnerCategory.fromLabel(requireContext(), category)?.name ?: "",
+            description
+        )
     }
 
     private fun setupMapDisplayOnly() {
@@ -315,10 +324,15 @@ class OrderServiceEditFragment : BaseFragment(R.layout.fragment_order_service_ed
         val currentCategory =
             binding.fragmentOrderServiceEditAutoCompleteTextViewIssueCategory.text.toString()
         if (currentCategory != order.issue) {
-            binding.fragmentOrderServiceEditAutoCompleteTextViewIssueCategory.setText(
-                getString(PartnerCategory.fromName(order.issue!!)?.label!!),
-                false
-            )
+
+            enumByNameIgnoreCaseOrNull<PartnerCategory>(order.issue!!)?.label.let {
+                it?.let { resId ->
+                    binding.fragmentOrderServiceEditAutoCompleteTextViewIssueCategory.setText(
+                        getString(resId),
+                        false
+                    )
+                }
+            }
         }
 
         // Map Logic
