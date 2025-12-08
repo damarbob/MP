@@ -34,8 +34,9 @@ class GetNewUsersUseCase @Inject constructor(
             // but if needed, we apply the same logic.
             val endQuery = searchQuery + "\uf8ff"
             query = query
-                .whereGreaterThanOrEqualTo("userId", searchQuery)
-                .whereLessThanOrEqualTo("userId", endQuery)
+                .whereArrayContains("searchTokens", searchQuery)
+//                .whereGreaterThanOrEqualTo("userId", searchQuery)
+//                .whereLessThanOrEqualTo("userId", endQuery)
                 .orderBy("userId")
         } else {
             // FILTER MODE
