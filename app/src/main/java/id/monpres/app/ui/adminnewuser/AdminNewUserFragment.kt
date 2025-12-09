@@ -32,7 +32,7 @@ import java.util.Locale
 class AdminNewUserFragment : DialogFragment() {
 
     companion object {
-        private const val ARG_USER = "user" // Key must match SavedStateHandle
+        private const val ARG_USER = "user" // Key must match SavedStateHandle in the viewModel
         val TAG = AdminNewUserFragment::class.simpleName
 
         fun newInstance(user: MontirPresisiUser): AdminNewUserFragment {
@@ -139,14 +139,33 @@ class AdminNewUserFragment : DialogFragment() {
                 launch {
                     viewModel.eventFlow.collect { event ->
                         when (event) {
-                            is AdminNewUserEvent.ActionSuccess -> {
-                                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                                dismiss() // Close the dialog on success
-                            }
-
-                            is AdminNewUserEvent.ShowToast -> {
+                            is AdminNewUserEvent.Error -> {
                                 Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                             }
+
+                            is AdminNewUserEvent.ActionRejected -> Toast.makeText(
+                                context,
+                                R.string.user_rejected,
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                            is AdminNewUserEvent.ActionVerified -> Toast.makeText(
+                                context,
+                                getString(R.string.user_verified), Toast.LENGTH_LONG
+                            ).show()
+
+                            is AdminNewUserEvent.ActionOther -> {
+                                // No specific action, but the user is updated
+                                Toast.makeText(
+                                    context,
+                                    getString(R.string.user_updated), Toast.LENGTH_LONG
+                                ).show()
+                            }
+
+                            is AdminNewUserEvent.ActionFailed -> Toast.makeText(
+                                context,
+                                getString(R.string.failed_to_update_user), Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
                 }
@@ -202,7 +221,8 @@ class AdminNewUserFragment : DialogFragment() {
             // --- BINDING THE ROLE ---
             // 1. Get the current role name. Assumes user.role is of type UserRole enum.
             // If user.role is null, default to CUSTOMER or handle accordingly.
-            val currentRoleName = user.role?.name ?: UserRole.CUSTOMER.name
+            val currentRoleName = user.role?.asString(requireContext())
+                ?: UserRole.CUSTOMER.asString(requireContext())
 
             // 2. Set the text ONLY if it's different to avoid resetting cursor/adapter state loop
             // setText(text, filter) -> set filter to false to prevent showing the list immediately
@@ -255,7 +275,7 @@ class AdminNewUserFragment : DialogFragment() {
 
     private fun setupRoleDropdown() {
         // Get list of role names (CUSTOMER, PARTNER, ADMIN)
-        val roles = UserRole.entries.map { it.name }
+        val roles = UserRole.toListString(requireContext())
 
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, roles)
         binding.fragmentAdminNewUserAutoCompleteTextViewUserRole.setAdapter(adapter)
@@ -263,7 +283,9 @@ class AdminNewUserFragment : DialogFragment() {
         // Listen for user selection
         binding.fragmentAdminNewUserAutoCompleteTextViewUserRole.setOnItemClickListener { _, _, position, _ ->
             val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
-            viewModel.onRoleSelected(selectedRole)
+            val selectedUserRole =
+                UserRole.fromLabel(requireContext(), selectedRole) ?: return@setOnItemClickListener
+            viewModel.onRoleSelected(selectedUserRole.name)
         }
     }
 

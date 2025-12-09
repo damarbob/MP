@@ -39,7 +39,7 @@ class AdminNewUserViewModel @Inject constructor(
     init {
         // Retrieve the user from the SavedStateHandle.
         // The key "user" MUST match the key you used in ARG_USER and newInstance.
-        val userFromArgs: MontirPresisiUser? = savedStateHandle.get("user")
+        val userFromArgs: MontirPresisiUser? = savedStateHandle["user"]
         if (userFromArgs != null) {
             _user.value = userFromArgs
         } else {
@@ -92,10 +92,16 @@ class AdminNewUserViewModel @Inject constructor(
             viewModelScope.launch {
                 result.onSuccess {
                     // Send the success event
-                    _eventFlow.emit(AdminNewUserEvent.ActionSuccess(successMessage))
+                    val event =
+                        when (newStatus) {
+                            UserVerificationStatus.VERIFIED -> AdminNewUserEvent.ActionVerified
+                            UserVerificationStatus.REJECTED -> AdminNewUserEvent.ActionRejected
+                            else -> AdminNewUserEvent.ActionOther
+                        }
+                    _eventFlow.emit(event)
                 }.onFailure { exception ->
                     // Send the toast event
-                    _eventFlow.emit(AdminNewUserEvent.ShowToast(exception.message ?: "Update failed"))
+                    _eventFlow.emit(AdminNewUserEvent.ActionFailed)
                 }
             }
         }
@@ -121,7 +127,7 @@ class AdminNewUserViewModel @Inject constructor(
 
     private fun reportError(message: String) {
         viewModelScope.launch {
-            _eventFlow.emit(AdminNewUserEvent.ShowToast(message))
+            _eventFlow.emit(AdminNewUserEvent.Error(message))
         }
     }
 }
