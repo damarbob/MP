@@ -115,21 +115,49 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             if (allGranted) {
                 // All permissions granted
                 Log.d(TAG, "All permissions granted")
+                startOrderServiceLocationTracker()
             } else {
+                when {
+                    permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                        startOrderServiceLocationTracker()
+                    }
+
+                    permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                        if (viewModel.getCurrentUser()?.role == UserRole.PARTNER) {
+                            checkPermissions(getLocationAccessPermissions().toList())
+                        } else startOrderServiceLocationTracker()
+
+                    }
+                }
+
                 // At least one permission was denied.
                 permissions.entries.forEach { (permission, isGranted) ->
-                    if (!isGranted) {
-                        if (!shouldShowRequestPermissionRationale(permission)) {
-                            // This is the "Don't ask again" case
-                            showPermissionSettingsDialog(permission)
-                        } else {
-                            // User denied, but we can ask again.
-                            // You might show a softer rationale here.
+                    if (permission != Manifest.permission.ACCESS_FINE_LOCATION) {
+                        if (!isGranted) {
+                            if (!shouldShowRequestPermissionRationale(permission)) {
+                                // This is the "Don't ask again" case
+                                showPermissionSettingsDialog(permission)
+                            } else {
+                                // User denied, but we can ask again.
+                                // You might show a softer rationale here.
+                                showPermissionRationale(permission)
+                            }
                         }
                     }
                 }
             }
         }
+
+    private fun startOrderServiceLocationTracker() {
+        val user = viewModel.getCurrentUser()
+        when (user?.role) {
+            UserRole.CUSTOMER, UserRole.PARTNER -> {
+                mainGraphViewModel.manageLocationServiceLifecycle()
+            }
+
+            else -> {}
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -142,8 +170,20 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
         setupWindowInsets()
 
         /* Permission */
+        val permissions = mutableListOf<String>()
         if (!hasPostNotificationPermission()) {
-            checkPermissions(getNotificationPermissions().toList())
+            permissions.addAll(getNotificationPermissions())
+//            checkPermissions(getNotificationPermissions().toList())
+        }
+
+        if (!hasLocationAccessPermission()) {
+            permissions.addAll(getLocationAccessPermissions())
+        } else {
+            startOrderServiceLocationTracker()
+        }
+
+        if (permissions.isNotEmpty()) {
+            checkPermissions(permissions.toList())
         }
 
         /* UI */
@@ -682,17 +722,42 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
         return permissions.toTypedArray()
     }
 
-    private fun showPermissionSettingsDialog(permission: String) {
-        val permissionName = extractPermissionName(permission)
+    private fun getLocationAccessPermissions(): Array<String> =
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+    private fun showPermissionRationale(permission: String) {
+        val name = extractPermissionName(permission)
+        val message = extractPermissionMessage(permission)
         MaterialAlertDialogBuilder(this)
-            .setTitle(getString(R.string.x_permission_is_not_granted, permissionName))
-            .setMessage(getString(R.string.this_permission_is_disabled))
-            .setPositiveButton(getString(R.string.go_to_settings)) { _, _ ->
-                openAppSettings()
+            .setTitle(getString(R.string.x_permission_required, name))
+            .setMessage(message)
+            .setPositiveButton(getString(R.string.okay)) { _, _ ->
+                checkPermissions(if (getLocationAccessPermissions().contains(permission)) getLocationAccessPermissions().toList() else listOf(permission))
             }
-            .setNegativeButton(resources.getString(R.string.cancel), null)
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+                showPermissionSettingsDialog(permission)
+            }
             .create()
             .show()
+    }
+
+    private fun showPermissionSettingsDialog(permission: String) {
+        if (!shouldShowRequestPermissionRationale(permission)) {
+            val permissionName = extractPermissionName(permission)
+            MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.x_permission_is_not_granted, permissionName))
+                .setMessage(getString(R.string.this_permission_is_disabled))
+                .setPositiveButton(getString(R.string.go_to_settings)) { _, _ ->
+                    openAppSettings()
+                }
+                .setNegativeButton(resources.getString(R.string.cancel), null)
+                .create()
+                .show()
+        }
     }
 
     private fun extractPermissionName(permission: String): String {
@@ -702,8 +767,26 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 R.string.gallery
             )
 
+            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION -> getString(
+                R.string.location
+            )
+
             Manifest.permission.POST_NOTIFICATIONS -> getString(R.string.notification)
             else -> ""
+        }
+    }
+
+    private fun extractPermissionMessage(permission: String): String {
+        return when (permission) {
+//            Manifest.permission.CAMERA -> getString(R.string.camera)
+//            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED, Manifest.permission.READ_EXTERNAL_STORAGE -> getString(
+//                R.string.gallery
+//            )
+            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION -> getString(
+                R.string.grant_location_permission
+            )
+//            Manifest.permission.POST_NOTIFICATIONS -> getString(R.string.please_grant_permission)
+            else -> getString(R.string.please_grant_permission)
         }
     }
 
@@ -724,6 +807,16 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             true
         }
     }
+
+    private fun hasLocationAccessPermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)

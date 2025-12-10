@@ -6,6 +6,7 @@ dotlottieAndroid = "0.12.2"
 firebaseMessagingDirectboot = "25.0.1"
 glide = "4.16.0"
 googleid = "1.1.1"
+gson = "2.13.2"
 hiltAndroid = "2.57"
 leakcanaryAndroid = "2.14"
 libphonenumber = "9.0.17"
@@ -41,11 +42,15 @@ transitionKtx = "1.6.0"
 roomKtx = "2.7.2"
 roomRuntime = "2.7.2"
 roomCompiler = "2.7.2"
-googleDevtoolKsp = "2.2.0-2.0.2"
+googleDevtoolKsp = "2.3.3"
 firebaseMessaging = "25.0.0"
 firebaseMessagingKtx = "24.1.2"
 preference = "1.2.1"
 vbpd = "2.0.4"
+googleServices = "4.4.4"
+pagingCommon = "3.3.6"
+roomPaging = "2.8.4"
+pagingRuntimeKtx = "3.3.6"
 
 [libraries]
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
@@ -57,6 +62,7 @@ dotlottie-android = { module = "com.github.LottieFiles:dotlottie-android", versi
 firebase-messaging-directboot = { module = "com.google.firebase:firebase-messaging-directboot", version.ref = "firebaseMessagingDirectboot" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
@@ -97,6 +103,9 @@ skeletonlayout = { module = "com.faltenreich:skeletonlayout", version.ref = "ske
 slidetoact = { module = "com.ncorti:slidetoact", version.ref = "slidetoact" }
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 vbpd = { module = "dev.androidbroadcast.vbpd:vbpd", version.ref = "vbpd" }
+androidx-paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "pagingCommon" }
+androidx-room-paging = { group = "androidx.room", name = "room-paging", version.ref = "roomPaging" }
+androidx-paging-runtime-ktx = { group = "androidx.paging", name = "paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -104,3 +113,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 androidx-navigation-safeargs-kotlin = { id = "androidx.navigation.safeargs.kotlin", version.ref = "navigationSafeArgsGradlePlugin" }
 google-devtool-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDevtoolKsp" }
 google-dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

@@ -10,7 +10,7 @@ import id.monpres.app.enums.OrderStatus
  * user information, and search-related data.
  */
 interface IOrder {
-    var id: String?
+    var id: String
 
     // Order snapshot
     var type: String?

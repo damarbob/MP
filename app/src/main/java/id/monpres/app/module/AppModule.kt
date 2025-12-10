@@ -15,6 +15,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import id.monpres.app.dao.OrderServiceDao
 import id.monpres.app.dao.VehicleDao
 import id.monpres.app.database.AppDatabase
 import javax.inject.Singleton
@@ -53,6 +54,8 @@ object AppModule {
     /* DAOs */
     @Provides
     fun provideVehicleDao(db: AppDatabase): VehicleDao = db.vehicleDao()
+    @Provides
+    fun provideOrderServiceDao(db: AppDatabase): OrderServiceDao = db.orderServiceDao()
 
     /* Credential Manager */
     @Provides

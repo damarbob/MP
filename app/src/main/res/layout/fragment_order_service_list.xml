@@ -40,38 +40,50 @@
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/fragmentOrderServiceListChipGroupOrderStatus"
-                style="@style/Widget.Material3.ChipGroup"
+            <HorizontalScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:singleLine="true"
-                app:selectionRequired="true"
-                app:singleSelection="true">
+                android:layout_height="wrap_content">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/fragmentOrderServiceListChipOrderStatusOngoing"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/fragmentOrderServiceListChipGroupOrderStatus"
+                    style="@style/Widget.Material3.ChipGroup"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="@string/ongoing" />
+                    app:selectionRequired="true"
+                    app:singleLine="true"
+                    app:singleSelection="true">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/fragmentOrderServiceListChipOrderStatusCompleted"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/order_status_completed" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/fragmentOrderServiceListChipOrderStatusOpen"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/open" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/fragmentOrderServiceListChipOrderStatusCancelled"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/order_status_cancelled" />
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/fragmentOrderServiceListChipOrderStatusOngoing"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/ongoing" />
 
-            </com.google.android.material.chip.ChipGroup>
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/fragmentOrderServiceListChipOrderStatusCompleted"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/order_status_completed" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/fragmentOrderServiceListChipOrderStatusCancelled"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/order_status_cancelled" />
+
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
         </LinearLayout>
 
         <FrameLayout

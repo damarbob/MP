@@ -2,10 +2,19 @@ package id.monpres.app.repository
 
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.room.withTransaction
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import id.monpres.app.dao.OrderServiceRemoteMediator
+import id.monpres.app.database.AppDatabase
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.UserRole
@@ -14,12 +23,14 @@ import id.monpres.app.usecase.ObserveCollectionByFieldUseCase
 import id.monpres.app.usecase.ObserveCollectionByUserIdUseCase
 import id.monpres.app.usecase.ObserveCollectionUseCase
 import id.monpres.app.usecase.UpdateDataByIdUseCase
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,10 +48,130 @@ class OrderServiceRepository @Inject constructor(
     private val observeCollectionByUserIdUseCase: ObserveCollectionByUserIdUseCase,
     private val observeCollectionByFieldUseCase: ObserveCollectionByFieldUseCase,
     private val observeCollectionUseCase: ObserveCollectionUseCase,
-    private val updateDataByIdUseCase: UpdateDataByIdUseCase
+    private val updateDataByIdUseCase: UpdateDataByIdUseCase,
+    private val appDatabase: AppDatabase
 ) : Repository<OrderService>() {
     companion object {
         val TAG = OrderServiceRepository::class.simpleName
+    }
+
+    // This reference needs to be held to be removed later
+    private var realTimeListener: ListenerRegistration? = null
+
+    /**
+     * STARTS a real-time listener for changes. This should be called from the ViewModel's init block.
+     * It handles additions, modifications, and DELETIONS.
+     */
+    fun startRealTimeOrderUpdates(userId: String, userRole: UserRole) {
+        // Prevent multiple listeners
+        if (realTimeListener != null) return
+
+        var query: Query = firestore.collection(OrderService.COLLECTION)
+        query = when (userRole) {
+            UserRole.PARTNER -> query.whereEqualTo(OrderService.PARTNER_ID, userId)
+            UserRole.CUSTOMER -> query.whereEqualTo("userId", userId)
+            UserRole.ADMIN -> query
+        }
+
+        realTimeListener = query.addSnapshotListener { snapshots, error ->
+            if (error != null) {
+                Log.w(TAG, "Listen failed.", error)
+                return@addSnapshotListener
+            }
+
+            if (snapshots == null) return@addSnapshotListener
+
+            val source = if (snapshots.metadata.isFromCache) "CACHE" else "SERVER"
+            Log.d(TAG, "Data fetched from $source, size: ${snapshots.documentChanges.size}")
+
+            val ordersToUpdate = mutableListOf<OrderService>()
+            val ordersToDelete = mutableListOf<String>()
+
+            for (dc in snapshots.documentChanges) {
+                when (dc.type) {
+                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
+                        val order = dc.document.toObject(OrderService::class.java)
+                        ordersToUpdate.add(order)
+                        Log.d(TAG, "Real-time update: ADDED/MODIFIED ${order.id}")
+                    }
+
+                    DocumentChange.Type.REMOVED -> {
+                        ordersToDelete.add(dc.document.id)
+                        Log.d(TAG, "Real-time update: REMOVED ${dc.document.id}")
+                    }
+                }
+            }
+
+            // Perform DB operations in a background coroutine
+            CoroutineScope(Dispatchers.IO).launch {
+                appDatabase.withTransaction {
+                    if (ordersToUpdate.isNotEmpty()) {
+                        appDatabase.orderServiceDao().insertOrUpdate(ordersToUpdate)
+                    }
+                    if (ordersToDelete.isNotEmpty()) {
+                        appDatabase.orderServiceDao().deleteOrdersByIds(ordersToDelete)
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * STOPS the real-time listener. Call this from ViewModel's onCleared().
+     */
+    fun stopRealTimeOrderUpdates() {
+        realTimeListener?.remove()
+        realTimeListener = null
+    }
+
+    @OptIn(ExperimentalPagingApi::class)
+    fun getOrderServiceStream(
+        searchQuery: String,
+        statusFilter: List<String>?, // Now accepts String list
+        userRole: UserRole,
+        userId: String
+    ): Flow<PagingData<OrderService>> {
+
+        val pagingSourceFactory = {
+            appDatabase.orderServiceDao().getOrderServicesPaged(
+                searchQuery = searchQuery,
+                statusFilter = statusFilter ?: emptyList(), // Pass empty list if null
+                userId = userId,
+                userRole = userRole.name
+            )
+        }
+
+        return Pager(
+            config = PagingConfig(
+                pageSize = 8, // Your desired page size
+                enablePlaceholders = false
+            ),
+            remoteMediator = OrderServiceRemoteMediator(
+                firestore = firestore,
+                database = appDatabase,
+                userId = userId,
+                userRole = userRole,
+                statusFilterNames = statusFilter // Pass filters to mediator
+            ),
+            pagingSourceFactory = pagingSourceFactory
+        ).flow
+    }
+
+    /**
+     * NEW: Observes a limited list of recent orders directly from Room.
+     * For HomeFragment and PartnerHomeFragment.
+     */
+    fun observeRecentOrderServices(userId: String, userRole: UserRole): Flow<List<OrderService>> {
+        // The data comes directly from Room's DAO.
+        return appDatabase.orderServiceDao().getOrderServicesFlow(userId, userRole.name)
+    }
+
+    /**
+     * NEW: Observes a single order by its ID directly from Room.
+     * For ServiceProcessFragment.
+     */
+    fun observeOrderServiceById(orderId: String): Flow<OrderService?> {
+        return appDatabase.orderServiceDao().getOrderServiceByIdFlow(orderId)
     }
 
     /**
@@ -172,7 +303,6 @@ class OrderServiceRepository @Inject constructor(
             .flowOn(Dispatchers.IO)
 
     fun getOrderServiceById(id: String): OrderService? = getRecords().find { it.id == id }
-
 
 
     /**

@@ -64,7 +64,7 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     // --- Dynamic Color ---
     val isDynamicColorEnabled: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
-            preferences[PreferenceKeys.DYNAMIC_COLOR] ?: true // Default to true
+            preferences[PreferenceKeys.DYNAMIC_COLOR] ?: false // Default to false
         }
 
     suspend fun setDynamicColorEnabled(isEnabled: Boolean) {

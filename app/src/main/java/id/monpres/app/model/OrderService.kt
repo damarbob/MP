@@ -1,14 +1,19 @@
 package id.monpres.app.model
 
 import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.ServerTimestamp
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.interfaces.IOrder
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
+@Entity(tableName = "order_services")
 data class OrderService(
-    override var id: String? = null,
+    @PrimaryKey
+    override var id: String = "",
     override var userId: String? = null,
     override var type: String? = null,
     override var name: String? = null,
@@ -22,7 +27,9 @@ data class OrderService(
     override var userAddress: String? = null,
     override var searchTokens: List<String>? = null,
     override val paymentMethod: String? = null,
+    @ServerTimestamp
     override var createdAt: Timestamp? = null,
+    @ServerTimestamp
     override var updatedAt: Timestamp? = null,
 
     var partnerId: String? = null,
@@ -43,6 +50,8 @@ data class OrderService(
     var imageAttachmentUris: List<String>? = null,
 
     var orderItems: List<OrderItem>? = null,
+
+    var lastSynced: Long = System.currentTimeMillis()
 ) : IOrder, Parcelable {
     companion object {
         const val COLLECTION = "orderServices"

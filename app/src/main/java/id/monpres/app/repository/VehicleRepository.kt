@@ -208,6 +208,6 @@ class VehicleRepository @Inject constructor(
     }
 
     override fun onRecordCleared() {
-        TODO("Not yet implemented")
+
     }
 }

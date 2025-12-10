@@ -316,7 +316,7 @@ class HomeFragment : BaseFragment(R.layout.fragment_home) {
 
     fun setupOrderServiceObservers() {
         //1. Pass the master list of orders to the ViewModel whenever it changes.
-        observeUiState(mainGraphViewModel.userOrderServicesState, onEmpty = {
+        observeUiState(mainGraphViewModel.recentOrderServicesState, onEmpty = {
             binding.fragmentHomeButtonSeeAllHistory.visibility = View.GONE
             toggleOrderServiceEmptyState(true)
         }) { serviceOrders ->

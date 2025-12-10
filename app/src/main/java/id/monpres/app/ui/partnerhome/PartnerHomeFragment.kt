@@ -152,7 +152,7 @@ class PartnerHomeFragment : BaseFragment(R.layout.fragment_partner_home) {
 
     private fun setupObservers() {
         //1. Pass the master list of orders to the ViewModel whenever it changes.
-        observeUiState(mainGraphViewModel.partnerOrderServicesState) { serviceOrders ->
+        observeUiState(mainGraphViewModel.recentOrderServicesState) { serviceOrders ->
             viewModel.setAllOrderServices(serviceOrders)
             binding.fragmentPartnerHomeButtonSeeAllOrderService.visibility =
                 if (serviceOrders.isEmpty()) View.GONE else View.VISIBLE

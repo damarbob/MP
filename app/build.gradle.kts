@@ -5,7 +5,8 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("com.google.gms.google-services")
+    alias(libs.plugins.google.gms.google.services)
+//    id("com.google.gms.google-services")
     id("kotlin-parcelize")
     alias(libs.plugins.androidx.navigation.safeargs.kotlin)
     alias(libs.plugins.google.devtool.ksp)
@@ -119,6 +120,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.preference)
+    implementation(libs.androidx.paging.common)
+    implementation(libs.androidx.room.paging)
+    implementation(libs.gson)
+    implementation(libs.androidx.paging.runtime.ktx)
     ksp(libs.androidx.room.compiler)
 
     // Hilt (DI)

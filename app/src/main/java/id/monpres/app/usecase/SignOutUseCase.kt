@@ -9,8 +9,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.qualifiers.ApplicationContext
 import id.monpres.app.SessionManager
+import id.monpres.app.database.AppDatabase
 import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserRepository
+import id.monpres.app.repository.VehicleRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -25,6 +27,8 @@ class SignOutUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val orderServiceRepository: OrderServiceRepository,
     private val sessionManager: SessionManager,
+    private val appDatabase: AppDatabase,
+    private val vehicleRepository: VehicleRepository,
     private val application: Application,
     @param:ApplicationContext private val context: Context
 ) {
@@ -48,6 +52,9 @@ class SignOutUseCase @Inject constructor(
             // Clear the local record
             userRepository.clearRecord()
             orderServiceRepository.clearRecord()
+            orderServiceRepository.stopRealTimeOrderUpdates()
+            vehicleRepository.clearRecord()
+            appDatabase.clearAllTables()
 
             additionalAction()
             // Firebase sign-out

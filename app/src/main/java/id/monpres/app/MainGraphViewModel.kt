@@ -61,27 +61,6 @@ class MainGraphViewModel @Inject constructor(
     }
 
     // --- UI States ---
-
-    private val _userOrderServicesState =
-        MutableStateFlow<UiState<List<OrderService>>>(Loading)
-    val userOrderServicesState: StateFlow<UiState<List<OrderService>>> =
-        _userOrderServicesState.asStateFlow()
-
-    private val _partnerOrderServicesState =
-        MutableStateFlow<UiState<List<OrderService>>>(Loading)
-    val partnerOrderServicesState: StateFlow<UiState<List<OrderService>>> =
-        _partnerOrderServicesState.asStateFlow()
-
-    // New State for ALL orders (e.g. for Admin or Public feed)
-    private val _allOrderServicesState =
-        MutableStateFlow<UiState<List<OrderService>>>(Loading)
-    val allOrderServicesState: StateFlow<UiState<List<OrderService>>> =
-        _allOrderServicesState.asStateFlow()
-
-    private val _openedOrderServiceState = MutableStateFlow<UiState<OrderService>>(Loading)
-    val openedOrderServiceState: StateFlow<UiState<OrderService>> =
-        _openedOrderServiceState.asStateFlow()
-
     private val _userVehiclesState = MutableStateFlow<UiState<List<Vehicle>>>(Loading)
     val userVehiclesState: StateFlow<UiState<List<Vehicle>>> = _userVehiclesState.asStateFlow()
 
@@ -91,15 +70,25 @@ class MainGraphViewModel @Inject constructor(
     private val _currentUser: MutableStateFlow<MontirPresisiUser?> = MutableStateFlow(null)
     val currentUser: StateFlow<MontirPresisiUser?> = _currentUser.asStateFlow()
 
+    // A single StateFlow for recent orders, adaptable to the user's role.
+    private val _recentOrderServicesState =
+        MutableStateFlow<UiState<List<OrderService>>>(Loading)
+    val recentOrderServicesState: StateFlow<UiState<List<OrderService>>> =
+        _recentOrderServicesState.asStateFlow()
+
+    // A flow for a single opened order, for ServiceProcessFragment
+    private val _openedOrderServiceState = MutableStateFlow<UiState<OrderService>>(Loading)
+    val openedOrderServiceState: StateFlow<UiState<OrderService>> =
+        _openedOrderServiceState.asStateFlow()
+
     // Event channel for one-time error messages
     private val _errorEvent = MutableSharedFlow<Throwable>()
     val errorEvent: SharedFlow<Throwable> = _errorEvent.asSharedFlow()
 
-    // --- Job Management (To prevent duplicate collectors) ---
-    private var userOrdersJob: Job? = null
-    private var partnerOrdersJob: Job? = null
-    private var allOrdersJob: Job? = null // Job for the new observer
+    // --- Jobs ---
+    private var dataObserverJob: Job? = null
     private var openedOrderJob: Job? = null
+
     private var vehiclesJob: Job? = null
 
     init {
@@ -109,17 +98,12 @@ class MainGraphViewModel @Inject constructor(
                 when (status.state) {
                     ConnectionState.Connected -> {
                         if (auth.currentUser != null && _currentUser.value?.id != auth.currentUser?.uid) {
-                            try {
-                                _currentUser.value = withTimeout(TimeUnit.SECONDS.toMillis(10)) {
-                                    userRepository.userRecord.filterNotNull().first()
-                                }
-                                currentUser.value?.let { observeDataByRole(it) }
-
-                                manageLocationServiceLifecycle()
-                            } catch (e: Exception) {
-                                changeStates()
-                                _errorEvent.emit(e)
-                            }
+                            observeData()
+                        }
+                        else if (auth.currentUser == null) {
+                            dataObserverJob?.cancel()
+                            _currentUser.value = null
+                            changeStates()
                         }
                     }
 
@@ -131,152 +115,83 @@ class MainGraphViewModel @Inject constructor(
         }
     }
 
-    private fun changeStates() {
-        _userOrderServicesState.value =
-            if (_userOrderServicesState.value == Loading) Empty else _userOrderServicesState.value
-        _userVehiclesState.value =
-            if (_userVehiclesState.value == Loading) Empty else _userVehiclesState.value
-        _partnerOrderServicesState.value =
-            if (_partnerOrderServicesState.value == Loading) Empty else _partnerOrderServicesState.value
-        _openedOrderServiceState.value =
-            if (_openedOrderServiceState.value == Loading) Empty else _openedOrderServiceState.value
-        // Reset all orders state if connection is lost while loading
-        _allOrderServicesState.value =
-            if (_allOrderServicesState.value == Loading) Empty else _allOrderServicesState.value
-    }
+    private fun observeData() {
+        dataObserverJob?.cancel()
+        dataObserverJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _currentUser.value = withTimeout(TimeUnit.SECONDS.toMillis(10)) {
+                    userRepository.userRecord.filterNotNull().first()
+                }
+                currentUser.value?.let {
+                    Log.d(TAG, "User: $it")
 
-    fun observeDataByRole(user: MontirPresisiUser) {
-        Log.d(TAG, "current role: ${user.role}")
-        when (user.role) {
-            UserRole.PARTNER -> {
-                observePartnerOrderServices()
+                    orderServiceRepository.startRealTimeOrderUpdates(
+                        it.id!!,
+                        it.role ?: UserRole.CUSTOMER
+                    )
+
+                    if (it.role == UserRole.CUSTOMER) observeUserVehicles()
+
+                    // Now, observe the LOCAL DATABASE for changes.
+                    orderServiceRepository.observeRecentOrderServices(
+                        it.id,
+                        it.role ?: UserRole.CUSTOMER
+                    )
+                        .onStart {
+                            _recentOrderServicesState.value = Loading
+                        }
+                        .catch { e ->
+                            _recentOrderServicesState.value =
+                                Error(e.message ?: "")
+                        }
+                        .collect { orders ->
+                            _recentOrderServicesState.value =
+                                if (orders.isEmpty()) Empty else Success(
+                                    orders
+                                )
+                        }
+                }
+
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    Log.e(TAG, "Error fetching user or observing data", e)
+                    _recentOrderServicesState.value = Error(e.message ?: "")
+                }
+                changeStates()
+                _errorEvent.emit(e)
             }
-
-            UserRole.ADMIN -> {
-                observeAllOrderServices()
-            }
-
-            else -> {
-                observeUserOrderServices()
-                observeUserVehicles()
-            }
-        }
-        // If you have an ADMIN role or want to trigger this for everyone, call observeAllOrderServices() here.
-    }
-
-    private fun observeUserOrderServices() {
-        userOrdersJob?.cancel()
-
-        userOrdersJob = viewModelScope.launch(Dispatchers.Default) {
-            orderServiceRepository.observeOrderServicesByUserId()
-                .takeUntilSignal(sessionManager.externalSignOutSignal)
-                .onStart { _userOrderServicesState.value = Loading }
-                .catch { e ->
-                    if (e is CancellationException) {
-                        Log.i(TAG, "User orders observation was cancelled.")
-                        throw e
-                    }
-                    Log.e(TAG, "Error observing user orders", e)
-                    _errorEvent.emit(e)
-                    _userOrderServicesState.value = Empty
-                }
-                .collect { orders ->
-                    _userOrderServicesState.value =
-                        if (orders.isEmpty()) Empty else Success(orders)
-                }
-        }
-    }
-
-    private fun observePartnerOrderServices() {
-        partnerOrdersJob?.cancel()
-
-        partnerOrdersJob = viewModelScope.launch(Dispatchers.Default) {
-            orderServiceRepository.observeOrderServicesByPartnerId()
-                .takeUntilSignal(sessionManager.externalSignOutSignal)
-                .onStart { _partnerOrderServicesState.value = Loading }
-                .catch { e ->
-                    if (e is CancellationException) {
-                        Log.i(TAG, "Partner orders observation was cancelled.")
-                        throw e
-                    }
-                    Log.e(TAG, "Error observing partner orders", e)
-                    _errorEvent.emit(e)
-                    _partnerOrderServicesState.value = Empty
-                }
-                .collect { orders ->
-                    _partnerOrderServicesState.value =
-                        if (orders.isEmpty()) Empty else Success(orders)
-                }
         }
     }
 
     /**
-     * Observes ALL order services (unfiltered).
-     * Use this for Admin panels or public feeds.
+     * Observes a single order from the local database.
+     * For use by ServiceProcessFragment.
      */
-    fun observeAllOrderServices() {
-        allOrdersJob?.cancel()
-
-        allOrdersJob = viewModelScope.launch(Dispatchers.Default) {
-            orderServiceRepository.observeOrderServices()
-                .takeUntilSignal(sessionManager.externalSignOutSignal)
-                .onStart { _allOrderServicesState.value = Loading }
-                .catch { e ->
-                    if (e is CancellationException) {
-                        Log.i(TAG, "All orders observation was cancelled.")
-                        throw e
-                    }
-                    Log.e(TAG, "Error observing all orders", e)
-                    _errorEvent.emit(e)
-                    _allOrderServicesState.value = Empty
-                }
-                .collect { orders ->
-                    _allOrderServicesState.value =
-                        if (orders.isEmpty()) Empty else Success(orders)
-                }
-        }
-    }
-
     fun observeOrderServiceById(orderId: String) {
         openedOrderJob?.cancel()
-
-        val role = userRepository.getCurrentUserRecord()?.role
-        // We prioritized role-based lists, but you could fall back to allOrderServicesState if needed
-        val masterListFlow = when (role) {
-            UserRole.CUSTOMER -> userOrderServicesState
-            UserRole.PARTNER -> partnerOrderServicesState
-            UserRole.ADMIN -> allOrderServicesState
-            else -> null
-        }
-
-        if (masterListFlow == null) {
-            _openedOrderServiceState.value = Empty
-            return
-        }
-
-        openedOrderJob = viewModelScope.launch(Dispatchers.Default) {
-            masterListFlow.collect { listState ->
-                when (listState) {
-                    is Loading -> _openedOrderServiceState.value = Loading
-                    is Empty -> _openedOrderServiceState.value = Empty
-                    is Success -> {
-                        val orderService = listState.data.find { it.id == orderId }
-                        if (orderService != null) {
-                            _openedOrderServiceState.value = Success(orderService)
-                        } else {
-                            _openedOrderServiceState.value = Empty
-                        }
+        openedOrderJob = viewModelScope.launch(Dispatchers.IO) {
+            orderServiceRepository.observeOrderServiceById(orderId)
+                .collect { order ->
+                    _openedOrderServiceState.value = when (order) {
+                        null -> Empty
+                        else -> Success(order)
                     }
-
-                    is Error -> {}
                 }
-            }
         }
     }
 
     fun stopObservingOpenedOrder() {
         openedOrderJob?.cancel()
         openedOrderJob = null
+    }
+
+    private fun changeStates() {
+        _userVehiclesState.value =
+            if (_userVehiclesState.value == Loading) Empty else _userVehiclesState.value
+        _recentOrderServicesState.value =
+            if (_recentOrderServicesState.value == Loading) Empty else _recentOrderServicesState.value
+        _openedOrderServiceState.value =
+            if (_openedOrderServiceState.value == Loading) Empty else _openedOrderServiceState.value
     }
 
     private fun observeUserVehicles() {
@@ -304,26 +219,23 @@ class MainGraphViewModel @Inject constructor(
         }
     }
 
-    private fun manageLocationServiceLifecycle() {
+    fun manageLocationServiceLifecycle() {
         viewModelScope.launch(Dispatchers.Default) {
-            currentUser.filterNotNull().first()
+            Log.d(TAG, "manageLocationServiceLifecycle")
+            val role = userRepository.userRecord.filterNotNull().first().role
 
-            val role = currentUser.value?.role
-            val orderFlow = when (role) {
-                UserRole.CUSTOMER -> userOrderServicesState
-                UserRole.PARTNER -> partnerOrderServicesState
-                else -> null
-            }
+            val orderFlow = recentOrderServicesState
 
             val trackedOrderIds = mutableSetOf<String>()
 
-            orderFlow?.collect { uiState ->
+            orderFlow.collect { uiState ->
                 if (uiState is Success) {
                     val allOrders = uiState.data
                     val onTheWayOrderIds = allOrders
                         .filter { it.status == OrderStatus.ON_THE_WAY }
-                        .mapNotNull { it.id }
+                        .map { it.id }
                         .toSet()
+                    Log.d(TAG, "onTheWayOrderIds: $onTheWayOrderIds")
 
                     val toStop = trackedOrderIds - onTheWayOrderIds
                     toStop.forEach { orderId ->
@@ -446,4 +358,10 @@ class MainGraphViewModel @Inject constructor(
     }
 
     fun getCurrentUser() = userRepository.getCurrentUserRecord()
+
+    override fun onCleared() {
+        super.onCleared()
+        // Stop the listener when the app is fully closed.
+        orderServiceRepository.stopRealTimeOrderUpdates()
+    }
 }
