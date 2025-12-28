@@ -103,7 +103,7 @@ class UserRepository @Inject constructor(
                 }
 //            .distinctUntilChanged()
                 .catch {
-                    Log.e(OrderServiceRepository.Companion.TAG, "Error observing user", it)
+                    Log.e(TAG, "Error observing user", it)
                 }
                 .flowOn(Dispatchers.IO) // Run the collection and mapping on an IO thread
         }

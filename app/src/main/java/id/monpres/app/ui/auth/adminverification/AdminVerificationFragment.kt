@@ -19,6 +19,7 @@ import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.AuthViewModel
+import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminVerificationBinding
 import id.monpres.app.libraries.ErrorLocalizer
@@ -158,7 +159,7 @@ class AdminVerificationFragment : BaseFragment(R.layout.fragment_admin_verificat
 
     private fun setupListeners() {
         binding.fragmentAdminVerificationButtonChatAdmin.setOnClickListener {
-            openWhatsAppUseCase(requireContext(), "62895346018055") // TODO: change to admin number
+            openWhatsAppUseCase(requireContext(), MainApplication.adminWANumber)
         }
 
         binding.fragmentAdminVerificationButtonLogout.setOnClickListener {

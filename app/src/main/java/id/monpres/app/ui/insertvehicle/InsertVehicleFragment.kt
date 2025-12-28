@@ -77,7 +77,6 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
         }
 
         vehicleTypes = VehicleType.getSampleList(requireContext())
-        setDropdownsOptions()
 
         setupListeners()
         setFormMarks()
@@ -230,8 +229,7 @@ class InsertVehicleFragment : BaseFragment(R.layout.fragment_insert_vehicle) {
                 fragmentInsertVehicleDropdownVehicleWheelDrive,
                 fragmentInsertVehicleDropdownVehiclePowerSource,
             ).forEach { autoCompleteTextView ->
-                autoCompleteTextView.onFocusChangeListener =
-                    View.OnFocusChangeListener { v, hasFocus ->
+                autoCompleteTextView.setOnFocusChangeListener { v, hasFocus ->
                         if (hasFocus) {
                             v.hideKeyboard()
                         }

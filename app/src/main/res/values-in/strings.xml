@@ -398,4 +398,12 @@
     <string name="user_verified">Pengguna terverifikasi</string>
     <string name="user_updated">Pengguna diperbarui</string>
     <string name="failed_to_update_user">Gagal memperbarui pengguna</string>
+
+    <string name="today">Hari ini</string>
+    <string name="tomorrow">Besok</string>
+    <string name="yesterday">Kemarin</string>
+    <string name="in_x_days">%d hari lagi</string>
+    <string name="x_days_ago">%d hari yang lalu</string>
+
+    <string name="help">Bantuan</string>
 </resources>

@@ -92,6 +92,7 @@ class AuthViewModel @Inject constructor(
     private var authStateListener: FirebaseAuth.AuthStateListener? = null
 
     private var adminVerificationJob: Job? = null
+    private var checkUserJob: Job? = null
 
     // Sealed classes for state management
     sealed class AuthState {
@@ -148,7 +149,8 @@ class AuthViewModel @Inject constructor(
      * Initial check for current user (for when ViewModel is created)
      */
     private fun checkCurrentUser() {
-        viewModelScope.launch {
+        checkUserJob?.cancel()
+        checkUserJob = viewModelScope.launch {
             userRepository.observeUserById()
                 .onCompletion {
                     Log.d(TAG, "User record collection completed")
@@ -230,6 +232,7 @@ class AuthViewModel @Inject constructor(
         adminVerificationJob = viewModelScope.launch {
             try {
                 val user = getOrCreateUserUseCase(UserRole.CUSTOMER).getOrThrow()
+                checkCurrentUser()
                 // Start collecting the admin verification status
                 getUserVerificationStatusUseCase().collectLatest { status ->
                     Log.d(TAG, "User verification status: $status, user: $user")
@@ -282,7 +285,6 @@ class AuthViewModel @Inject constructor(
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _loginState.value = LoginState.Success
-                    checkCurrentUser()
                     // AuthStateListener will automatically handle the state update
                 } else {
                     Log.w(TAG, "Login failed: ${task.exception?.message}: ${(task.exception as FirebaseAuthException).errorCode}")
@@ -326,7 +328,6 @@ class AuthViewModel @Inject constructor(
                         if (updateTask.isSuccessful) {
                             _registerState.value = RegisterState.Success
                             sendVerificationEmail() // Auto-send verification email after registration
-                            checkCurrentUser()
                             // AuthStateListener will handle the state update
                         } else {
                             val errorMessage =
@@ -419,7 +420,6 @@ class AuthViewModel @Inject constructor(
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    checkCurrentUser()
                     // AuthStateListener will handle the state update
                 } else {
                     val errorMessage = task.exception?.message ?: "Google sign-in failed"

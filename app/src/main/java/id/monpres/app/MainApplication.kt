@@ -26,6 +26,8 @@ class MainApplication : Application() {
         // Services
         var serviceTypes: List<ServiceType>? = null // TODO: Use repository
         var services: List<Service>? = null  // TODO: Use repository
+
+        const val adminWANumber = "6285166665655"
     }
 
     override fun onCreate() {

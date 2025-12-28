@@ -7,6 +7,7 @@ import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -150,7 +151,7 @@ class ProfileFragment : BaseFragment(R.layout.fragment_edit_profile) {
             binding.editProfileInputWhatsApp.setText(formattedWhatsApp) // Update the input field to show formatted number
 
             // Update profile
-            viewModel.updateProfile(
+            observeUiStateOneShot(viewModel.updateProfile(
                 fullName,
                 emailAddress,
                 formattedWhatsApp,
@@ -158,7 +159,10 @@ class ProfileFragment : BaseFragment(R.layout.fragment_edit_profile) {
                 address,
                 instagramId,
                 facebookId,
-            )
+            )) { _ ->
+                it.isEnabled = true
+                Toast.makeText(requireContext(), getString(R.string.user_updated), Toast.LENGTH_SHORT).show()
+            }
         }
         binding.editProfileButtonSelectPrimaryLocationButton.setOnClickListener {
             openMap()

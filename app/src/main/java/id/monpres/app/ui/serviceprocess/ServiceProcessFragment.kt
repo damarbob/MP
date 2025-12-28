@@ -106,6 +106,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.DateFormat
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 
@@ -464,8 +465,12 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         aerialDistanceToTargetInMeters = currentDistance
 
         // Update the UI components
-        binding.fragmentServiceProcessProgressIndicator.isIndeterminate = false
-        binding.fragmentServiceProcessProgressIndicator.progress = progress
+        if (orderService.status == OrderStatus.ON_THE_WAY) {
+            binding.fragmentServiceProcessProgressIndicator.isIndeterminate = false
+            binding.fragmentServiceProcessProgressIndicator.progress = progress
+        } else {
+            binding.fragmentServiceProcessProgressIndicator.isIndeterminate = true
+        }
 
         binding.fragmentServiceProcessTextViewCurrentDistance.text =
             getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance))
@@ -596,6 +601,45 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
 
             // Mapbox
             setupMap()
+
+            if (orderService.selectedDateMillis != null) {
+                fragmentServiceProcessLinearLayoutDayContainer.visibility = View.VISIBLE
+                // Convert the Double timestamp to a Long, then to a Calendar instance
+                val selectedTimeInMillis = orderService.selectedDateMillis!!.toLong()
+                val selectedCalendar = Calendar.getInstance().apply {
+                    timeInMillis = selectedTimeInMillis
+                }
+
+                // Get today's date at midnight for accurate comparison
+                val todayCalendar = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+
+                // Calculate the difference in days
+                val diffInMillis = selectedCalendar.timeInMillis - todayCalendar.timeInMillis
+                val diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMillis)
+
+                // Set the text based on the difference
+                fragmentServiceProcessTextViewDay.text = when (diffInDays) {
+                    0L -> getString(R.string.today)
+                    1L -> getString(R.string.tomorrow)
+                    -1L -> getString(R.string.yesterday)
+                    in 2..Long.MAX_VALUE -> getString(R.string.in_x_days, diffInDays)
+                    else -> {
+                        // For past days, show "X days ago"
+                        val daysAgo = -diffInDays
+                        getString(R.string.x_days_ago, daysAgo)
+                    }
+                }
+
+            } else {
+                // If the date is null, hide the container
+                fragmentServiceProcessLinearLayoutDayContainer.visibility = View.GONE
+            }
+
         }
     }
 

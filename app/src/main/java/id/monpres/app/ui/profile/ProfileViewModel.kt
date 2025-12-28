@@ -19,6 +19,7 @@ import id.monpres.app.state.UiState
 import id.monpres.app.utils.UserUtils
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -103,10 +105,10 @@ class ProfileViewModel @Inject constructor(
         address: String?,
         instagramId: String?,
         facebookId: String?,
-    ) {
-        viewModelScope.launch {
+    ): Flow<UiState<MontirPresisiUser>> = flow {
+
             try {
-                _uiState.value = UiState.Loading
+                emit(UiState.Loading)
 
                 val currentUser = auth.currentUser
                     ?: run {
@@ -117,7 +119,8 @@ class ProfileViewModel @Inject constructor(
                             )
                         )
                         _uiState.value = UiState.Error("User not authenticated")
-                        return@launch
+                        emit(UiState.Empty)
+                        return@flow
                     }
 
                 // 1. Get current data from Repository
@@ -126,7 +129,8 @@ class ProfileViewModel @Inject constructor(
 
                 if (existingUser.role == UserRole.PARTNER && _selectedCategories.value.isEmpty()) {
                     _errorEvent.emit(IllegalArgumentException("Partner must select at least one category"))
-                    return@launch
+                    emit(UiState.Empty)
+                    return@flow
                 }
 
                 // 2. Prepare the basic Firestore updates map
@@ -183,10 +187,10 @@ class ProfileViewModel @Inject constructor(
                     val profileUpdateRequest = UserProfileChangeRequest.Builder()
                         .setDisplayName(fullName)
                         .build()
-                    authJob = async { currentUser.updateProfile(profileUpdateRequest).await() }
+                    authJob = viewModelScope.async { currentUser.updateProfile(profileUpdateRequest)?.await() }
                 }
 
-                val firestoreUpdateJob = async {
+                val firestoreUpdateJob = viewModelScope.async {
                     if (firestoreUpdates.isNotEmpty()) {
                         FirebaseFirestore.getInstance()
                             .collection(MontirPresisiUser.COLLECTION)
@@ -212,14 +216,13 @@ class ProfileViewModel @Inject constructor(
                 )
 
                 // Refresh UI State
-                _uiState.value =
-                    UiState.Success(userRepository.getRecordByUserId(currentUser.uid)!!)
+                emit(UiState.Success(userRepository.getRecordByUserId(currentUser.uid)!!))
 
             } catch (e: Exception) {
                 _errorEvent.emit(e)
-                _uiState.value = UiState.Error("Failed to update profile")
+                emit(UiState.Error("Failed to update profile"))
             }
-        }
+
     }
 
     private fun updateLocalUserCache(

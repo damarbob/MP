@@ -63,8 +63,11 @@ import id.monpres.app.service.OrderServiceLocationTrackingService
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.usecase.MigrateUsersSearchTokens
+import id.monpres.app.usecase.OpenWhatsAppUseCase
 import id.monpres.app.utils.NetworkConnectivityObserver
 import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -90,6 +93,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
 
     /* Use cases */
     private val getColorFromAttrUseCase = GetColorFromAttrUseCase()
+    private val openWhatsAppUseCase = OpenWhatsAppUseCase()
 
     @Inject
     lateinit var migrateUsersSearchTokens: MigrateUsersSearchTokens
@@ -102,6 +106,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
     val drawerLayout: DrawerLayout by lazy { binding.activityMainDrawerLayout }
     private lateinit var skeleton: Skeleton
     private var currentDialog: AlertDialog? = null
+
+    private var dialogStateJob: Job? = null
 
     /* Others */
     @Inject
@@ -151,6 +157,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
 
         /* Observers */
         setupObservers()
+        observeDialog()
 
         /* Listeners */
         setupUIListeners()
@@ -308,8 +315,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 }
             }
 
+            dialogStateJob?.cancel()
             if (destination.id != R.id.profileFragment) {
                 viewModel.recheckEligibility()
+                observeDialog()
             }
 
             optionsMenu?.findItem(R.id.menu_profile)?.isVisible =
@@ -442,10 +451,46 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
             }
         }
 
-        // --- DIALOG STATE OBSERVER ---
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.dialogState.collect { state ->
+                viewModel.isDynamicColorApplied.collect { isApplied ->
+                    Log.d(TAG, "isDynamicColorApplied: $isApplied")
+                    setDynamicColors(isApplied)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.themeMode.collect { mode ->
+                    Log.d(TAG, "Theme mode: $mode")
+                    val modeInt = AppPreferences.decideThemeMode(
+                        enumByNameIgnoreCaseOrNull<ThemeMode>(
+                            mode,
+                            ThemeMode.SYSTEM
+                        )!!
+                    )
+                    AppCompatDelegate.setDefaultNightMode(modeInt)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.language.collect { language ->
+                    Log.d(TAG, "Language: $language")
+                    setAppLanguage(enumByNameIgnoreCaseOrNull<Language>(language))
+                }
+            }
+        }
+    }
+
+    private fun observeDialog() {
+        // --- DIALOG STATE OBSERVER ---
+        dialogStateJob?.cancel()
+        dialogStateJob = lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.dialogState.collectLatest { state ->
                     currentDialog?.dismiss() // Dismiss any existing dialog
                     currentDialog = when (state) {
                         is DialogState.None -> null
@@ -476,39 +521,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                         )
                     }
                     currentDialog?.show()
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.isDynamicColorApplied.collect { isApplied ->
-                    Log.d(TAG, "isDynamicColorApplied: $isApplied")
-                    setDynamicColors(isApplied)
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.themeMode.collect { mode ->
-                    Log.d(TAG, "Theme mode: $mode")
-                    val modeInt = AppPreferences.decideThemeMode(
-                        enumByNameIgnoreCaseOrNull<ThemeMode>(
-                            mode,
-                            ThemeMode.SYSTEM
-                        )!!
-                    )
-                    AppCompatDelegate.setDefaultNightMode(modeInt)
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.language.collect { language ->
-                    Log.d(TAG, "Language: $language")
-                    setAppLanguage(enumByNameIgnoreCaseOrNull<Language>(language))
                 }
             }
         }
@@ -627,10 +639,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                 R.id.activityMainDrawerMenuOrder -> navController.navigate(R.id.action_global_orderServiceListFragment)
 
                 R.id.activityMainDrawerMenuSettings -> navController.navigate(NavMainDirections.actionGlobalMonpresSettingFragment())
+
+                R.id.activityMainDrawerMenuChatAdmin -> openWhatsAppUseCase(this, MainApplication.adminWANumber)
             }
             drawerLayout.close()
             true
         }
+
+        binding.activityMainNavigationView.menu.findItem(R.id.activityMainDrawerMenuChatAdmin).isVisible = userRepository.getCurrentUserRecord()?.role != UserRole.ADMIN
     }
 
     private fun prepareProfileIconMenu(menu: Menu) {

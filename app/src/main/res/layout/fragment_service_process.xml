@@ -42,6 +42,36 @@
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="24dp">
 
+                    <LinearLayout
+                        android:id="@+id/fragmentServiceProcessLinearLayoutDayContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/rounded_large_rectangle_background"
+                        android:backgroundTint="?colorPrimary"
+                        android:divider="@drawable/divider_gap_8"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="8dp"
+                        android:showDividers="middle">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?colorOnTertiary"
+                            android:src="@drawable/calendar_add_on_24px"
+                            android:tint="?colorTertiary"
+                            app:contentPadding="4dp"
+                            app:shapeAppearance="@style/ShapeAppearance.Material3.LargeComponent" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/fragmentServiceProcessTextViewDay"
+                            style="@style/Widget.App.H2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="?colorOnPrimary"
+                            android:textAlignment="center" />
+                    </LinearLayout>
+
                     <com.google.android.material.progressindicator.CircularProgressIndicator
                         android:id="@+id/fragmentServiceProcessProgressIndicator"
                         style="@style/Widget.Material3.CircularProgressIndicator"

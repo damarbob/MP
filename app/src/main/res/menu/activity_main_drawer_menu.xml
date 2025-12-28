@@ -22,6 +22,16 @@
             </menu>
         </item>
 
+        <item android:title="@string/help">
+            <menu>
+                <item
+                    android:id="@+id/activityMainDrawerMenuChatAdmin"
+                    android:icon="@drawable/icons8_whatsapp"
+                    android:title="@string/chat_admin"/>
+            </menu>
+
+        </item>
+
         <item android:title="@string/other">
             <menu>
                 <item
