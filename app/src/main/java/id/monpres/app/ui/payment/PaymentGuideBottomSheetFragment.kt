@@ -92,7 +92,7 @@ class PaymentGuideBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         when (url) {
             "app:save_image_qris" -> {
                 // Get the bitmap from the drawable resource
-                val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.mp_marker)
+                val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.qris_mp)
                 if (drawable is BitmapDrawable) {
                     val bitmap = drawable.bitmap
                     // Use the UseCase
@@ -120,7 +120,7 @@ class PaymentGuideBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
 
     companion object {
         const val TAG = "PaymentGuideBottomSheet"
-        const val KEY_GUIDE_RES_ID = "guide_res_id" // <-- Changed
+        const val KEY_GUIDE_RES_ID = "guide_res_id"
         const val KEY_GUIDE_TITLE = "guide_title"
 
         fun newInstance(@RawRes guideResId: Int?, title: String? = null): PaymentGuideBottomSheetFragment {
