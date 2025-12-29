@@ -7,14 +7,10 @@ import com.google.firebase.firestore.Query
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
+import id.monpres.app.model.UserPageResult
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
-
-data class UserPageResult(
-    val data: List<MontirPresisiUser>,
-    val lastSnapshot: DocumentSnapshot?
-)
 
 @Singleton
 class GetNewUsersUseCase @Inject constructor(
@@ -35,8 +31,6 @@ class GetNewUsersUseCase @Inject constructor(
             val endQuery = searchQuery + "\uf8ff"
             query = query
                 .whereArrayContains("searchTokens", searchQuery)
-//                .whereGreaterThanOrEqualTo("userId", searchQuery)
-//                .whereLessThanOrEqualTo("userId", endQuery)
                 .orderBy("userId")
         } else {
             // FILTER MODE
