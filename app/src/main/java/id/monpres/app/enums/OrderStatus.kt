@@ -89,9 +89,3 @@ enum class OrderStatus(
         }
     }
 }
-
-enum class OrderStatusType {
-    OPEN,
-    IN_PROGRESS,
-    CLOSED
-}
