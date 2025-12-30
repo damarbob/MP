@@ -9,8 +9,8 @@ import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.OrderService
-import id.monpres.app.repository.OrderServiceRepository
 import id.monpres.app.repository.UserRepository
+import id.monpres.app.usecase.GetPagedOrderServicesUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class OrderServiceListViewModel @Inject constructor(
-    private val orderServiceRepository: OrderServiceRepository,
+    private val getPagedOrderServicesUseCase: GetPagedOrderServicesUseCase,
     private val userRepository: UserRepository
 ) : ViewModel() {
 
@@ -85,7 +85,7 @@ class OrderServiceListViewModel @Inject constructor(
             resetPagination()
 
             try {
-                val result = fetchFromRepo()
+                val result = fetchFromUseCase()
                 _orderListState.value = result.first
                 lastVisibleDocument = result.second
 
@@ -108,7 +108,7 @@ class OrderServiceListViewModel @Inject constructor(
             _isLoadingMore.value = true
 
             try {
-                val result = fetchFromRepo()
+                val result = fetchFromUseCase()
                 val currentList = _orderListState.value.toMutableList()
                 currentList.addAll(result.first)
 
@@ -132,7 +132,7 @@ class OrderServiceListViewModel @Inject constructor(
         _orderListState.value = emptyList()
     }
 
-    private suspend fun fetchFromRepo(): Pair<List<OrderService>, DocumentSnapshot?> {
+    private suspend fun fetchFromUseCase(): Pair<List<OrderService>, DocumentSnapshot?> {
         val currentUser = userRepository.getCurrentUserRecord() ?: return Pair(emptyList(), null)
 
         // Map Chips to Filter Logic
@@ -151,7 +151,7 @@ class OrderServiceListViewModel @Inject constructor(
             }
         }
 
-        val pagedResult = orderServiceRepository.getOrderServicesPaged(
+        val pagedResult = getPagedOrderServicesUseCase(
             limit = pageSize,
             lastSnapshot = lastVisibleDocument,
             searchQuery = currentSearchQuery,
