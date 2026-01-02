@@ -11,8 +11,12 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.collections.emptyList
 
+/**
+ * Use case for observing real-time Firestore collection changes filtered by field value.
+ *
+ * Returns a reactive Flow with automatic deserialization and error handling.
+ */
 @Singleton
 class ObserveCollectionByFieldUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
     companion object {

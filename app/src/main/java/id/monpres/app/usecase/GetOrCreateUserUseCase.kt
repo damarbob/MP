@@ -13,6 +13,17 @@ import id.monpres.app.utils.UserUtils
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+/**
+ * Use case for retrieving or creating user profiles with comprehensive change detection and FCM token management.
+ *
+ * This use case implements a sophisticated get-or-create pattern that:
+ * - Retrieves existing user from Firestore
+ * - Creates new user profile if none exists
+ * - Detects and updates changes in display name or phone number
+ * - Manages FCM token registration and updates
+ * - Synchronizes all changes with local repository
+ * - Optimizes writes by only updating when changes are detected
+ */
 class GetOrCreateUserUseCase @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
@@ -22,14 +33,31 @@ class GetOrCreateUserUseCase @Inject constructor(
         private val TAG: String = GetOrCreateUserUseCase::class.java.simpleName
     }
 
-    // Custom exceptions for better error identification
+    /** Thrown when no authenticated user is available. */
     class UserNotAuthenticatedException(message: String = "User not authenticated") :
         Exception(message)
 
+    /** Thrown when user data cannot be parsed from Firestore. */
     class UserDataParseException(message: String) : Exception(message)
+
+    /** Thrown when Firestore operations fail, including FCM token retrieval. */
     class FirestoreOperationException(message: String, cause: Throwable? = null) :
         Exception(message, cause)
 
+    /**
+     * Retrieves or creates a user profile for the currently authenticated user.
+     *
+     * The method performs intelligent change detection and only writes to Firestore when:
+     * - Display name has changed
+     * - Phone number has changed
+     * - FCM token needs to be registered or updated
+     *
+     * @param role The role to assign if creating a new user
+     * @return Result containing MontirPresisiUser on success, or custom exception on failure
+     * @throws UserNotAuthenticatedException if no user is authenticated
+     * @throws UserDataParseException if existing user data cannot be parsed
+     * @throws FirestoreOperationException if FCM token retrieval or Firestore operations fail
+     */
     suspend operator fun invoke(role: UserRole): Result<MontirPresisiUser> {
         val firebaseUser = auth.currentUser
             ?: return Result.failure(UserNotAuthenticatedException())

@@ -12,6 +12,11 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for observing real-time changes to an entire Firestore collection.
+ *
+ * Returns a reactive Flow sorted by updatedAt in descending order.
+ */
 @Singleton
 class ObserveCollectionUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
     companion object {

@@ -14,6 +14,11 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for converting bitmaps to PDF and saving to the Downloads directory.
+ *
+ * Uses MediaStore APIs for Android 10+ devices.
+ */
 @Singleton
 class SavePdfToDownloadsUseCase @Inject constructor(
     @param:ApplicationContext private val context: Context
@@ -47,19 +52,19 @@ class SavePdfToDownloadsUseCase @Inject constructor(
         }
 
         try {
-            // 1. Create a PDF document from the bitmap
+            // Create a PDF document from the bitmap
             val pdfDocument = PdfDocument()
             val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
             val page = pdfDocument.startPage(pageInfo)
             page.canvas.drawBitmap(bitmap, 0f, 0f, null)
             pdfDocument.finishPage(page)
 
-            // 2. Write the PDF to the output stream provided by the resolver
+            // Write the PDF to the output stream provided by the resolver
             resolver.openOutputStream(uri)?.use { outputStream ->
                 pdfDocument.writeTo(outputStream)
             } ?: throw Exception("Failed to open output stream for URI: $uri")
 
-            // 3. Close the PDF document
+            // Close the PDF document
             pdfDocument.close()
 
             Result.success(true)

@@ -15,6 +15,11 @@ import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for saving bitmap images to the device's public gallery.
+ *
+ * Handles platform-specific MediaStore APIs for Android 10+ with fallback for older versions.
+ */
 @Singleton
 class SaveImageToGalleryUseCase @Inject constructor(
     @param:ApplicationContext private val context: Context

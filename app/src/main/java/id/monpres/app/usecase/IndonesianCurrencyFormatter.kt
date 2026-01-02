@@ -3,30 +3,20 @@ package id.monpres.app.usecase
 import java.text.NumberFormat
 import java.util.Locale
 
+/**
+ * Formatter for converting numbers to Indonesian Rupiah currency format.
+ *
+ * Supports Float, Int, Double, and Long inputs with zero decimal places.
+ */
 class IndonesianCurrencyFormatter {
     private var value = 0f
     private var valueRound = 0L
     private fun format(): String {
-        val deviceLocale = Locale.getDefault()
         val currencyLocale = Locale.Builder().setRegion("ID").setLanguage("id").build()
         return NumberFormat.getCurrencyInstance(currencyLocale)
             .apply { maximumFractionDigits = 0 }
             .format(value)
             .toString()
-//        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//            NumberFormatter.withLocale(deviceLocale)
-//                .notation(Notation.simple())
-//                .unit(Currency.getInstance(currencyLocale))
-//                .unitWidth(NumberFormatter.UnitWidth.NARROW)
-//                .precision(Precision.currency(Currency.CurrencyUsage.STANDARD))
-//                .format(value).toString()
-//        } else {
-//            NumberFormat.getCurrencyInstance(
-//                currencyLocale
-//            ).apply {
-//                maximumFractionDigits = 0
-//            }.format(value).toString()
-//        }
     }
 
     private fun formatRound(): String {
