@@ -12,7 +12,6 @@ import id.monpres.app.usecase.GetVehiclesByUserIdFlowUseCase
 import id.monpres.app.usecase.GetVehiclesByUserIdUseCase
 import id.monpres.app.usecase.InsertVehicleUseCase
 import id.monpres.app.usecase.UpdateVehicleUseCase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -48,18 +46,15 @@ class VehicleRepository @Inject constructor(
      * In the background, it also triggers a real-time listener to Firestore to keep the
      * local cache synchronized.
      *
-     * @param scope The CoroutineScope (e.g., viewModelScope) to launch the sync process in.
      * @return A [Flow] of a list of [Vehicle] objects from the local cache.
      *         Exceptions from the remote sync process are logged but do not interrupt this flow.
      */
-    fun getVehiclesByUserIdFlow(scope: CoroutineScope): Flow<List<Vehicle>> {
+    suspend fun getVehiclesByUserIdFlow(): Flow<List<Vehicle>> {
         val userId = getCurrentUserId()
 
         // Trigger the background sync process. This is a fire-and-forget coroutine.
         // It will stay alive as long as the viewModelScope that calls this function is alive.
-        scope.launch {
-            syncRemoteToLocal()
-        }
+        syncRemoteToLocal()
 
         // The UI observes the local database directly. Room ensures this flow emits
         // new data whenever the underlying table is changed by the sync process.

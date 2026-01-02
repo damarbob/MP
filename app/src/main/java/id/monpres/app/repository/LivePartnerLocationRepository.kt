@@ -21,10 +21,15 @@ class LivePartnerLocationRepository @Inject constructor(
      * Updates the real-time location for a specific order.
      * This is a suspend function for a single write.
      */
-    suspend fun updateLiveLocation(orderId: String, lat: Double, lng: Double) {
+    suspend fun updateLiveLocation(orderId: String, lat: Double, lng: Double, isFinalUpdate: Boolean = false) {
         val geoPoint = GeoPoint(lat, lng)
+        val data = mutableMapOf<String, Any>("location" to geoPoint)
+        if (isFinalUpdate) {
+            data["isArrived"] = true
+        }
+
         firestore.collection(LivePartnerLocation.COLLECTION).document(orderId)
-            .set(mapOf("location" to geoPoint))
+            .set(data)
             .await() // Use kotlinx-coroutines-play-services
     }
 

@@ -76,6 +76,7 @@
                                 android:orientation="vertical">
 
                                 <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/fragmentOrderServiceDetailTitle"
                                     style="@style/Widget.App.H1.Bold.Primary"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
@@ -86,7 +87,7 @@
                                     tools:targetApi="26" />
 
                                 <com.google.android.material.textview.MaterialTextView
-                                    android:id="@+id/fragmentOrderServiceDetailTitle"
+                                    android:id="@+id/fragmentOrderServiceDetailServiceName"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:autoSizeTextType="uniform"
@@ -324,63 +325,44 @@
                                     tools:targetApi="26" />
                             </LinearLayout>
 
-                            <LinearLayout
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/fragmentOrderServiceDetailLinearLayoutVehicleDetailContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            android:background="@drawable/rounded_large_rectangle_background"
+                            android:divider="@drawable/divider_gap_8"
+                            android:gravity="center_horizontal"
+                            android:orientation="vertical"
+                            android:padding="16dp"
+                            android:showDividers="middle">
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/fragmentOrderServiceDetailVehicle"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:divider="@drawable/divider_gap_8"
-                                android:gravity="fill"
-                                android:showDividers="middle">
-
-                                <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                    android:layout_height="wrap_content"
-                                    android:autoSizeTextType="uniform"
-                                    android:text="@string/vehicle"
-                                    android:textAlignment="textStart"
-                                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                                    android:textColor="?colorOnSurface"
-                                    tools:targetApi="26" />
-
-                                <com.google.android.material.textview.MaterialTextView
-                                    android:id="@+id/fragmentOrderServiceDetailVehicle"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="end"
-                                    android:layout_weight="1"
-                                    android:autoSizeTextType="uniform"
-                                    android:textAlignment="textEnd"
-                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                    android:textColor="?colorOnSurface"
-                                    tools:targetApi="26" />
-                            </LinearLayout>
+                                style="@style/Widget.App.H4"
+                                android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                android:textColor="?colorOnSurface" />
 
                             <LinearLayout
-                                android:layout_width="match_parent"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:divider="@drawable/divider_gap_8"
-                                android:gravity="fill"
-                                android:showDividers="middle">
-
-                                <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                    android:layout_height="wrap_content"
-                                    android:autoSizeTextType="uniform"
-                                    android:text="@string/issue"
-                                    android:textAlignment="textStart"
-                                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                                    android:textColor="?colorOnSurface"
-                                    tools:targetApi="26" />
+                                android:background="@drawable/rounded_large_rectangle_background"
+                                android:paddingVertical="4dp"
+                                android:paddingHorizontal="12dp"
+                                android:layout_gravity="start"
+                                android:backgroundTint="?colorPrimary">
 
                                 <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/fragmentOrderServiceDetailIssue"
-                                    android:layout_width="0dp"
+                                    android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_gravity="end"
-                                    android:layout_weight="1"
                                     android:autoSizeTextType="uniform"
-                                    android:textAlignment="textEnd"
-                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
-                                    android:textColor="?colorOnSurface"
+                                    style="?attr/textAppearanceBodySmall"
+                                    android:textColor="?colorOnPrimary"
                                     tools:targetApi="26" />
                             </LinearLayout>
 
@@ -392,28 +374,220 @@
                                 android:showDividers="middle">
 
                                 <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="@dimen/information_title_list_text_view_max_width"
-                                    android:layout_height="wrap_content"
-                                    android:autoSizeTextType="uniform"
-                                    android:text="@string/description"
-                                    android:textAlignment="textStart"
-                                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                                    android:textColor="?colorOnSurface"
-                                    tools:targetApi="26" />
-
-                                <com.google.android.material.textview.MaterialTextView
                                     android:id="@+id/fragmentOrderServiceDetailIssueDescription"
-                                    android:layout_width="0dp"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_gravity="end"
-                                    android:layout_weight="1"
                                     android:autoSizeTextType="uniform"
-                                    android:textAlignment="textEnd"
-                                    android:textAppearance="?attr/textAppearanceBodyLargeEmphasized"
+                                    style="?attr/textAppearanceBodyMediumEmphasized"
                                     android:textColor="?colorOnSurface"
                                     tools:targetApi="26" />
                             </LinearLayout>
 
+                            <GridLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:columnCount="2"
+                                android:orientation="horizontal"
+                                android:rowCount="5">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/registration_number"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailRegistrationNumber"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:ellipsize="middle"
+                                        android:maxLines="1"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/license_plate_number"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailLicensePlateNumber"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/type"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailType"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/power_source"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailPowerSource"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/transmission"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailTransmission"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/wheel_drive"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailWheelDrive"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/production_year"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailProductionYear"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/engine_capacity"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailEngineCapacity"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/seat"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailSeat"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_columnWeight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="4dp"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="6dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/power_output"
+                                        style="?textAppearanceBodySmall"/>
+                                    <TextView
+                                        android:id="@+id/fragmentOrderServiceDetailPowerOutput"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        style="?textAppearanceBodyLarge"/>
+                                </LinearLayout>
+
+                            </GridLayout>
                         </LinearLayout>
 
                         <!-- Distance detail -->

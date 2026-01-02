@@ -31,17 +31,22 @@ import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderServiceDetailBinding
+import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
+import id.monpres.app.enums.VehiclePowerSource
+import id.monpres.app.enums.VehicleTransmission
 import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.PaymentMethod
+import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.adapter.OrderItemAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.usecase.SaveImageToGalleryUseCase
 import id.monpres.app.usecase.SavePdfToDownloadsUseCase
+import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import id.monpres.app.utils.toDateTimeDisplayString
 import kotlinx.coroutines.launch
 import java.io.File
@@ -324,7 +329,8 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
                 )
             )
             // Header
-            fragmentOrderServiceDetailTitle.text = MainApplication.services?.find { it.id == orderService.serviceId }?.name
+            fragmentOrderServiceDetailTitle.text = if (orderService.status == OrderStatus.COMPLETED) getString(R.string.invoice) else orderService.status?.labelResId?.let { getString(it) }
+            fragmentOrderServiceDetailServiceName.text = MainApplication.services?.find { it.id == orderService.serviceId }?.name
             fragmentOrderServiceDetailDate.text =
                 orderService.updatedAt.toDateTimeDisplayString(
                     dateStyle = DateFormat.MEDIUM,
@@ -372,6 +378,23 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
             ?: getString(R.string.unknown_issue)
             fragmentOrderServiceDetailIssue.text = issueString
             fragmentOrderServiceDetailIssueDescription.text = orderService.issueDescription ?: ""
+
+            fragmentOrderServiceDetailRegistrationNumber.text =
+                orderService.vehicle?.registrationNumber ?: "-"
+            fragmentOrderServiceDetailLicensePlateNumber.text =
+                orderService.vehicle?.licensePlateNumber ?: "-"
+            fragmentOrderServiceDetailType.text = VehicleType.getSampleList(requireContext())
+                .find { it.id == orderService.vehicle?.typeId }?.name ?: "-"
+            orderService.vehicle?.powerSource
+                ?.let { enumByNameIgnoreCaseOrNull<VehiclePowerSource>(it) }
+                ?.let { fragmentOrderServiceDetailPowerSource.text = getString(it.label) }
+            orderService.vehicle?.transmission
+                ?.let { enumByNameIgnoreCaseOrNull<VehicleTransmission>(it) }
+                ?.let { fragmentOrderServiceDetailTransmission.text = getString(it.label) }
+            fragmentOrderServiceDetailWheelDrive.text = orderService.vehicle?.wheelDrive ?: "-"
+            fragmentOrderServiceDetailProductionYear.text = orderService.vehicle?.year ?: "-"
+            fragmentOrderServiceDetailSeat.text = orderService.vehicle?.seat ?: "-"
+            fragmentOrderServiceDetailPowerOutput.text = orderService.vehicle?.powerOutput ?: "-"
 
             // Distance detail
             fragmentOrderServiceDetailPartnerLocation.text = orderService.userLocationLat.toString()

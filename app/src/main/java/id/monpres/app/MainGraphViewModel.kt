@@ -25,7 +25,6 @@ import id.monpres.app.state.UiState.Loading
 import id.monpres.app.state.UiState.Success
 import id.monpres.app.utils.NetworkConnectivityObserver
 import id.monpres.app.utils.takeUntilSignal
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -104,7 +103,7 @@ class MainGraphViewModel @Inject constructor(
 
     init {
         Log.d(TAG, "ViewModel init")
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch {
             networkConnectivityObserver.networkStatus.collect { status ->
                 when (status.state) {
                     ConnectionState.Connected -> {
@@ -167,7 +166,7 @@ class MainGraphViewModel @Inject constructor(
     private fun observeUserOrderServices() {
         userOrdersJob?.cancel()
 
-        userOrdersJob = viewModelScope.launch(Dispatchers.Default) {
+        userOrdersJob = viewModelScope.launch {
             orderServiceRepository.observeOrderServicesByUserId()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
                 .onStart { _userOrderServicesState.value = Loading }
@@ -190,7 +189,7 @@ class MainGraphViewModel @Inject constructor(
     private fun observePartnerOrderServices() {
         partnerOrdersJob?.cancel()
 
-        partnerOrdersJob = viewModelScope.launch(Dispatchers.Default) {
+        partnerOrdersJob = viewModelScope.launch {
             orderServiceRepository.observeOrderServicesByPartnerId()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
                 .onStart { _partnerOrderServicesState.value = Loading }
@@ -217,7 +216,7 @@ class MainGraphViewModel @Inject constructor(
     fun observeAllOrderServices() {
         allOrdersJob?.cancel()
 
-        allOrdersJob = viewModelScope.launch(Dispatchers.Default) {
+        allOrdersJob = viewModelScope.launch {
             orderServiceRepository.observeOrderServices()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
                 .onStart { _allOrderServicesState.value = Loading }
@@ -254,7 +253,7 @@ class MainGraphViewModel @Inject constructor(
             return
         }
 
-        openedOrderJob = viewModelScope.launch(Dispatchers.Default) {
+        openedOrderJob = viewModelScope.launch {
             masterListFlow.collect { listState ->
                 when (listState) {
                     is Loading -> _openedOrderServiceState.value = Loading
@@ -282,8 +281,8 @@ class MainGraphViewModel @Inject constructor(
     private fun observeUserVehicles() {
         vehiclesJob?.cancel()
 
-        vehiclesJob = viewModelScope.launch(Dispatchers.Default) {
-            vehicleRepository.getVehiclesByUserIdFlow(this)
+        vehiclesJob = viewModelScope.launch {
+            vehicleRepository.getVehiclesByUserIdFlow()
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
                 .onStart { _userVehiclesState.value = Loading }
                 .catch { e ->
@@ -305,7 +304,7 @@ class MainGraphViewModel @Inject constructor(
     }
 
     private fun manageLocationServiceLifecycle() {
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch {
             currentUser.filterNotNull().first()
 
             val role = currentUser.value?.role

@@ -49,6 +49,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.security.SecureRandom
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -265,6 +266,7 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
     // Google Sign-In method - called from UI
     fun signInWithGoogle() {
         Log.d(TAG, "Google server client id ${BuildConfig.GOOGLE_SERVER_CLIENT_ID}")
+        val nonce = generateSecureNonce()
         val request = GetCredentialRequest.Builder().addCredentialOption(
             GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
@@ -374,5 +376,22 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
     override fun onRestart() {
         super.onRestart()
         viewModel.checkUser()
+    }
+
+    /**
+     * Generates a cryptographically secure, URL-safe, random string to be used as a nonce.
+     * This is crucial for preventing replay attacks.
+     * @return A random, URL-safe string.
+     */
+    private fun generateSecureNonce(): String {
+        val secureRandom = SecureRandom()
+        // A 16-byte random number is a good balance of security and length.
+        val nonceBytes = ByteArray(16)
+        secureRandom.nextBytes(nonceBytes)
+        // Encode the random bytes into a URL-safe Base64 string without padding.
+        return android.util.Base64.encodeToString(
+            nonceBytes,
+            android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING
+        )
     }
 }

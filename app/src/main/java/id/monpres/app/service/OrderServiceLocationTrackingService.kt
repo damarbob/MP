@@ -63,6 +63,7 @@ class OrderServiceLocationTrackingService : Service() {
 
         private const val UPDATE_INTERVAL_SECOND = 60L
         private const val MIN_UPDATE_DISTANCE_METER = 20f
+        private const val ARRIVAL_THRESHOLD_METERS = 20f
         private const val FOREGROUND_SERVICE_ID: Int = 12341234
     }
 
@@ -79,9 +80,12 @@ class OrderServiceLocationTrackingService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
+    // This map will now hold the full OrderService object for partners
+    private val activePartnerJobs = ConcurrentHashMap<String, OrderService>()
     // Use a ConcurrentHashMap for thread-safe access to the jobs map.
-    private val activeJobs = ConcurrentHashMap<String, Job>()
-    private val activeLocationCallbacks = ConcurrentHashMap<String, LocationCallback>()
+    private val activeCustomerJobs = ConcurrentHashMap<String, Job>()
+
+    private var locationCallback: LocationCallback? = null
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -108,7 +112,7 @@ class OrderServiceLocationTrackingService : Service() {
                 }
 
                 // If already tracking this specific order, do nothing.
-                if (activeJobs.containsKey(orderId)) {
+                if (activePartnerJobs.containsKey(orderId) || activeCustomerJobs.containsKey(orderId)) {
                     Log.d(TAG, "Already tracking order $orderId. Ignoring redundant start command.")
                     return START_NOT_STICKY
                 }
@@ -123,19 +127,24 @@ class OrderServiceLocationTrackingService : Service() {
 
                 // Start the service in the foreground if it isn't already.
                 // This uses a generic notification. Each job will post its own specific one.
-                if (activeJobs.isEmpty()) {
+                if (activePartnerJobs.isEmpty() && activeCustomerJobs.isEmpty()) {
                     Log.d(TAG, "No active jobs. Starting service in foreground.")
                     val baseNotification = OrderServiceNotification.createBaseNotification(this)
                     startForeground(FOREGROUND_SERVICE_ID, baseNotification)
                 }
 
-                // --- CREATE AND STORE A NEW JOB FOR THIS ORDER ---
-                val newJob = when (mode) {
-                    MODE_PARTNER -> startPartnerLocationUpdates(orderService)
-                    MODE_CUSTOMER -> startCustomerLocationObserver(orderService)
-                    else -> null
+                when (mode) {
+                    MODE_PARTNER -> {
+                        // Store the order and start the single location provider if needed
+                        activePartnerJobs[orderId] = orderService
+                        startPartnerLocationUpdates()
+                    }
+                    MODE_CUSTOMER -> {
+                        // Customer mode still uses an individual job for Firestore observation
+                        val customerJob = startCustomerLocationObserver(orderService)
+                        activeCustomerJobs[orderId] = customerJob
+                    }
                 }
-                newJob?.let { activeJobs[orderId] = it }
             }
 
             ACTION_STOP_ONE -> {
@@ -148,7 +157,8 @@ class OrderServiceLocationTrackingService : Service() {
             ACTION_STOP -> {
                 Log.d(TAG, "ACTION_STOP received. Stopping all tracking and service.")
                 // Stop all individual jobs first.
-                activeJobs.keys.forEach { id -> stopTrackingForOrder(id) }
+                activePartnerJobs.keys.forEach { id -> stopTrackingForOrder(id) }
+                activeCustomerJobs.keys.forEach { id -> activeCustomerJobs[id]?.cancel() }
                 // Then stop the service itself.
                 stopSelf()
             }
@@ -166,36 +176,64 @@ class OrderServiceLocationTrackingService : Service() {
     }
 
     // --- This function now returns a Job ---
-    private fun startPartnerLocationUpdates(orderService: OrderService): Job? {
+    private fun startPartnerLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG, "Partner mode: Location permission not granted.")
-            return null // Cannot start job
+            return // Cannot start job
         }
 
-        val orderId = orderService.id!!
+        if (locationCallback != null) {
+            Log.e(TAG, "Partner mode: Location callback already exists.")
+            return // Cannot start job
+        }
+
         val locationRequest = buildLocationRequest()
 
-        // Create a new LocationCallback for this specific order
-        val locationCallback = object : LocationCallback() {
+        locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 // This callback continues to run, but its parent job can be cancelled.
                 val location = locationResult.lastLocation ?: return
-                // Launch a fire-and-forget coroutine within the service scope for the update.
-                serviceScope.launch {
-                    updatePartnerState(orderId, location, orderService)
+                // When location is received, process it for ALL active partner orders.
+                processLocationUpdateForPartners(location)
+            }
+        }
+
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback!!, Looper.getMainLooper())
+    }
+
+    // Processes a location update for all active partners
+    private fun processLocationUpdateForPartners(location: Location) {
+        if (activePartnerJobs.isEmpty()) return
+
+        Log.d(TAG, "Processing location update for ${activePartnerJobs.size} partner jobs.")
+        // Create a thread-safe copy of the keys to iterate over, to avoid ConcurrentModificationException
+        val orderIds = activePartnerJobs.keys.toList()
+
+        for (orderId in orderIds) {
+            val orderService = activePartnerJobs[orderId] ?: continue
+
+            // Launch a separate coroutine for each update to avoid blocking the loop
+            serviceScope.launch {
+                // Check distance and decide if the partner has arrived
+                val destination = Location("destination").apply {
+                    latitude = orderService.selectedLocationLat ?: 0.0
+                    longitude = orderService.selectedLocationLng ?: 0.0
+                }
+                val distanceToDestination = location.distanceTo(destination)
+
+                // Update Firestore and notification
+                updatePartnerState(orderId, location, orderService, distanceToDestination)
+
+                // --- SMART ARRIVAL LOGIC ---
+                if (distanceToDestination < ARRIVAL_THRESHOLD_METERS) {
+                    Log.i(TAG, "Partner has arrived for order $orderId (distance: $distanceToDestination m). Performing final update and stopping tracking for this order.")
+                    // Perform one last guaranteed update
+                    updatePartnerState(orderId, location, orderService, distanceToDestination, isFinalUpdate = true)
+                    // Stop tracking for this specific order
+                    stopTrackingForOrder(orderId)
                 }
             }
         }
-        activeLocationCallbacks[orderId] = locationCallback
-
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-        Log.d(TAG, "Started location updates for partner, order: $orderId")
-
-        // Return a job that does nothing but can be used as a handle in our map.
-        // The real cleanup happens when we remove the LocationCallback.
-        return Job().also { it.invokeOnCompletion {
-            Log.d(TAG, "Partner job for $orderId completed/cancelled.")
-        }}
     }
 
     // This function now returns a Job
@@ -211,6 +249,20 @@ class OrderServiceLocationTrackingService : Service() {
             livePartnerLocationRepository.observeLiveLocation(orderId)
                 .onEach { livePartnerLocation ->
                     Log.d(TAG, "Received live location for $orderId: $livePartnerLocation")
+
+                    if (livePartnerLocation.isArrived) {
+                        Log.i(TAG, "Customer mode: Partner has arrived signal received. Stopping updates for $orderId.")
+                        // Show a final "Arrived" notification
+                        OrderServiceNotification.showOrUpdateNotification(
+                            this@OrderServiceLocationTrackingService, orderId, OrderStatus.ON_THE_WAY,
+                            Timestamp.now(), currentUserRole, 100, // 100% progress
+                            shortCriticalText = getString(R.string.partner_has_arrived)
+                        )
+                        // Stop this specific customer observer job
+                        this.cancel() // This cancels the coroutine started by serviceScope.launch
+                        return@onEach
+                    }
+
                     val partnerGeoPoint = livePartnerLocation.location ?: return@onEach
                     val currentDistance = getCurrentDistance(partnerGeoPoint, orderService)
                     val progress = calculateProgress(initialDistance, currentDistance)
@@ -228,53 +280,48 @@ class OrderServiceLocationTrackingService : Service() {
         }
     }
 
-    private suspend fun updatePartnerState(orderId: String, location: Location, orderService: OrderService) {
-
+    private suspend fun updatePartnerState(orderId: String, location: Location, orderService: OrderService, distance: Float, isFinalUpdate: Boolean = false) {
         try {
-            livePartnerLocationRepository.updateLiveLocation(orderId, location.latitude, location.longitude)
-            updatePartnerNotification(orderService,location)
+            // Update firestore
+            livePartnerLocationRepository.updateLiveLocation(orderId, location.latitude, location.longitude, isFinalUpdate)
+            // Update local notification
+            updatePartnerNotification(orderService, distance)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update live location for $orderId", e)
         }
     }
 
-    private suspend fun updatePartnerNotification(orderService: OrderService, currentLocation: Location) {
-        val targetLocation = Location("target").apply {
-            latitude = orderService.selectedLocationLat ?: 0.0
-            longitude = orderService.selectedLocationLng ?: 0.0
-        }
-        val currentDistance = currentLocation.distanceTo(targetLocation)
+    // --- MODIFIED: Simplified to just take distance ---
+    private suspend fun updatePartnerNotification(orderService: OrderService, currentDistance: Float) {
         val initialDistance = getInitialDistance(orderService)
         val progress = calculateProgress(initialDistance, currentDistance)
         val currentUserRole = userRepository.userRecord.filterNotNull().first().role ?: UserRole.CUSTOMER
-        val notification = OrderServiceNotification.showOrUpdateNotification(
-            this@OrderServiceLocationTrackingService, orderService.id!!, OrderStatus.ON_THE_WAY,
+
+        OrderServiceNotification.showOrUpdateNotification(
+            this, orderService.id!!, OrderStatus.ON_THE_WAY,
             Timestamp.now(), currentUserRole, progress,
-            shortCriticalText = getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance))
+            shortCriticalText = getString(R.string.x_distance_m, numberFormatterUseCase(currentDistance.toDouble()))
         )
-//        startForeground(getNotificationId(orderService.id!!), notification)
     }
 
     private fun stopTrackingForOrder(orderId: String) {
-        // 1. Cancel and remove the coroutine job
-        activeJobs[orderId]?.cancel()
-        activeJobs.remove(orderId)
+        // Remove from the correct map
+        activePartnerJobs.remove(orderId)
+        activeCustomerJobs[orderId]?.cancel()
+        activeCustomerJobs.remove(orderId)
 
-        // 2. Remove and stop the location callback for partners
-        activeLocationCallbacks[orderId]?.let { callback ->
-            fusedLocationProviderClient.removeLocationUpdates(callback)
-            activeLocationCallbacks.remove(orderId)
-            Log.d(TAG, "Removed location callback for order: $orderId")
-        }
-
-        // 3. Dismiss the specific notification for this order
+        // Dismiss the specific notification for this order
         OrderServiceNotification.cancelNotification(this, orderId)
         Log.d(TAG, "Stopped tracking and cleaned up for order: $orderId")
-        stopForeground(STOP_FOREGROUND_REMOVE)
 
-        // 4. If this was the last active job, stop the service itself.
-        if (activeJobs.isEmpty()) {
-            Log.d(TAG, "No more active jobs. Stopping foreground service.")
+        // If this was the last active job of ANY kind, stop the location provider and the service
+        if (activePartnerJobs.isEmpty() && activeCustomerJobs.isEmpty()) {
+            Log.i(TAG, "No more active jobs. Stopping foreground service and all location updates.")
+            locationCallback?.let {
+                fusedLocationProviderClient.removeLocationUpdates(it)
+                locationCallback = null
+                Log.d(TAG, "Removed single location callback.")
+            }
             stopSelf()
         }
     }
@@ -297,7 +344,8 @@ class OrderServiceLocationTrackingService : Service() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: Service is being destroyed. Final cleanup.")
         // Fallback cleanup in case anything was missed
-        activeJobs.keys.forEach { orderId -> stopTrackingForOrder(orderId) }
+        activePartnerJobs.keys.forEach { orderId -> stopTrackingForOrder(orderId) }
+        activeCustomerJobs.keys.forEach { orderId -> stopTrackingForOrder(orderId) }
         serviceScope.cancel()
     }
 

@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
@@ -462,25 +463,23 @@ class AuthViewModel @Inject constructor(
         onVerified: () -> Unit,
         onPendingOrRejected: () -> Unit
     ) {
-        val status = getUserVerificationStatusUseCase().filterNotNull().first()
-        val monpresUser = _monpresUser.filterNotNull().first()
-        Log.d(
-            TAG,
-            "Monpres user: $monpresUser, current time: ${System.currentTimeMillis()}"
-        )
-        when (status) {
-            UserVerificationStatus.VERIFIED -> {
-                Log.d(
-                    TAG, "User is verified : ${System.currentTimeMillis()}"
-                )
-                onVerified()
-            }
+        combine(getUserVerificationStatusUseCase().filterNotNull(), _monpresUser.filterNotNull()) { status, monpresUser ->
+            Pair(status, monpresUser)
+        }.collect { (status, user) ->
+            when (status) {
+                UserVerificationStatus.VERIFIED -> {
+                    Log.d(
+                        TAG, "User is verified : ${System.currentTimeMillis()}"
+                    )
+                    onVerified()
+                }
 
-            UserVerificationStatus.PENDING, UserVerificationStatus.REJECTED -> {
-                if (monpresUser.role == UserRole.CUSTOMER) {
-                    onPendingOrRejected()
-                } else {
-                    onVerified() // Other than customer, they are always verified
+                UserVerificationStatus.PENDING, UserVerificationStatus.REJECTED -> {
+                    if (user.role == UserRole.CUSTOMER) {
+                        onPendingOrRejected()
+                    } else {
+                        onVerified() // Other than customer, they are always verified
+                    }
                 }
             }
         }

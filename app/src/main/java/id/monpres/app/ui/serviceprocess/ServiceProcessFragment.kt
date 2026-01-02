@@ -63,6 +63,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
+import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
@@ -79,11 +80,14 @@ import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.OrderStatusType
 import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
+import id.monpres.app.enums.VehiclePowerSource
+import id.monpres.app.enums.VehicleTransmission
 import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.PaymentMethod
+import id.monpres.app.model.VehicleType
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.state.UiState
 import id.monpres.app.ui.BaseFragment
@@ -97,6 +101,7 @@ import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.usecase.NumberFormatterUseCase
 import id.monpres.app.usecase.OpenWhatsAppUseCase
 import id.monpres.app.utils.capitalizeWords
+import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import id.monpres.app.utils.toDateTimeDisplayString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -259,6 +264,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
             }
         }
 
+        setupMap()
         setupRecyclerView()
         setupObservers()
         setupListeners()
@@ -351,8 +357,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                         if (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED) {
                             observePartnerLiveLocation()
                         } else {
-                            observePartnerLiveLocationJob?.cancel()
-                            observePartnerLiveLocationJob = null
+                            updateMap()
+                            stopObservingPartnerLiveLocation()
                         }
                     }
             }
@@ -425,6 +431,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
     }
 
     private fun observePartnerLiveLocation() {
+        observePartnerLiveLocationJob?.cancel()
         // Launch a new collector for the live location
         observePartnerLiveLocationJob = lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -436,10 +443,26 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
 
                         updateDistanceAndProgress(partnerGeoPoint)
                         updateMap(partnerGeoPoint)
+
+                        if (livePartnerLocation.isArrived) {
+                            Log.d(TAG, "Partner arrived at the location")
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.partner_has_arrived),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            stopObservingPartnerLiveLocation()
+                        }
                     }
                 }
             }
         }
+    }
+
+    private fun stopObservingPartnerLiveLocation() {
+        observePartnerLiveLocationJob?.cancel()
+        observePartnerLiveLocationJob = null
+        Log.d(TAG, "Stopped observing partner live location.")
     }
 
     /**
@@ -587,6 +610,23 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
             fragmentServiceProcessIssueDescription.text =
                 if (orderService.issueDescription?.isNotBlank() == true) orderService.issueDescription else "-"
 
+            fragmentServiceProcessRegistrationNumber.text =
+                orderService.vehicle?.registrationNumber ?: "-"
+            fragmentServiceProcessLicensePlateNumber.text =
+                orderService.vehicle?.licensePlateNumber ?: "-"
+            fragmentServiceProcessType.text = VehicleType.getSampleList(requireContext())
+                .find { it.id == orderService.vehicle?.typeId }?.name ?: "-"
+            orderService.vehicle?.powerSource
+                ?.let { enumByNameIgnoreCaseOrNull<VehiclePowerSource>(it) }
+                ?.let { fragmentServiceProcessPowerSource.text = getString(it.label) }
+            orderService.vehicle?.transmission
+                ?.let { enumByNameIgnoreCaseOrNull<VehicleTransmission>(it) }
+                ?.let { fragmentServiceProcessTransmission.text = getString(it.label) }
+            fragmentServiceProcessWheelDrive.text = orderService.vehicle?.wheelDrive ?: "-"
+            fragmentServiceProcessProductionYear.text = orderService.vehicle?.year ?: "-"
+            fragmentServiceProcessSeat.text = orderService.vehicle?.seat ?: "-"
+            fragmentServiceProcessPowerOutput.text = orderService.vehicle?.powerOutput ?: "-"
+
             // Show total price with currency format
             price = orderService.price ?: OrderService.getPriceFromOrderItems(orderItems)
             fragmentServiceProcessOrderItemsTotalPrice.text = indonesianCurrencyFormatter(price!!)
@@ -598,9 +638,6 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
             // Keeping existing logic: Visible for Partner during active states.
             fragmentServiceProcessTextViewCurrentDistance.visibility =
                 if (currentUser?.role == UserRole.PARTNER && (orderService.status == OrderStatus.ON_THE_WAY || orderService.status == OrderStatus.ORDER_PLACED)) View.VISIBLE else View.GONE
-
-            // Mapbox
-            setupMap()
 
             if (orderService.selectedDateMillis != null) {
                 fragmentServiceProcessLinearLayoutDayContainer.visibility = View.VISIBLE
@@ -645,45 +682,29 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
 
     private fun setupMap() {
         with(binding) {
-//            fragmentServiceProcessMapView.mapboxMap.setCamera(
-//                CameraOptions.Builder()
-//                    .center(
-//                        Point.fromLngLat(
-//                            orderService.selectedLocationLng ?: 0.0,
-//                            orderService.selectedLocationLat ?: 0.0
-//                        )
-//                    )
-//                    .pitch(0.0)
-//                    .zoom(12.0)
-//                    .bearing(0.0)
-//                    .build()
-//            )
-//            val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.mp_marker)
-//            val desiredWidth = 60 // in pixels
-//            val desiredHeight = 96 // in pixels
-//
-//            val resizedBitmap = originalBitmap.scale(desiredWidth, desiredHeight, false)
-//
-//            // Create an instance of the Annotation API and get the PointAnnotationManager.
-//            val annotationApi = fragmentServiceProcessMapView.annotations
-//            val pointAnnotationManager = annotationApi.createPointAnnotationManager()
-//
-//            // Set options for the resulting symbol layer.
-//            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
-//                // Define a geographic coordinate.
-//                .withPoint(
-//                    Point.fromLngLat(
-//                        orderService.selectedLocationLng ?: 0.0,
-//                        orderService.selectedLocationLat ?: 0.0
-//                    )
-//                )
-//                // Specify the bitmap you assigned to the point annotation
-//                // The bitmap will be added to map style automatically.
-//                .withIconImage(resizedBitmap)
-//            // Add the resulting pointAnnotation to the map.
-//            pointAnnotationManager.create(pointAnnotationOptions)
+            fragmentServiceProcessMapView.setOnTouchListener { view, event ->
+                view.performClick()
+                if (event.pointerCount >= 2) {
+                    // Two-finger touch - let MapView handle it
+                    fragmentServiceProcessMapView.mapboxMap.gesturesPlugin {
+                        scrollEnabled = true
+                    }
+                    fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(true)
+                } else {
+                    // One-finger touch - let NestedScrollView handle it
+                    fragmentServiceProcessMapView.mapboxMap.gesturesPlugin {
+                        scrollEnabled = false
+                    }
+                    fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(false)
+                }
+                false // Return false to allow MapView to handle the touch
+            }
+        }
+    }
 
-            // Mapbox - Create both points
+    private fun updateMap(partnerGeoPoint: GeoPoint? = null) {
+        with(binding) {
+
             val selectedPoint = Point.fromLngLat(
                 orderService.selectedLocationLng ?: 0.0,
                 orderService.selectedLocationLat ?: 0.0
@@ -710,36 +731,11 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
             // Add annotations to map
             pointAnnotationManager.create(selectedAnnotationOptions)
 
-            updateMap()
-
-            fragmentServiceProcessMapView.setOnTouchListener { view, event ->
-                view.performClick()
-                if (event.pointerCount >= 2) {
-                    // Two-finger touch - let MapView handle it
-                    fragmentServiceProcessMapView.mapboxMap.gesturesPlugin {
-                        scrollEnabled = true
-                    }
-                    fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(true)
-                } else {
-                    // One-finger touch - let NestedScrollView handle it
-                    fragmentServiceProcessMapView.mapboxMap.gesturesPlugin {
-                        scrollEnabled = false
-                    }
-                    fragmentServiceProcessNestedScrollView.requestDisallowInterceptTouchEvent(false)
-                }
-                false // Return false to allow MapView to handle the touch
-            }
-        }
-    }
-
-    private fun updateMap(partnerGeoPoint: GeoPoint? = null) {
-        with(binding) {
-            val annotationApi = fragmentServiceProcessMapView.annotations
-            val pointAnnotationManager = annotationApi.createPointAnnotationManager()
+            Log.d(TAG, "updateMap: $partnerGeoPoint")
 
             if (partnerGeoPoint != null) {
 
-                val userPoint = Point.fromLngLat(
+                val partnerPoint = Point.fromLngLat(
                     partnerGeoPoint.longitude,
                     partnerGeoPoint.latitude
                 )
@@ -747,7 +743,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                 // Update or create user annotation
                 partnerPointAnnotation?.let { existingAnnotation ->
                     // Update existing annotation
-                    existingAnnotation.point = userPoint
+                    existingAnnotation.point = partnerPoint
                     pointAnnotationManager.update(existingAnnotation)
                 } ?: run {
                     // Create new annotation
@@ -755,10 +751,10 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                         BitmapFactory.decodeResource(
                             resources,
                             R.drawable.mp_custom_marker  // Your existing marker for selected location
-                        ).scale(80,80,false)
+                        ).scale(80, 80, false)
 
-                            val userAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
-                        .withPoint(userPoint)
+                    val userAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                        .withPoint(partnerPoint)
                         .withIconImage(partnerMarkerBitmap)
                         .withIconAnchor(IconAnchor.CENTER)
 
@@ -771,12 +767,19 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
                     orderService.selectedLocationLat ?: 0.0
                 )
 
-                val coordinates = listOf(selectedPoint, userPoint)
-                fragmentServiceProcessMapView.mapboxMap.cameraForCoordinates(
-                    coordinates, CameraOptions.Builder().padding(EdgeInsets(100.0, 100.0, 100.0, 100.0)).build(),
-                    EdgeInsets(100.0, 100.0, 100.0, 100.0), null, null
-                ) {
-                    fragmentServiceProcessMapView.mapboxMap.setCamera(it)
+                val coordinates = listOf(selectedPoint, partnerPoint)
+                Log.d(TAG, "updateMap: coordinates: $coordinates")
+                fragmentServiceProcessMapView.mapboxMap.loadStyle(Style.STANDARD) {
+                    fragmentServiceProcessMapView.mapboxMap.cameraForCoordinates(
+                        coordinates,
+//                        CameraOptions.Builder().padding(EdgeInsets(100.0, 100.0, 100.0, 100.0)).build(),
+                        CameraOptions.Builder().build(),
+                        EdgeInsets(100.0, 100.0, 100.0, 100.0), null, null
+//                        null, null, null
+                    ) {
+                        Log.d(TAG, "updateMap: Camera updated: $it")
+                        fragmentServiceProcessMapView.mapboxMap.setCamera(it)
+                    }
                 }
             } else {
                 fragmentServiceProcessMapView.mapboxMap.setCamera(
@@ -858,15 +861,24 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         }
 
         binding.fragmentServiceProcessButtonCancel.setOnClickListener {
-            observeUiStateOneShot(
-                mainGraphViewModel.updateOrderService(
-                    orderService.copy(
-                        updatedAt = Timestamp.now(),
-                        status = OrderStatus.CANCELLED
-                    )
-                )
-            ) {
-            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.cancel_order)
+                .setMessage(R.string.are_you_sure)
+                .setPositiveButton(R.string.cancel_order) { dialog, which ->
+                    observeUiStateOneShot(
+                        mainGraphViewModel.updateOrderService(
+                            orderService.copy(
+                                updatedAt = Timestamp.now(),
+                                status = OrderStatus.CANCELLED
+                            )
+                        )
+                    ) {
+                    }
+                }
+                .setNegativeButton(getString(R.string.dismiss)) { dialog, which ->
+                    dialog.dismiss()
+                }
+                .show()
         }
 
         binding.fragmentServiceProcessButtonComplete.setOnClickListener {
@@ -1043,6 +1055,8 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
         }
         TransitionManager.beginDelayedTransition(binding.root, materialFade)
         binding.fragmentServiceProcessButtonCancel.visibility =
+            if (show) View.VISIBLE else View.GONE
+        binding.fragmentServiceProcessDividerForButtons.visibility =
             if (show) View.VISIBLE else View.GONE
     }
 
@@ -1288,8 +1302,7 @@ class ServiceProcessFragment : BaseFragment(R.layout.fragment_service_process),
     override fun onDestroyView() {
         super.onDestroyView()
         mainGraphViewModel.stopObservingOpenedOrder()
-        observePartnerLiveLocationJob?.cancel()
-        observePartnerLiveLocationJob = null
+        stopObservingPartnerLiveLocation()
     }
 
     override val progressIndicator: LinearProgressIndicator
