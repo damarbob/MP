@@ -17,8 +17,9 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
- * A suspend function UseCase to handle all sign-out logic.
- * This encapsulates clearing tokens, repositories, and signing out.
+ * Use case for handling comprehensive user sign-out with cleanup.
+ *
+ * Manages FCM token removal, repository cleanup, credential clearing, and session termination.
  */
 class SignOutUseCase @Inject constructor(
     private val auth: FirebaseAuth,

@@ -12,6 +12,15 @@ import id.monpres.app.repository.UserIdentityRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+/**
+ * Use case for retrieving or creating user identity with Firestore and local repository synchronization.
+ *
+ * This use case implements a get-or-create pattern that:
+ * - Retrieves existing user identity from Firestore
+ * - Creates new identity if none exists
+ * - Updates identity if email has changed
+ * - Synchronizes all changes with the local repository
+ */
 class GetOrCreateUserIdentityUseCase @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
@@ -22,6 +31,11 @@ class GetOrCreateUserIdentityUseCase @Inject constructor(
         private val TAG: String = GetOrCreateUserIdentityUseCase::class.java.simpleName
     }
 
+    /**
+     * Retrieves or creates user identity for the currently authenticated user.
+     *
+     * @return Result containing UserIdentity on success, or Exception if user is not authenticated or operation fails
+     */
     suspend operator fun invoke(): Result<UserIdentity> {
         val firebaseUser = auth.currentUser
             ?: return Result.failure(Exception("User not authenticated"))

@@ -6,8 +6,19 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for creating or updating vehicle records in Firestore.
+ *
+ * Handles ID generation if not provided.
+ */
 @Singleton
 class InsertVehicleUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
+    /**
+     * Inserts or updates a vehicle in Firestore.
+     *
+     * @param vehicle Vehicle object to insert (generates ID if empty)
+     * @return The inserted vehicle with its final ID
+     */
     suspend operator fun invoke(vehicle: Vehicle): Vehicle {
 
         val vehicleCollection = firestore.collection(Vehicle.COLLECTION)

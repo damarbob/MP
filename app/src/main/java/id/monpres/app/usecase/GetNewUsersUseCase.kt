@@ -12,10 +12,26 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for retrieving paginated user lists with filtering and search capabilities.
+ *
+ * Supports two main modes:
+ * - **Filter mode**: Filter users by verification status with pagination
+ * - **Search mode**: Search users by search tokens
+ */
 @Singleton
 class GetNewUsersUseCase @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
+    /**
+     * Retrieves a paginated list of users with optional filtering and search.
+     *
+     * @param statusFilter Filter users by verification status (PENDING, VERIFIED, REJECTED, or null for all)
+     * @param searchQuery Optional search query to filter users by search tokens
+     * @param limit Maximum number of users to retrieve per page (default: 10)
+     * @param startAfter Document snapshot to start pagination after (for subsequent pages)
+     * @return UserPageResult containing the list of users and the last document for pagination
+     */
     suspend operator fun invoke(
         statusFilter: UserVerificationStatus? = UserVerificationStatus.PENDING,
         searchQuery: String? = null,

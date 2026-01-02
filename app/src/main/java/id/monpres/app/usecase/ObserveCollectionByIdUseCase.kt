@@ -11,6 +11,11 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for observing real-time changes to a single Firestore document by ID.
+ *
+ * Returns a reactive Flow emitting document updates or null if not found.
+ */
 @Singleton
 class ObserveCollectionByIdUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
     companion object {

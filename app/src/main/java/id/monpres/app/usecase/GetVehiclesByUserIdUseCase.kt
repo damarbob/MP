@@ -6,8 +6,17 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for retrieving all vehicles owned by a specific user.
+ */
 @Singleton
 class GetVehiclesByUserIdUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
+    /**
+     * Retrieves all vehicles for a given user.
+     *
+     * @param userId The user's unique identifier
+     * @return List of vehicles or null if an error occurs
+     */
     suspend operator fun invoke(userId: String): List<Vehicle>? {
 
         val vehicleCollection = firestore.collection(Vehicle.COLLECTION)

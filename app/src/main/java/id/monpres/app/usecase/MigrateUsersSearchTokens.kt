@@ -7,12 +7,23 @@ import id.monpres.app.utils.SearchHelper
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+/**
+ * Migration use case for generating and updating search tokens for all users.
+ *
+ * Generates searchable tokens from display name, social IDs, phone numbers, and user IDs.
+ * Uses batch writes for efficiency (450 documents per batch).
+ */
 class MigrateUsersSearchTokens @Inject constructor() {
 
     companion object {
         private val TAG = MigrateUsersSearchTokens::class.simpleName
     }
 
+    /**
+     * Executes the search token migration for all users in Firestore.
+     *
+     * Generates tokens for prefix search (name) and exact match (socials, phone, ID).
+     */
     suspend operator fun invoke() {
         val firestore = FirebaseFirestore.getInstance()
         val usersCollection = firestore.collection(MontirPresisiUser.COLLECTION)
@@ -30,7 +41,7 @@ class MigrateUsersSearchTokens @Inject constructor() {
                 val user = doc.toObject(MontirPresisiUser::class.java)
 
                 if (user != null) {
-                    // 1. Start with a Mutable List
+                    // Start with a Mutable List
                     // Generate prefix tokens for Name (and Socials if you want "starts-with" search for them too)
                     val tokens = SearchHelper.generateSearchTokens(
                         user.displayName
@@ -39,13 +50,13 @@ class MigrateUsersSearchTokens @Inject constructor() {
                         // user.facebookId
                     ).toMutableList()
 
-                    // 2. Add Exact Matches (No prefixes, just the full string)
+                    // Add Exact Matches (No prefixes, just the full string)
                     // Note: We use safe calls (.let) to add only if not null
 
                     user.facebookId?.let { tokens.add(it.lowercase()) }
                     user.instagramId?.let { tokens.add(it.lowercase()) }
 
-                    // 3. Phone Number Logic (Sanitize it!)
+                    // Phone Number Logic (Sanitize it!)
                     // If you save "+62-812", users can't find it by typing "0812"
                     user.phoneNumber?.let { rawPhone ->
 
@@ -61,13 +72,13 @@ class MigrateUsersSearchTokens @Inject constructor() {
                         }
                     }
 
-                    // 4. User ID (Exact match only)
+                    // User ID (Exact match only)
                     user.userId?.let {
                         tokens.add(it) // Exact case
                         tokens.add(it.lowercase()) // Lowercase for safety
                     }
 
-                    // 5. Final Cleanup (Remove duplicates)
+                    // Final Cleanup (Remove duplicates)
                     val finalTokens = tokens.distinct()
 
                     batch.update(doc.reference, "searchTokens", finalTokens)

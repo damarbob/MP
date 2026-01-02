@@ -8,6 +8,12 @@ import id.monpres.app.repository.PartnerRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for retrieving active partner users from Firestore.
+ *
+ * Note: Currently performs client-side filtering of inactive partners.
+ * TODO: Consider using coroutine instead of callback
+ */
 @Singleton
 class GetPartnersUseCase @Inject constructor(
     private val firestore: FirebaseFirestore,
@@ -17,12 +23,16 @@ class GetPartnersUseCase @Inject constructor(
         private val TAG = GetPartnersUseCase::class.java.simpleName
     }
 
-    // In your Repository or ViewModel
+    /**
+     * Retrieves all active partners and synchronizes with the local repository.
+     *
+     * @param onResult Callback invoked with Result containing list of partners or exception
+     */
     operator fun invoke(onResult: (Result<List<MontirPresisiUser>>) -> Unit) {
         firestore
             .collection(MontirPresisiUser.COLLECTION) // TODO: Hardcoded collection name
             .whereEqualTo("role", UserRole.PARTNER)
-//            .whereNotEqualTo("active", false) // TODO: Do server-side filtering instead
+//            .whereNotEqualTo("active", false) // TODO: (unfinished) Do server-side filtering instead
             .get()
             .addOnSuccessListener { querySnapshot ->
                 val partners = ArrayList<MontirPresisiUser>()

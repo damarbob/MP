@@ -11,6 +11,11 @@ import javax.inject.Inject
 class ResendVerificationEmailUseCase @Inject constructor(
     private val auth: FirebaseAuth
 ) {
+    /**
+     * Sends a verification email to the currently authenticated user.
+     *
+     * @throws Exception if user is not authenticated or Firebase send operation fails
+     */
     suspend operator fun invoke() {
         val user = auth.currentUser ?: throw Exception("User not authenticated")
         user.sendEmailVerification().await() // Throws exception on Firebase failure

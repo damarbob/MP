@@ -7,6 +7,11 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for observing user verification status changes via reactive Flow.
+ *
+ * Treats null user or null status as PENDING (default state).
+ */
 @Singleton
 class GetUserVerificationStatusUseCase @Inject constructor(
     private val userRepository: UserRepository

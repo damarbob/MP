@@ -12,11 +12,21 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for observing real-time changes to a user's vehicles via reactive Flow.
+ */
 @Singleton
 class GetVehiclesByUserIdFlowUseCase @Inject constructor(private val firestore: FirebaseFirestore) {
     companion object {
         val TAG = GetVehiclesByUserIdFlowUseCase::class.simpleName
     }
+
+    /**
+     * Observes real-time changes to all vehicles owned by a user.
+     *
+     * @param userId The user's unique identifier
+     * @return Flow emitting updated vehicle lists on changes
+     */
     operator fun invoke(userId: String): Flow<List<Vehicle>> = callbackFlow {
         val listenerRegistration = firestore
             .collection(Vehicle.COLLECTION)

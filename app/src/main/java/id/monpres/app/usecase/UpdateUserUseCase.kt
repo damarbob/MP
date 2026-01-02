@@ -7,6 +7,11 @@ import id.monpres.app.utils.UserUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Use case for updating user documents in Firestore with callback-based result handling.
+ *
+ * Prepares user data before saving and provides success/failure callbacks.
+ */
 @Singleton
 class UpdateUserUseCase @Inject constructor(
     private val firestore: FirebaseFirestore
