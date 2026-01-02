@@ -406,7 +406,11 @@
     <string name="x_days_ago">%d hari yang lalu</string>
 
     <string name="help">Bantuan</string>
+
     <string name="partner_has_arrived">Mitra sudah datang</string>
     <string name="cancel_order">Batalkan pesanan</string>
     <string name="dismiss">Tutup</string>
+
+    <string name="notification_title_new_user">Pengguna Baru Terdaftar</string>
+    <string name="notification_text_new_user">%1$s baru saja mendaftar!</string>
 </resources>

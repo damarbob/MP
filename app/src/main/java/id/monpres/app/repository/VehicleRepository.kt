@@ -12,6 +12,7 @@ import id.monpres.app.usecase.GetVehiclesByUserIdFlowUseCase
 import id.monpres.app.usecase.GetVehiclesByUserIdUseCase
 import id.monpres.app.usecase.InsertVehicleUseCase
 import id.monpres.app.usecase.UpdateVehicleUseCase
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,15 +48,18 @@ class VehicleRepository @Inject constructor(
      * In the background, it also triggers a real-time listener to Firestore to keep the
      * local cache synchronized.
      *
+     * @param scope The coroutine scope to launch the background sync process.
      * @return A [Flow] of a list of [Vehicle] objects from the local cache.
      *         Exceptions from the remote sync process are logged but do not interrupt this flow.
      */
-    suspend fun getVehiclesByUserIdFlow(): Flow<List<Vehicle>> {
+    fun getVehiclesByUserIdFlow(scope: CoroutineScope): Flow<List<Vehicle>> {
         val userId = getCurrentUserId()
 
         // Trigger the background sync process. This is a fire-and-forget coroutine.
         // It will stay alive as long as the viewModelScope that calls this function is alive.
-        syncRemoteToLocal()
+        scope.launch {
+            syncRemoteToLocal()
+        }
 
         // The UI observes the local database directly. Room ensures this flow emits
         // new data whenever the underlying table is changed by the sync process.
@@ -67,22 +72,26 @@ class VehicleRepository @Inject constructor(
      * Helper function to establish a real-time listener from Firestore and sync data to Room.
      */
     private suspend fun syncRemoteToLocal() {
-        val userId = getCurrentUserId()
-        getVehiclesByUserIdFlowUseCase(getCurrentUserId())
-            .onEach { remoteVehicles ->
-                Log.d(TAG, "Sync: Received ${remoteVehicles.size} vehicles from Firestore.")
-                vehicleDao.withTransaction {
-                    // A more sophisticated sync can be done here, e.g., using diffs.
-                    // For simplicity, this replaces all user vehicles with the remote list.
-                    vehicleDao.deleteAllVehiclesByUser(userId)
-                    vehicleDao.insertVehicles(remoteVehicles)
+        try {
+            val userId = getCurrentUserId()
+            getVehiclesByUserIdFlowUseCase(getCurrentUserId())
+                .onEach { remoteVehicles ->
+                    Log.d(TAG, "Sync: Received ${remoteVehicles.size} vehicles from Firestore.")
+                    vehicleDao.withTransaction {
+                        // A more sophisticated sync can be done here, e.g., using diffs.
+                        // For simplicity, this replaces all user vehicles with the remote list.
+                        vehicleDao.deleteAllVehiclesByUser(userId)
+                        vehicleDao.insertVehicles(remoteVehicles)
+                    }
                 }
-            }
-            .catch { e ->
-                // Log Firestore errors. The UI continues to function with cached data.
-                Log.e(TAG, "Sync failed: Firestore error: ${e.message}", e)
-            }
-            .collect() // This is a terminal operator that keeps the flow alive.
+                .catch { e ->
+                    // Log Firestore errors. The UI continues to function with cached data.
+                    Log.e(TAG, "Sync failed: Firestore error: ${e.message}", e)
+                }
+                .collect() // This is a terminal operator that keeps the flow alive.
+        } catch (e: UserNotAuthenticatedException) {
+            Log.w(TAG, "Sync cancelled: User is not authenticated: ${e.message}")
+        }
     }
 
     /**

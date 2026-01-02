@@ -8,9 +8,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import id.monpres.app.R
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.UserRole
 import id.monpres.app.model.OrderService
+import id.monpres.app.notification.GenericNotification
 import id.monpres.app.notification.OrderServiceNotification
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -28,10 +30,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "From: ${remoteMessage.from}")
 
         val data = remoteMessage.data
-        // Ensure the message is an order update with the required fields
-        if (data.isNotEmpty() && data.containsKey("orderId")) {
-            Log.d(TAG, "Message data payload: $data")
-            handleOrderNotification(data)
+        if (data.isEmpty()) {
+            return
+        }
+
+        Log.d(TAG, "Message data payload: $data")
+
+        // Route the notification based on its type
+        when (data["notificationType"]) {
+            "ORDER_UPDATE" -> handleOrderNotification(data)
+            "NEW_USER_REGISTERED" -> handleNewUserRegisteredNotification(remoteMessage)
+            else -> Log.w(TAG, "Received unknown notification type: ${data["notificationType"]}")
         }
     }
 
@@ -79,6 +88,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             orderService.status,
             orderService.updatedAt,
             userRole
+        )
+    }
+
+    /**
+     * Handles the notification sent to admins when a new user signs up.
+     */
+    private fun handleNewUserRegisteredNotification(remoteMessage: RemoteMessage) {
+        val data = remoteMessage.data
+        val newUserName = data["newUserName"] ?: "A new user"
+
+        // For this generic notification, we don't need deep linking logic,
+        // so we can use a simpler notification builder.
+        // We pass the localized title and body directly from the FCM payload.
+        GenericNotification.showNotification(
+            applicationContext,
+            getString(R.string.notification_title_new_user),
+            getString(R.string.notification_text_new_user, newUserName),
+            R.id.action_global_adminNewUsersFragment
         )
     }
 

@@ -11,6 +11,7 @@ import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.module.CoroutineModule
+import id.monpres.app.notification.GenericNotification
 import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
@@ -59,6 +60,7 @@ sealed class DialogState {
 sealed class NavigationEvent {
     data class ToServiceProcess(val orderId: String) : NavigationEvent()
     data object ToLogin : NavigationEvent()
+    data class ToOther(val destination: Int) : NavigationEvent()
 }
 
 /**
@@ -181,6 +183,13 @@ class MainViewModel @Inject constructor(
                             _navigationEvent.emit(NavigationEvent.ToServiceProcess(orderId))
                             _pendingIntent.value = null // Consume the intent
                         }
+
+                        val fragmentCls = intent.getIntExtra(GenericNotification.DESTINATION_FRAGMENT_ID_KEY, -1)
+                        if (fragmentCls != -1) {
+                            Log.d(TAG, "Processing pending intent for fragment: $fragmentCls")
+                            _navigationEvent.emit(NavigationEvent.ToOther(fragmentCls))
+                            _pendingIntent.value = null // Consume the intent
+                        }
                     }
                 }
         }
@@ -234,8 +243,10 @@ class MainViewModel @Inject constructor(
      * Called by Activity to buffer an intent for processing.
      */
     fun setPendingIntent(intent: Intent?) {
-        if (intent?.hasExtra(OrderServiceNotification.ORDER_ID_KEY) == true) {
-            _pendingIntent.value = intent
+        when {
+            intent?.hasExtra(OrderServiceNotification.ORDER_ID_KEY) == true || intent?.hasExtra(GenericNotification.DESTINATION_FRAGMENT_ID_KEY) == true -> {
+                _pendingIntent.value = intent
+            }
         }
     }
 

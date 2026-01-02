@@ -282,7 +282,7 @@ class MainGraphViewModel @Inject constructor(
         vehiclesJob?.cancel()
 
         vehiclesJob = viewModelScope.launch {
-            vehicleRepository.getVehiclesByUserIdFlow()
+            vehicleRepository.getVehiclesByUserIdFlow(this)
                 .takeUntilSignal(sessionManager.externalSignOutSignal)
                 .onStart { _userVehiclesState.value = Loading }
                 .catch { e ->

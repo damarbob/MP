@@ -277,10 +277,6 @@
             app:argType="id.monpres.app.model.OrderService" />
     </fragment>
     <fragment
-        android:id="@+id/settingsFragment"
-        android:name="id.monpres.app.ui.settings.SettingsFragment"
-        android:label="SettingsFragment" />
-    <fragment
         android:id="@+id/monpresSettingFragment"
         android:name="id.monpres.app.ui.settings.MonpresSettingFragment"
         android:label="@string/setting"
@@ -306,9 +302,6 @@
         android:id="@+id/action_global_partnerSelectionFragment"
         app:destination="@id/partnerSelectionFragment" />
     <action
-        android:id="@+id/action_global_settingsFragment"
-        app:destination="@id/settingsFragment" />
-    <action
         android:id="@+id/action_global_orderServiceEditFragment"
         app:destination="@id/orderServiceEditFragment">
         <argument
@@ -328,5 +321,8 @@
         app:destination="@id/adminHomeFragment"
         app:popUpTo="@id/nav_main"
         app:popUpToInclusive="true"/>
+    <action
+        android:id="@+id/action_global_adminNewUsersFragment"
+        app:destination="@id/adminNewUsersFragment" />
 
 </navigation>

@@ -406,6 +406,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                                     )
                                 })
                         }
+                        is NavigationEvent.ToOther -> navController.navigate(event.destination)
                     }
                 }
             }
