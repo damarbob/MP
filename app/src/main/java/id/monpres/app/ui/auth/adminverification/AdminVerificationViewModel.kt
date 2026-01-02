@@ -4,14 +4,14 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import id.monpres.app.libraries.ErrorLocalizer
+import id.monpres.app.data.network.NetworkMonitor
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.UiState
 import id.monpres.app.state.UiState.Empty
 import id.monpres.app.state.UiState.Loading
 import id.monpres.app.state.UiState.Success
-import id.monpres.app.utils.NetworkConnectivityObserver
+import id.monpres.app.ui.common.mapper.ErrorMessageMapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -25,7 +25,7 @@ import kotlin.coroutines.cancellation.CancellationException
 @HiltViewModel
 class AdminVerificationViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val networkConnectivityObserver: NetworkConnectivityObserver,
+    private val NetworkMonitor: NetworkMonitor,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     companion object {
@@ -61,8 +61,8 @@ class AdminVerificationViewModel @Inject constructor(
         Log.d(TAG, "Updating user: $user")
         emit(Loading)
 
-        if (!networkConnectivityObserver.isConnected()) {
-            _errorEvent.emit(IOException(ErrorLocalizer.FIREBASE_PENDING_WRITE))
+        if (!NetworkMonitor.isConnected()) {
+            _errorEvent.emit(IOException(ErrorMessageMapper.FIREBASE_PENDING_WRITE))
             emit(Empty)
             return@flow
         }

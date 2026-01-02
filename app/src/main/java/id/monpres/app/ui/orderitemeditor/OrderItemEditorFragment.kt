@@ -29,10 +29,10 @@ import id.monpres.app.MainViewModel
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentOrderItemEditorBinding
 import id.monpres.app.enums.UserRole
-import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
 import id.monpres.app.ui.adapter.OrderItemEditorAdapter
+import id.monpres.app.ui.common.mapper.ErrorMessageMapper
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.CalculateAerialDistanceUseCase
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
@@ -92,7 +92,9 @@ class OrderItemEditorFragment : Fragment(R.layout.fragment_order_item_editor) {
     private fun setupData() {
         val user = mainViewModel.getCurrentUser()
         if (user == null) {
-            Toast.makeText(requireContext(), ErrorLocalizer.getLocalizedError(requireContext(),
+            Toast.makeText(
+                requireContext(), ErrorMessageMapper.getLocalizedError(
+                    requireContext(),
                 IllegalStateException()), Toast.LENGTH_SHORT).show()
             return
         }

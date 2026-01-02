@@ -41,12 +41,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import id.monpres.app.MainApplication.Companion.APP_REGION
 import id.monpres.app.MainApplication.Companion.userRegion
+import id.monpres.app.data.local.AppPreferences
 import id.monpres.app.databinding.ActivityLoginBinding
 import id.monpres.app.enums.Language
 import id.monpres.app.enums.ThemeMode
-import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.module.CoroutineModule
-import id.monpres.app.repository.AppPreferences
+import id.monpres.app.ui.common.mapper.ErrorMessageMapper
 import id.monpres.app.usecase.GetUserVerificationStatusUseCase
 import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import kotlinx.coroutines.CoroutineScope
@@ -237,7 +237,7 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
                 viewModel.errorEvent.collect { exception ->
                     Toast.makeText(
                         this@LoginActivity,
-                        ErrorLocalizer.getLocalizedError(this@LoginActivity, exception),
+                        ErrorMessageMapper.getLocalizedError(this@LoginActivity, exception),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -336,7 +336,7 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
                         Toast.makeText(
                             this, getString(
                                 R.string.google_sign_in_failed,
-                                ErrorLocalizer.getLocalizedError(this, e)
+                                ErrorMessageMapper.getLocalizedError(this, e)
                             ), Toast.LENGTH_SHORT
                         ).show()
                     }

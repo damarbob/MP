@@ -22,9 +22,9 @@ import id.monpres.app.AuthViewModel
 import id.monpres.app.MainApplication
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentAdminVerificationBinding
-import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.ui.common.mapper.ErrorMessageMapper
 import id.monpres.app.usecase.OpenWhatsAppUseCase
 import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import id.monpres.app.utils.hideKeyboard
@@ -119,7 +119,7 @@ class AdminVerificationFragment : BaseFragment(R.layout.fragment_admin_verificat
                 viewModel.errorEvent.collect { exception ->
                     Toast.makeText(
                         requireContext(),
-                        ErrorLocalizer.getLocalizedErrorWithLog(requireContext(), exception),
+                        ErrorMessageMapper.getLocalizedErrorWithLog(requireContext(), exception),
                         Toast.LENGTH_SHORT
                     ).show()
                 }

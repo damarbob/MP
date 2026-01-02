@@ -1,4 +1,4 @@
-package id.monpres.app.interfaces
+package id.monpres.app.model
 
 import com.google.firebase.Timestamp
 import id.monpres.app.enums.OrderStatus

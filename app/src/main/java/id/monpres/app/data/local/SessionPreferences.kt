@@ -1,10 +1,10 @@
-package id.monpres.app.libraries
+package id.monpres.app.data.local
 
 import android.app.Activity
 import android.content.Context
 import androidx.core.content.edit
 
-class Preferences {
+class SessionPreferences {
     companion object {
 
         fun readString(activity: Activity, key: String?): String? {
@@ -23,7 +23,8 @@ class Preferences {
         }
 
         fun readBoolean(activity: Activity, key: String, defaultValue: Boolean?): Boolean {
-            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(key,
+            return activity.getPreferences(Context.MODE_PRIVATE).getBoolean(
+                key,
                 defaultValue ?: false
             )
         }
@@ -36,7 +37,8 @@ class Preferences {
         }
 
         fun readInt(activity: Activity, key: String, defaultValue: Int?): Int {
-            return activity.getPreferences(Context.MODE_PRIVATE).getInt(key,
+            return activity.getPreferences(Context.MODE_PRIVATE).getInt(
+                key,
                 defaultValue ?: 0
             )
         }
@@ -48,23 +50,35 @@ class Preferences {
             }
         }
 
-        fun readSharedInt(context: Context, sharedPreference: String, key: String, defaultValue: Int?): Int {
-            return context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE).getInt(key, defaultValue ?: 0)
+        fun readSharedInt(
+            context: Context,
+            sharedPreference: String,
+            key: String,
+            defaultValue: Int?
+        ): Int {
+            return context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE)
+                .getInt(key, defaultValue ?: 0)
         }
 
         fun saveSharedInt(context: Context, sharedPreference: String, key: String, value: Int) {
-            context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE).edit().apply{
+            context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE).edit().apply {
                 putInt(key, value)
                 apply()
             }
         }
 
-        fun readSharedLong(context: Context, sharedPreference: String, key: String, defaultValue: Long?): Long {
-            return context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE).getLong(key, defaultValue ?: 0L)
+        fun readSharedLong(
+            context: Context,
+            sharedPreference: String,
+            key: String,
+            defaultValue: Long?
+        ): Long {
+            return context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE)
+                .getLong(key, defaultValue ?: 0L)
         }
 
         fun saveSharedLong(context: Context, sharedPreference: String, key: String, value: Long) {
-            context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE).edit().apply{
+            context.getSharedPreferences(sharedPreference, Context.MODE_PRIVATE).edit().apply {
                 putLong(key, value)
                 apply()
             }

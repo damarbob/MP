@@ -36,12 +36,12 @@ import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.VehiclePowerSource
 import id.monpres.app.enums.VehicleTransmission
-import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.PaymentMethod
 import id.monpres.app.model.VehicleType
 import id.monpres.app.ui.adapter.OrderItemAdapter
+import id.monpres.app.ui.common.interfaces.IOrderServiceProvider
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.usecase.SaveImageToGalleryUseCase

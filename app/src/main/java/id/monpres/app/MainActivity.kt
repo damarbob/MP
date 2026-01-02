@@ -50,21 +50,21 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
+import id.monpres.app.data.local.AppPreferences
+import id.monpres.app.data.network.NetworkMonitor
 import id.monpres.app.databinding.ActivityMainBinding
 import id.monpres.app.enums.Language
 import id.monpres.app.enums.ThemeMode
 import id.monpres.app.enums.UserRole
-import id.monpres.app.libraries.ActivityRestartable
-import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.notification.OrderServiceNotification
-import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.service.OrderServiceLocationTrackingService
+import id.monpres.app.ui.common.base.ActivityRestartable
+import id.monpres.app.ui.common.mapper.ErrorMessageMapper
 import id.monpres.app.ui.serviceprocess.ServiceProcessFragment
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.usecase.MigrateUsersSearchTokens
 import id.monpres.app.usecase.OpenWhatsAppUseCase
-import id.monpres.app.utils.NetworkConnectivityObserver
 import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
 
     /* Others */
     @Inject
-    lateinit var networkConnectivityObserver: NetworkConnectivityObserver
+    lateinit var NetworkMonitor: NetworkMonitor
 
     /* Permissions */
     private val requestMultiplePermissionsLauncher =
@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
         super.onCreate(savedInstanceState)
         applyInitialSettings()
 
-        networkConnectivityObserver.registerNetworkCallback()
+        NetworkMonitor.registerNetworkCallback()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setupWindowInsets()
@@ -268,7 +268,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
                     navHostFragment?.childFragmentManager?.fragments?.firstOrNull()
 
                 // 2. Check if it provides an OrderService
-                if (currentFragment is id.monpres.app.interfaces.IOrderServiceProvider) {
+                if (currentFragment is id.monpres.app.ui.common.interfaces.IOrderServiceProvider) {
                     val orderService = currentFragment.getCurrentOrderService()
 
                     if (orderService != null) {
@@ -356,7 +356,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.errorEvent.collect { exception ->
-                    val message = ErrorLocalizer.getLocalizedError(this@MainActivity, exception)
+                    val message = ErrorMessageMapper.getLocalizedError(this@MainActivity, exception)
                     Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
                 }
             }
@@ -366,7 +366,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainGraphViewModel.errorEvent.collect { exception ->
-                    val message = ErrorLocalizer.getLocalizedError(this@MainActivity, exception)
+                    val message = ErrorMessageMapper.getLocalizedError(this@MainActivity, exception)
                     Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
                 }
             }
@@ -773,12 +773,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), ActivityRestarta
 
     override fun onStop() {
         super.onStop()
-        networkConnectivityObserver.cleanup()
+        NetworkMonitor.cleanup()
     }
 
     override fun onRestart() {
         super.onRestart()
-        networkConnectivityObserver.registerNetworkCallback()
+        NetworkMonitor.registerNetworkCallback()
     }
 
     override fun onStart() {

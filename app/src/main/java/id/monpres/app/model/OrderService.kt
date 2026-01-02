@@ -3,7 +3,6 @@ package id.monpres.app.model
 import android.os.Parcelable
 import com.google.firebase.Timestamp
 import id.monpres.app.enums.OrderStatus
-import id.monpres.app.interfaces.IOrder
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

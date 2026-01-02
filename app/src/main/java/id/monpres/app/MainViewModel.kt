@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.data.local.AppPreferences
+import id.monpres.app.data.network.NetworkMonitor
 import id.monpres.app.enums.Language
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
@@ -13,7 +15,6 @@ import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.module.CoroutineModule
 import id.monpres.app.notification.GenericNotification
 import id.monpres.app.notification.OrderServiceNotification
-import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.state.ConnectionState
 import id.monpres.app.usecase.CheckEmailVerificationUseCase
@@ -22,7 +23,6 @@ import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetUserVerificationStatusUseCase
 import id.monpres.app.usecase.ResendVerificationEmailUseCase
 import id.monpres.app.usecase.SignOutUseCase
-import id.monpres.app.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -76,7 +76,7 @@ sealed class ToastEvent {
 class MainViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val userRepository: UserRepository,
-    private val networkConnectivityObserver: NetworkConnectivityObserver,
+    private val NetworkMonitor: NetworkMonitor,
     // --- USE CASES (Assumed to be refactored as suspend functions) ---
     private val getOrCreateUserUseCase: GetOrCreateUserUseCase,
     private val getOrCreateUserIdentityUseCase: GetOrCreateUserIdentityUseCase,
@@ -139,7 +139,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeNetwork() {
         viewModelScope.launch {
-            networkConnectivityObserver.networkStatus.collect { status ->
+            NetworkMonitor.networkStatus.collect { status ->
                 Log.d(TAG, "Network status: ${status.state}")
                 when (status.state) {
                     ConnectionState.Connected -> {

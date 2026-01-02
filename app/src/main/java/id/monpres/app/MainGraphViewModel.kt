@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.data.network.NetworkMonitor
 import id.monpres.app.enums.OrderStatus
 import id.monpres.app.enums.UserRole
-import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderService
 import id.monpres.app.model.Vehicle
@@ -23,7 +23,7 @@ import id.monpres.app.state.UiState.Empty
 import id.monpres.app.state.UiState.Error
 import id.monpres.app.state.UiState.Loading
 import id.monpres.app.state.UiState.Success
-import id.monpres.app.utils.NetworkConnectivityObserver
+import id.monpres.app.ui.common.mapper.ErrorMessageMapper
 import id.monpres.app.utils.takeUntilSignal
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -52,7 +52,7 @@ class MainGraphViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val userRepository: UserRepository,
     private val application: Application,
-    private val networkConnectivityObserver: NetworkConnectivityObserver,
+    private val NetworkMonitor: NetworkMonitor,
     private val auth: FirebaseAuth
 ) : ViewModel() {
     companion object {
@@ -104,7 +104,7 @@ class MainGraphViewModel @Inject constructor(
     init {
         Log.d(TAG, "ViewModel init")
         viewModelScope.launch {
-            networkConnectivityObserver.networkStatus.collect { status ->
+            NetworkMonitor.networkStatus.collect { status ->
                 when (status.state) {
                     ConnectionState.Connected -> {
                         if (auth.currentUser != null && _currentUser.value?.id != auth.currentUser?.uid) {
@@ -372,8 +372,8 @@ class MainGraphViewModel @Inject constructor(
         Log.d(TAG, "Updating order service: $orderService")
         emit(Loading)
 
-        if (!networkConnectivityObserver.isConnected()) {
-            _errorEvent.emit(IOException(ErrorLocalizer.FIREBASE_PENDING_WRITE))
+        if (!NetworkMonitor.isConnected()) {
+            _errorEvent.emit(IOException(ErrorMessageMapper.FIREBASE_PENDING_WRITE))
             emit(Empty)
             return@flow
         }
@@ -397,8 +397,8 @@ class MainGraphViewModel @Inject constructor(
         Log.d(TAG, "Updating vehicle: $vehicle")
         emit(Loading)
 
-        if (!networkConnectivityObserver.isConnected()) {
-            _errorEvent.emit(IOException(ErrorLocalizer.FIREBASE_PENDING_WRITE))
+        if (!NetworkMonitor.isConnected()) {
+            _errorEvent.emit(IOException(ErrorMessageMapper.FIREBASE_PENDING_WRITE))
             emit(Error(""))
             return@flow
         }
@@ -423,8 +423,8 @@ class MainGraphViewModel @Inject constructor(
         Log.d(TAG, "Insert vehicle: $vehicle")
         emit(Loading)
 
-        if (!networkConnectivityObserver.isConnected()) {
-            _errorEvent.emit(IOException(ErrorLocalizer.FIREBASE_PENDING_WRITE))
+        if (!NetworkMonitor.isConnected()) {
+            _errorEvent.emit(IOException(ErrorMessageMapper.FIREBASE_PENDING_WRITE))
             emit(Error(""))
             return@flow
         }

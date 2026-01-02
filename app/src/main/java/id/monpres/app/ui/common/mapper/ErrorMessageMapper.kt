@@ -1,4 +1,4 @@
-package id.monpres.app.libraries
+package id.monpres.app.ui.common.mapper
 
 import android.content.Context
 import android.util.Log
@@ -10,7 +10,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import java.io.IOException
 import java.net.SocketTimeoutException
 
-object ErrorLocalizer {
+object ErrorMessageMapper {
 
     /**
      * Convert any Throwable to a user-friendly localized message
@@ -30,7 +30,11 @@ object ErrorLocalizer {
     /**
      * Get localized error with additional logging
      */
-    fun getLocalizedErrorWithLog(context: Context, throwable: Throwable, tag: String = "ErrorLocalizer"): String {
+    fun getLocalizedErrorWithLog(
+        context: Context,
+        throwable: Throwable,
+        tag: String = "ErrorMessageMapper"
+    ): String {
         val localizedMessage = getLocalizedError(context, throwable)
 
         // Log the actual exception for debugging
@@ -43,7 +47,10 @@ object ErrorLocalizer {
         return localizedMessage
     }
 
-    private fun mapFirebaseAuthException(context: Context, exception: FirebaseAuthException): String {
+    private fun mapFirebaseAuthException(
+        context: Context,
+        exception: FirebaseAuthException
+    ): String {
         return when (exception.errorCode) {
             "ERROR_INVALID_EMAIL" -> context.getString(R.string.error_invalid_email)
             "ERROR_INVALID_CREDENTIAL" -> context.getString(R.string.error_invalid_credential)
@@ -57,7 +64,10 @@ object ErrorLocalizer {
         }
     }
 
-    private fun mapFirestoreException(context: Context, exception: FirebaseFirestoreException): String {
+    private fun mapFirestoreException(
+        context: Context,
+        exception: FirebaseFirestoreException
+    ): String {
         return when (exception.code) {
             FirebaseFirestoreException.Code.NOT_FOUND -> context.getString(R.string.error_document_not_found)
             FirebaseFirestoreException.Code.PERMISSION_DENIED -> context.getString(R.string.error_permission_denied)
@@ -72,10 +82,13 @@ object ErrorLocalizer {
         return when {
             exception.message?.contains("ENOSPC", ignoreCase = true) == true ->
                 context.getString(R.string.error_storage_full)
+
             exception.message?.contains("ENOENT", ignoreCase = true) == true ->
                 context.getString(R.string.error_file_not_found)
+
             exception is SocketTimeoutException ->
                 context.getString(R.string.error_timeout)
+
             exception.message?.contains(FIREBASE_PENDING_WRITE) == true -> context.getString(R.string.operation_postponed_until_online)
             else -> context.getString(R.string.error_network)
         }
@@ -85,6 +98,7 @@ object ErrorLocalizer {
         return when {
             exception.message?.contains("permission", ignoreCase = true) == true ->
                 context.getString(R.string.error_storage_permission)
+
             else -> context.getString(R.string.error_permission_denied)
         }
     }

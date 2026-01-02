@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.data.local.AppPreferences
 import id.monpres.app.enums.Language
 import id.monpres.app.enums.ThemeMode
-import id.monpres.app.repository.AppPreferences
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

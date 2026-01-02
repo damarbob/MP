@@ -1,4 +1,4 @@
-package id.monpres.app.utils
+package id.monpres.app.data.network
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -16,12 +16,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NetworkConnectivityObserver @Inject constructor(
+class NetworkMonitor @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
 
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
     // Register network callback
     private var networkRequest: NetworkRequest = NetworkRequest.Builder()
         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -55,7 +56,8 @@ class NetworkConnectivityObserver @Inject constructor(
     }
 
     private fun getCurrentNetworkStatus(): NetworkStatus {
-        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
         return if (capabilities != null) {
             val type = when {
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> ConnectionType.WiFi
@@ -70,9 +72,10 @@ class NetworkConnectivityObserver @Inject constructor(
     }
 
     private fun updateNetworkStatus(capabilities: NetworkCapabilities? = null) {
-        val currentCapabilities = capabilities ?:
-        connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        Log.d("NetworkConnectivityObserver", "getCurrentNetworkStatus: $currentCapabilities")
+        val currentCapabilities = capabilities ?: connectivityManager.getNetworkCapabilities(
+            connectivityManager.activeNetwork
+        )
+        Log.d("NetworkMonitor", "getCurrentNetworkStatus: $currentCapabilities")
 
         if (currentCapabilities != null) {
             val type = when {

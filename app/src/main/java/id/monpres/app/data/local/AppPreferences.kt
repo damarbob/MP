@@ -1,4 +1,4 @@
-package id.monpres.app.repository
+package id.monpres.app.data.local
 
 import android.content.Context
 import android.util.Log
@@ -123,7 +123,8 @@ class AppPreferences @Inject constructor(@ApplicationContext private val context
     // --- Payment Method ---
     val paymentMethodId: Flow<String> = context.dataStore.data
         .map { preferences ->
-            preferences[PreferenceKeys.PAYMENT_METHOD_ID] ?: PaymentMethod.CASH_ID // Default to cash
+            preferences[PreferenceKeys.PAYMENT_METHOD_ID]
+                ?: PaymentMethod.CASH_ID // Default to cash
         }
 
     suspend fun setPaymentMethodId(id: String) {

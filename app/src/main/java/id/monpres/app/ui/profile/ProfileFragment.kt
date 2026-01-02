@@ -36,11 +36,11 @@ import id.monpres.app.R
 import id.monpres.app.databinding.FragmentEditProfileBinding
 import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
-import id.monpres.app.libraries.ErrorLocalizer
 import id.monpres.app.model.MapsActivityExtraData
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.state.UiState
 import id.monpres.app.ui.BaseFragment
+import id.monpres.app.ui.common.mapper.ErrorMessageMapper
 import id.monpres.app.usecase.GetColorFromAttrUseCase
 import id.monpres.app.utils.dpToPx
 import id.monpres.app.utils.hideKeyboard
@@ -199,7 +199,7 @@ class ProfileFragment : BaseFragment(R.layout.fragment_edit_profile) {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.errorEvent.collect {
-                    ErrorLocalizer.getLocalizedErrorWithLog(requireContext(), it)
+                    ErrorMessageMapper.getLocalizedErrorWithLog(requireContext(), it)
                 }
             }
         }

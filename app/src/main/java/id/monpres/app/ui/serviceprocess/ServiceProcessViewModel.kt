@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.data.local.AppPreferences
 import id.monpres.app.model.PaymentMethod
-import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.LivePartnerLocationRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -82,7 +82,6 @@ import id.monpres.app.enums.PartnerCategory
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.VehiclePowerSource
 import id.monpres.app.enums.VehicleTransmission
-import id.monpres.app.interfaces.IOrderServiceProvider
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.model.OrderItem
 import id.monpres.app.model.OrderService
@@ -92,6 +91,7 @@ import id.monpres.app.notification.OrderServiceNotification
 import id.monpres.app.state.UiState
 import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.OrderItemAdapter
+import id.monpres.app.ui.common.interfaces.IOrderServiceProvider
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.ui.orderitemeditor.OrderItemEditorFragment
 import id.monpres.app.ui.payment.PaymentGuideBottomSheetFragment

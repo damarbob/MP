@@ -11,12 +11,12 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
+import id.monpres.app.data.local.AppPreferences
 import id.monpres.app.enums.Language
 import id.monpres.app.enums.UserRole
 import id.monpres.app.enums.UserVerificationStatus
 import id.monpres.app.model.MontirPresisiUser
 import id.monpres.app.module.CoroutineModule
-import id.monpres.app.repository.AppPreferences
 import id.monpres.app.repository.UserRepository
 import id.monpres.app.usecase.GetOrCreateUserUseCase
 import id.monpres.app.usecase.GetUserVerificationStatusUseCase
