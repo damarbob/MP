@@ -95,14 +95,8 @@ class PartnerRepository @Inject constructor(
             TurfConstants.UNIT_KILOMETERS
         )
 
-//        val results = FloatArray(1)
-//        Location.distanceBetween(currentUserLat, currentUserLng, partnerLat, partnerLng, results)
-//        return results[0]
-
         // Cache the result
         distanceCache[partnerId] = distance
         return distance
-//        distanceCache[partnerId] = results[0].toDouble() / 1000
-//        return results[0].toDouble() / 1000
     }
 }
