@@ -50,7 +50,8 @@
                     android:contentDescription="Email Icon"
                     app:lottie_autoPlay="true"
                     app:lottie_fileName="lotties/car_json.json"
-                    app:lottie_loop="true" />
+                    app:lottie_loop="true"
+                    app:lottie_renderMode="hardware" />
             </LinearLayout>
 
             <LinearLayout

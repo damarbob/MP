@@ -42,7 +42,8 @@
             app:lottie_rawRes="@raw/car_json"
             app:lottie_loop="true"
             app:lottie_autoPlay="true"
-            app:lottie_fallbackRes="@raw/car"/>
+            app:lottie_fallbackRes="@raw/car"
+            app:lottie_renderMode="hardware"/>
 
         <com.google.android.material.textview.MaterialTextView
             style="@style/Widget.App.H5"
