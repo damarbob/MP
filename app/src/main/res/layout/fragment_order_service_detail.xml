@@ -782,9 +782,7 @@
         style="@style/Widget.Material3.FloatingToolbar.Vibrant"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
-        android:layout_margin="16dp"
-        app:layout_behavior="com.google.android.material.behavior.HideViewOnScrollBehavior">
+        android:layout_gravity="bottom|center">
 
         <!-- floating toolbar sample content -->
         <com.google.android.material.overflow.OverflowLinearLayout

@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
-import androidx.core.view.updateMarginsRelative
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.FragmentNavigatorExtras
@@ -29,6 +28,7 @@ import id.monpres.app.ui.BaseFragment
 import id.monpres.app.ui.adapter.VehicleAdapter
 import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.utils.dpToPx
+import id.monpres.app.utils.setMargins
 
 @AndroidEntryPoint
 class VehicleListFragment : BaseFragment(R.layout.fragment_vehicle_list) {
@@ -66,7 +66,7 @@ class VehicleListFragment : BaseFragment(R.layout.fragment_vehicle_list) {
                 insets.right,
                 insets.bottom
             )
-            WindowInsetsCompat.CONSUMED
+            windowInsets
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentListVehicleFloatingActionButtonAddVehicle) { v, windowInsets ->
             val insets =
@@ -75,11 +75,11 @@ class VehicleListFragment : BaseFragment(R.layout.fragment_vehicle_list) {
             // only the bottom, left, and right dimensions, but you can apply whichever
             // insets are appropriate to your layout. You can also update the view padding
             // if that's more appropriate.
-            (v.layoutParams as ViewGroup.MarginLayoutParams).updateMarginsRelative(
-                insets.left + 16.dpToPx(requireActivity()),
-                0,
-                insets.right + 16.dpToPx(requireActivity()),
-                insets.bottom + 16.dpToPx(requireActivity())
+            v.setMargins(
+                left = insets.left + 16.dpToPx(requireActivity()),
+                top = 0,
+                right = insets.right + 16.dpToPx(requireActivity()),
+                bottom = insets.bottom + 16.dpToPx(requireActivity())
             )
 
             // Return CONSUMED if you don't want the window insets to keep passing

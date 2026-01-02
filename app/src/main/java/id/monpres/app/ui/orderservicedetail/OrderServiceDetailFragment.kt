@@ -46,7 +46,9 @@ import id.monpres.app.ui.itemdecoration.SpacingItemDecoration
 import id.monpres.app.usecase.IndonesianCurrencyFormatter
 import id.monpres.app.usecase.SaveImageToGalleryUseCase
 import id.monpres.app.usecase.SavePdfToDownloadsUseCase
+import id.monpres.app.utils.dpToPx
 import id.monpres.app.utils.enumByNameIgnoreCaseOrNull
+import id.monpres.app.utils.setMargins
 import id.monpres.app.utils.toDateTimeDisplayString
 import kotlinx.coroutines.launch
 import java.io.File
@@ -112,6 +114,22 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
                 insets.right,
                 insets.bottom
             )
+//            WindowInsetsCompat.CONSUMED
+            windowInsets
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentOrderServiceDetailFloatingToolbarLayout) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+
+            v.setMargins(
+                bottom = insets.bottom + 16.dpToPx(requireActivity()),
+                left = insets.left + 16.dpToPx(requireActivity()),
+                right = insets.right + 16.dpToPx(requireActivity())
+            )
+
+            // Return CONSUMED if you don't want the window insets to keep passing
+            // down to descendant views.
             WindowInsetsCompat.CONSUMED
         }
 
@@ -329,8 +347,12 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
                 )
             )
             // Header
-            fragmentOrderServiceDetailTitle.text = if (orderService.status == OrderStatus.COMPLETED) getString(R.string.invoice) else orderService.status?.labelResId?.let { getString(it) }
-            fragmentOrderServiceDetailServiceName.text = MainApplication.services?.find { it.id == orderService.serviceId }?.name
+            fragmentOrderServiceDetailTitle.text =
+                if (orderService.status == OrderStatus.COMPLETED) getString(R.string.invoice) else orderService.status?.labelResId?.let {
+                    getString(it)
+                }
+            fragmentOrderServiceDetailServiceName.text =
+                MainApplication.services?.find { it.id == orderService.serviceId }?.name
             fragmentOrderServiceDetailDate.text =
                 orderService.updatedAt.toDateTimeDisplayString(
                     dateStyle = DateFormat.MEDIUM,
@@ -370,7 +392,11 @@ class OrderServiceDetailFragment : Fragment(R.layout.fragment_order_service_deta
 
             // General info
             fragmentOrderServiceDetailInvoiceNumber.text = orderService.id ?: ""
-            fragmentOrderServiceDetailPaymentMethod.text = PaymentMethod.getDefaultPaymentMethodById(requireContext(), orderService.paymentMethod ?: "")?.name ?: ""
+            fragmentOrderServiceDetailPaymentMethod.text =
+                PaymentMethod.getDefaultPaymentMethodById(
+                    requireContext(),
+                    orderService.paymentMethod ?: ""
+                )?.name ?: ""
             fragmentOrderServiceDetailPartner.text = orderService.partnerId ?: ""
             fragmentOrderServiceDetailVehicle.text = orderService.vehicle?.name ?: ""
             val issueEnum = orderService.issue?.let { PartnerCategory.fromName(it) }

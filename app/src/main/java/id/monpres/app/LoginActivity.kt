@@ -9,7 +9,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.postOnAnimationDelayed
+import androidx.core.view.updatePadding
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -86,6 +91,8 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        setupWindowInsets()
 
         applyInitialSettings()
 
@@ -100,6 +107,35 @@ class LoginActivity : AppCompatActivity(R.layout.activity_login) {
         )
 
         checkRegionAndInitialize()
+    }
+
+    private fun setupWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+
+            // Apply padding to the root for navigation drawer cutouts
+            v.setPadding(insets.left, 0, insets.right, 0)
+
+            // NavHostFragment (main content)
+            binding.navHostFragmentActivityLogin.updatePadding(
+                top = insets.top,
+                left = insets.left,
+                right = insets.right
+            )
+
+            binding.activityLoginContainerLoading.updatePadding(
+                top = insets.top,
+                bottom = insets.bottom,
+                left = insets.left,
+                right = insets.right
+            )
+
+            WindowInsetsCompat.Builder(windowInsets).setInsets(
+                WindowInsetsCompat.Type.systemBars(),
+                Insets.of(0, insets.top, 0, insets.bottom)
+            ).build()
+        }
     }
 
     private fun checkInitialUserState() {

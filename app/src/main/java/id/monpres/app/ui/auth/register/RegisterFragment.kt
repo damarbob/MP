@@ -6,6 +6,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -21,7 +22,6 @@ import id.monpres.app.AuthViewModel
 import id.monpres.app.LoginActivity
 import id.monpres.app.R
 import id.monpres.app.databinding.FragmentRegisterBinding
-import id.monpres.app.ui.insets.InsetsWithKeyboardCallback
 import id.monpres.app.utils.hideKeyboard
 import id.monpres.app.utils.requestFocusAndShowKeyboard
 import kotlinx.coroutines.launch
@@ -50,10 +50,16 @@ class RegisterFragment : Fragment(R.layout.fragment_register) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Set insets with keyboard
-        val insetsWithKeyboardCallback =
-            InsetsWithKeyboardCallback(requireActivity().window, 0, null)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root, insetsWithKeyboardCallback)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.registerNestedScrollView) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(insets.left, 0, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
 
         setupObservers()
         setupListeners()
