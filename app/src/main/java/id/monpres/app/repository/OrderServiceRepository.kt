@@ -5,7 +5,6 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import id.monpres.app.model.OrderService
 import id.monpres.app.usecase.ObserveCollectionByFieldUseCase
-import id.monpres.app.usecase.ObserveCollectionByUserIdUseCase
 import id.monpres.app.usecase.ObserveCollectionUseCase
 import id.monpres.app.usecase.UpdateDataByIdUseCase
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +19,6 @@ import javax.inject.Singleton
 @Singleton
 class OrderServiceRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val observeCollectionByUserIdUseCase: ObserveCollectionByUserIdUseCase,
     private val observeCollectionByFieldUseCase: ObserveCollectionByFieldUseCase,
     private val observeCollectionUseCase: ObserveCollectionUseCase,
     private val updateDataByIdUseCase: UpdateDataByIdUseCase
@@ -52,7 +50,8 @@ class OrderServiceRepository @Inject constructor(
 
     // TODO: Use observeOrderServicesByPartnerId for consistency
     fun observeOrderServicesByUserId(): Flow<List<OrderService>> =
-        observeCollectionByUserIdUseCase(
+        observeCollectionByFieldUseCase(
+            "userId",
             getCurrentUserId(),
             OrderService.COLLECTION, OrderService::class.java
         )
